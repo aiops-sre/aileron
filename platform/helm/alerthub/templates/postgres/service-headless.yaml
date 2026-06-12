@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pg-hl
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+    app: postgres-primary
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: postgres-primary
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP

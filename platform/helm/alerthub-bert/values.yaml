@@ -1,0 +1,50 @@
+# ============================================================
+# AlertHub BERT Service — Values
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Global
+# ---------------------------------------------------------------------------
+global:
+  imageRegistry: ghcr.io/aileron-platform/aileron-admins
+  imagePullSecret: jfrog-dockers-access
+  namespace: aileron
+  storageClass: example-cluster-netapp-sc
+
+# ---------------------------------------------------------------------------
+# Images
+# ---------------------------------------------------------------------------
+images:
+  bert:
+    repository: ghcr.io/aileron-platform/aileron-admins/alerthub-bert-service
+    tag: v4.0.0
+    pullPolicy: IfNotPresent
+
+# ---------------------------------------------------------------------------
+# BERT Service
+# ---------------------------------------------------------------------------
+bert:
+  httpProxy: ""
+  httpsProxy: ""
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+# ---------------------------------------------------------------------------
+# Config (logLevel used by bert deployment)
+# ---------------------------------------------------------------------------
+config:
+  logLevel: info
+
+build:
+  enabled: true
+
+# ---------------------------------------------------------------------------
+# CMP plugin runtime values (set at deploy time; fallbacks below)
+# ---------------------------------------------------------------------------
+imageTag: ""
+Branch: ""

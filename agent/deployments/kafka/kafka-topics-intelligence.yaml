@@ -1,0 +1,95 @@
+# KubeSense Intelligence Layer — New Kafka Topics
+# LLM narratives, risk scores, fingerprint matches, playbooks, GitOps changes
+# Apply alongside kafka-topics-extended.yaml on the Strimzi cluster:
+#   kubectl apply -f kafka-topics-intelligence.yaml -n aileron
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.llm.narratives
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"       # 7 days
+    retention.bytes: "1073741824"   # 1 GB
+    min.insync.replicas: "2"
+    cleanup.policy: "delete"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.risk.scores
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"      # 30 days — risk scores are valuable for model tuning
+    retention.bytes: "536870912"    # 512 MB
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.fingerprints.matches
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"       # 7 days
+    retention.bytes: "268435456"    # 256 MB
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.playbooks
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 1
+  replicas: 3
+  config:
+    cleanup.policy: "compact"       # Compacted: latest playbook per failure mode
+    retention.ms: "-1"              # Retain forever (compacted)
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.gitops.changes
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"      # 30 days — git commits used for long-horizon correlation
+    retention.bytes: "268435456"    # 256 MB
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.webhook.decisions
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"      # 30 days — admission decisions for audit trail
+    retention.bytes: "268435456"    # 256 MB
+    min.insync.replicas: "2"

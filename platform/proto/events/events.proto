@@ -1,0 +1,590 @@
+syntax = "proto3";
+
+package events;
+
+option go_package = "github.com/alerthub-enterprise/proto/events";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+// Common Event Envelope
+message EventEnvelope {
+    string event_id = 1;
+    string event_type = 2;
+    string source_service = 3;
+    string correlation_id = 4;
+    google.protobuf.Timestamp timestamp = 5;
+    string version = 6;
+    google.protobuf.Any payload = 7;
+    map<string, string> metadata = 8;
+    string tenant_id = 9;
+    string trace_id = 10;
+}
+
+// Authentication Events
+message UserAuthenticatedEvent {
+    string user_id = 1;
+    string username = 2;
+    string auth_method = 3;
+    string session_id = 4;
+    google.protobuf.Timestamp authenticated_at = 5;
+    string ip_address = 6;
+    string user_agent = 7;
+    map<string, string> additional_context = 8;
+}
+
+message UserLoggedOutEvent {
+    string user_id = 1;
+    string username = 2;
+    string session_id = 3;
+    google.protobuf.Timestamp logged_out_at = 4;
+    string logout_reason = 5; // "user_initiated", "timeout", "force_logout"
+}
+
+message AuthenticationFailedEvent {
+    string username = 1;
+    string auth_method = 2;
+    string failure_reason = 3;
+    google.protobuf.Timestamp failed_at = 4;
+    string ip_address = 5;
+    string user_agent = 6;
+    int32 attempt_count = 7;
+}
+
+message UserCreatedEvent {
+    string user_id = 1;
+    string username = 2;
+    string email = 3;
+    repeated string roles = 4;
+    string created_by = 5;
+    google.protobuf.Timestamp created_at = 6;
+}
+
+message UserUpdatedEvent {
+    string user_id = 1;
+    string username = 2;
+    repeated string changed_fields = 3;
+    map<string, string> old_values = 4;
+    map<string, string> new_values = 5;
+    string updated_by = 6;
+    google.protobuf.Timestamp updated_at = 7;
+}
+
+message UserDeletedEvent {
+    string user_id = 1;
+    string username = 2;
+    string deleted_by = 3;
+    google.protobuf.Timestamp deleted_at = 4;
+    string deletion_reason = 5;
+}
+
+message RoleAssignedEvent {
+    string user_id = 1;
+    string username = 2;
+    string role_name = 3;
+    string assigned_by = 4;
+    google.protobuf.Timestamp assigned_at = 5;
+}
+
+message RoleRevokedEvent {
+    string user_id = 1;
+    string username = 2;
+    string role_name = 3;
+    string revoked_by = 4;
+    google.protobuf.Timestamp revoked_at = 5;
+    string revocation_reason = 6;
+}
+
+message PermissionChangedEvent {
+    string user_id = 1;
+    string permission = 2;
+    string resource = 3;
+    string action = 4; // "granted", "revoked"
+    string changed_by = 5;
+    google.protobuf.Timestamp changed_at = 6;
+}
+
+// Alert Management Events
+message AlertCreatedEvent {
+    string alert_id = 1;
+    string title = 2;
+    string description = 3;
+    string severity = 4;
+    string source = 5;
+    string source_type = 6;
+    map<string, string> labels = 7;
+    map<string, string> annotations = 8;
+    google.protobuf.Timestamp created_at = 9;
+    string created_by = 10;
+    bool auto_correlated = 11;
+    string correlation_id = 12;
+}
+
+message AlertUpdatedEvent {
+    string alert_id = 1;
+    repeated string changed_fields = 2;
+    map<string, string> old_values = 3;
+    map<string, string> new_values = 4;
+    string updated_by = 5;
+    google.protobuf.Timestamp updated_at = 6;
+    string update_reason = 7;
+}
+
+message AlertAcknowledgedEvent {
+    string alert_id = 1;
+    string acknowledged_by = 2;
+    google.protobuf.Timestamp acknowledged_at = 3;
+    string acknowledgment_note = 4;
+    string previous_status = 5;
+}
+
+message AlertResolvedEvent {
+    string alert_id = 1;
+    string resolved_by = 2;
+    google.protobuf.Timestamp resolved_at = 3;
+    string resolution_note = 4;
+    string resolution_method = 5;
+    string previous_status = 6;
+    float resolution_time_minutes = 7;
+}
+
+message AlertEscalatedEvent {
+    string alert_id = 1;
+    string escalated_by = 2;
+    google.protobuf.Timestamp escalated_at = 3;
+    string escalation_reason = 4;
+    string escalation_target = 5;
+    string escalation_level = 6;
+    string previous_assignee = 7;
+    string new_assignee = 8;
+}
+
+message AlertDeletedEvent {
+    string alert_id = 1;
+    string deleted_by = 2;
+    google.protobuf.Timestamp deleted_at = 3;
+    string deletion_reason = 4;
+    bool soft_delete = 5;
+}
+
+message AlertCorrelatedEvent {
+    string primary_alert_id = 1;
+    repeated string correlated_alert_ids = 2;
+    string correlation_id = 3;
+    string correlation_method = 4;
+    float correlation_score = 5;
+    string correlation_reason = 6;
+    google.protobuf.Timestamp correlated_at = 7;
+    map<string, string> correlation_metadata = 8;
+}
+
+message AlertEnrichedEvent {
+    string alert_id = 1;
+    map<string, string> enrichment_data = 2;
+    repeated string enrichment_sources = 3;
+    google.protobuf.Timestamp enriched_at = 4;
+    string enrichment_version = 5;
+}
+
+message BurstDetectedEvent {
+    string burst_id = 1;
+    string source = 2;
+    int32 alert_count = 3;
+    float alerts_per_minute = 4;
+    google.protobuf.Timestamp burst_start = 5;
+    google.protobuf.Timestamp detected_at = 6;
+    repeated string affected_alert_ids = 7;
+    map<string, int32> severity_distribution = 8;
+}
+
+message FloodgateActivatedEvent {
+    string floodgate_session_id = 1;
+    string rule_name = 2;
+    int32 suppressed_count = 3;
+    repeated string suppressed_alert_ids = 4;
+    string activated_by = 5;
+    google.protobuf.Timestamp activated_at = 6;
+    map<string, string> rule_conditions = 7;
+}
+
+// Configuration Management Events
+message ConfigCreatedEvent {
+    string config_id = 1;
+    string config_name = 2;
+    string category = 3;
+    string environment = 4;
+    string version = 5;
+    string created_by = 6;
+    google.protobuf.Timestamp created_at = 7;
+    map<string, string> metadata = 8;
+    repeated string tags = 9;
+}
+
+message ConfigUpdatedEvent {
+    string config_id = 1;
+    string config_name = 2;
+    string old_version = 3;
+    string new_version = 4;
+    repeated string changed_fields = 5;
+    string updated_by = 6;
+    google.protobuf.Timestamp updated_at = 7;
+    string update_comment = 8;
+    bool validation_passed = 9;
+}
+
+message ConfigDeletedEvent {
+    string config_id = 1;
+    string config_name = 2;
+    string version = 3;
+    string deleted_by = 4;
+    google.protobuf.Timestamp deleted_at = 5;
+    string deletion_reason = 6;
+    bool soft_delete = 7;
+}
+
+message ConfigDeployedEvent {
+    string deployment_id = 1;
+    string config_id = 2;
+    string config_name = 3;
+    string version = 4;
+    repeated string target_environments = 5;
+    string deployed_by = 6;
+    google.protobuf.Timestamp deployed_at = 7;
+    map<string, string> deployment_results = 8;
+    bool deployment_successful = 9;
+}
+
+message ConfigValidationFailedEvent {
+    string config_id = 1;
+    string config_name = 2;
+    string version = 3;
+    repeated ValidationError validation_errors = 4;
+    string validated_by = 5;
+    google.protobuf.Timestamp validated_at = 6;
+    string validation_context = 7;
+}
+
+message ConfigRollbackEvent {
+    string config_id = 1;
+    string config_name = 2;
+    string from_version = 3;
+    string to_version = 4;
+    string rolled_back_by = 5;
+    google.protobuf.Timestamp rolled_back_at = 6;
+    string rollback_reason = 7;
+}
+
+message ConfigSyncEvent {
+    string sync_id = 1;
+    string config_id = 2;
+    string source_environment = 3;
+    repeated string target_environments = 4;
+    string sync_status = 5;
+    google.protobuf.Timestamp sync_started = 6;
+    google.protobuf.Timestamp sync_completed = 7;
+    map<string, string> sync_results = 8;
+}
+
+message TemplateAppliedEvent {
+    string template_id = 1;
+    string template_name = 2;
+    string template_version = 3;
+    repeated string generated_config_ids = 4;
+    map<string, string> template_parameters = 5;
+    string applied_by = 6;
+    google.protobuf.Timestamp applied_at = 7;
+    string target_environment = 8;
+}
+
+// Topology Knowledge Events
+message NodeCreatedEvent {
+    string node_id = 1;
+    string node_name = 2;
+    string node_type = 3;
+    string environment = 4;
+    map<string, string> properties = 5;
+    repeated string tags = 6;
+    string discovery_source = 7;
+    google.protobuf.Timestamp created_at = 8;
+    bool auto_discovered = 9;
+}
+
+message NodeUpdatedEvent {
+    string node_id = 1;
+    string node_name = 2;
+    repeated string changed_properties = 3;
+    map<string, string> old_values = 4;
+    map<string, string> new_values = 5;
+    string updated_by = 6;
+    google.protobuf.Timestamp updated_at = 7;
+    string update_source = 8;
+}
+
+message NodeDeletedEvent {
+    string node_id = 1;
+    string node_name = 2;
+    string node_type = 3;
+    string deleted_by = 4;
+    google.protobuf.Timestamp deleted_at = 5;
+    string deletion_reason = 6;
+    bool cascade_delete = 7;
+    repeated string affected_relationship_ids = 8;
+}
+
+message NodeHealthChangedEvent {
+    string node_id = 1;
+    string node_name = 2;
+    string old_health_status = 3;
+    string new_health_status = 4;
+    google.protobuf.Timestamp changed_at = 5;
+    string health_check_source = 6;
+    map<string, string> health_details = 7;
+}
+
+message RelationshipCreatedEvent {
+    string relationship_id = 1;
+    string source_node_id = 2;
+    string target_node_id = 3;
+    string relationship_type = 4;
+    map<string, string> properties = 5;
+    string discovery_source = 6;
+    google.protobuf.Timestamp created_at = 7;
+    bool auto_discovered = 8;
+}
+
+message RelationshipUpdatedEvent {
+    string relationship_id = 1;
+    string source_node_id = 2;
+    string target_node_id = 3;
+    repeated string changed_properties = 4;
+    map<string, string> old_values = 5;
+    map<string, string> new_values = 6;
+    string updated_by = 7;
+    google.protobuf.Timestamp updated_at = 8;
+}
+
+message RelationshipDeletedEvent {
+    string relationship_id = 1;
+    string source_node_id = 2;
+    string target_node_id = 3;
+    string relationship_type = 4;
+    string deleted_by = 5;
+    google.protobuf.Timestamp deleted_at = 6;
+    string deletion_reason = 7;
+}
+
+message TopologyDiscoveryStartedEvent {
+    string discovery_id = 1;
+    string discovery_name = 2;
+    string discoverer_type = 3;
+    repeated string target_environments = 4;
+    string started_by = 5;
+    google.protobuf.Timestamp started_at = 6;
+    map<string, string> discovery_parameters = 7;
+}
+
+message TopologyDiscoveryCompletedEvent {
+    string discovery_id = 1;
+    string discovery_name = 2;
+    string status = 3; // "completed", "failed", "partial"
+    google.protobuf.Timestamp completed_at = 4;
+    float duration_seconds = 5;
+    TopologyDiscoveryStatistics statistics = 6;
+    string completion_message = 7;
+}
+
+message TopologySnapshotCreatedEvent {
+    string snapshot_id = 1;
+    string snapshot_name = 2;
+    google.protobuf.Timestamp created_at = 3;
+    string created_by = 4;
+    TopologySnapshotStatistics statistics = 5;
+    repeated string included_environments = 6;
+}
+
+message TopologyAnomalyDetectedEvent {
+    string anomaly_id = 1;
+    string anomaly_type = 2;
+    string entity_id = 3;
+    string entity_type = 4;
+    string description = 5;
+    float confidence_score = 6;
+    google.protobuf.Timestamp detected_at = 7;
+    string detection_method = 8;
+    map<string, string> anomaly_context = 9;
+}
+
+// System Events
+message ServiceStartedEvent {
+    string service_name = 1;
+    string service_version = 2;
+    string instance_id = 3;
+    google.protobuf.Timestamp started_at = 4;
+    map<string, string> configuration = 5;
+    string environment = 6;
+    string deployment_id = 7;
+}
+
+message ServiceStoppedEvent {
+    string service_name = 1;
+    string instance_id = 2;
+    google.protobuf.Timestamp stopped_at = 3;
+    string stop_reason = 4;
+    int32 exit_code = 5;
+    float uptime_seconds = 6;
+}
+
+message ServiceHealthChangedEvent {
+    string service_name = 1;
+    string instance_id = 2;
+    string old_health_status = 3;
+    string new_health_status = 4;
+    google.protobuf.Timestamp changed_at = 5;
+    string health_check_details = 6;
+}
+
+message DatabaseConnectionEvent {
+    string service_name = 1;
+    string database_name = 2;
+    string event_type = 3; // "connected", "disconnected", "reconnected"
+    google.protobuf.Timestamp occurred_at = 4;
+    string connection_details = 5;
+}
+
+message CacheOperationEvent {
+    string service_name = 1;
+    string cache_name = 2;
+    string operation_type = 3; // "hit", "miss", "eviction", "clear"
+    string cache_key = 4;
+    google.protobuf.Timestamp occurred_at = 5;
+    map<string, string> operation_metadata = 6;
+}
+
+// Integration Events
+message ExternalSystemIntegrationEvent {
+    string integration_id = 1;
+    string system_name = 2;
+    string event_type = 3; // "connected", "disconnected", "error", "data_received"
+    google.protobuf.Timestamp occurred_at = 4;
+    map<string, string> integration_details = 5;
+    string error_message = 6;
+}
+
+message WebhookReceivedEvent {
+    string webhook_id = 1;
+    string source_system = 2;
+    string webhook_type = 3;
+    google.protobuf.Timestamp received_at = 4;
+    map<string, string> headers = 5;
+    string payload = 6;
+    string processing_status = 7;
+}
+
+message NotificationSentEvent {
+    string notification_id = 1;
+    string notification_type = 2;
+    repeated string recipients = 3;
+    string channel = 4; // "email", "slack", "teams", "sms"
+    string subject = 5;
+    google.protobuf.Timestamp sent_at = 6;
+    string delivery_status = 7;
+    string related_entity_id = 8;
+    string related_entity_type = 9;
+}
+
+// Workflow and Process Events
+message WorkflowStartedEvent {
+    string workflow_id = 1;
+    string workflow_name = 2;
+    string workflow_type = 3;
+    string triggered_by = 4;
+    google.protobuf.Timestamp started_at = 5;
+    map<string, string> input_parameters = 6;
+    string trigger_event_id = 7;
+}
+
+message WorkflowCompletedEvent {
+    string workflow_id = 1;
+    string workflow_name = 2;
+    string status = 3; // "completed", "failed", "cancelled"
+    google.protobuf.Timestamp completed_at = 4;
+    float duration_seconds = 5;
+    map<string, string> output_results = 6;
+    string completion_message = 7;
+}
+
+message WorkflowStepExecutedEvent {
+    string workflow_id = 1;
+    string step_id = 2;
+    string step_name = 3;
+    string step_type = 4;
+    string status = 5; // "started", "completed", "failed", "skipped"
+    google.protobuf.Timestamp executed_at = 6;
+    float execution_time_ms = 7;
+    map<string, string> step_results = 8;
+}
+
+// Supporting Data Structures
+message ValidationError {
+    string field = 1;
+    string message = 2;
+    string error_code = 3;
+    string severity = 4;
+}
+
+message TopologyDiscoveryStatistics {
+    int32 nodes_discovered = 1;
+    int32 nodes_created = 2;
+    int32 nodes_updated = 3;
+    int32 nodes_deleted = 4;
+    int32 relationships_discovered = 5;
+    int32 relationships_created = 6;
+    int32 relationships_updated = 7;
+    int32 relationships_deleted = 8;
+    repeated string environments_scanned = 9;
+}
+
+message TopologySnapshotStatistics {
+    int32 total_nodes = 1;
+    int32 total_relationships = 2;
+    map<string, int32> nodes_by_type = 3;
+    map<string, int32> relationships_by_type = 4;
+    float snapshot_size_mb = 5;
+}
+
+// Event Routing and Processing
+message EventProcessingResult {
+    string event_id = 1;
+    string processor_name = 2;
+    bool success = 3;
+    string error_message = 4;
+    google.protobuf.Timestamp processed_at = 5;
+    float processing_time_ms = 6;
+    map<string, string> processing_metadata = 7;
+}
+
+message DeadLetterEvent {
+    EventEnvelope original_event = 1;
+    string failure_reason = 2;
+    int32 retry_count = 3;
+    google.protobuf.Timestamp first_failed_at = 4;
+    google.protobuf.Timestamp last_failed_at = 5;
+    repeated string processing_errors = 6;
+}
+
+// Batch Events for High-Volume Operations
+message BatchAlertCreatedEvent {
+    repeated AlertCreatedEvent alerts = 1;
+    int32 batch_size = 2;
+    google.protobuf.Timestamp batch_created_at = 3;
+    string batch_id = 4;
+    string source_system = 5;
+}
+
+message BatchTopologyUpdateEvent {
+    repeated NodeCreatedEvent node_updates = 1;
+    repeated RelationshipCreatedEvent relationship_updates = 2;
+    string update_batch_id = 3;
+    google.protobuf.Timestamp batch_processed_at = 4;
+    string update_source = 5;
+}

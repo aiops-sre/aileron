@@ -1,0 +1,171 @@
+# ============================================================
+# Kafka Cluster CR (Strimzi)
+# apiVersion: kafka.strimzi.io/v1beta2
+# ============================================================
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: alerthub-kafka
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka
+spec:
+  kafka:
+    version: "3.6.0"
+    replicas: {{ .Values.kafka.replicas }}
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+    config:
+      offsets.topic.replication.factor: {{ .Values.kafka.replicas }}
+      transaction.state.log.replication.factor: {{ .Values.kafka.replicas }}
+      transaction.state.log.min.isr: 1
+      default.replication.factor: {{ .Values.kafka.replicas }}
+      min.insync.replicas: 1
+      log.retention.hours: 168
+      log.retention.bytes: "10737418240"
+      auto.create.topics.enable: "true"
+      num.partitions: 3
+    storage:
+      type: persistent-claim
+      size: {{ .Values.kafka.storage }}
+      class: {{ .Values.global.storageClass }}
+      deleteClaim: false
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 4Gi
+    readinessProbe:
+      initialDelaySeconds: 30
+      timeoutSeconds: 10
+    livenessProbe:
+      initialDelaySeconds: 60
+      timeoutSeconds: 10
+    template:
+      pod:
+        metadata:
+          labels:
+            app.kubernetes.io/part-of: alerthub-enterprise
+        imagePullSecrets:
+          - name: {{ .Values.global.imagePullSecret }}
+  # ---------------------------------------------------------------------------
+  # ZooKeeper (required by Strimzi 0.38; KRaft mode available in later versions)
+  # ---------------------------------------------------------------------------
+  zookeeper:
+    replicas: {{ .Values.kafka.zookeeperReplicas }}
+    storage:
+      type: persistent-claim
+      size: {{ .Values.kafka.zookeeperStorage }}
+      class: {{ .Values.global.storageClass }}
+      deleteClaim: false
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    readinessProbe:
+      initialDelaySeconds: 30
+      timeoutSeconds: 10
+    livenessProbe:
+      initialDelaySeconds: 60
+      timeoutSeconds: 10
+    template:
+      pod:
+        metadata:
+          labels:
+            app.kubernetes.io/part-of: alerthub-enterprise
+        imagePullSecrets:
+          - name: {{ .Values.global.imagePullSecret }}
+  # ---------------------------------------------------------------------------
+  # Entity Operator — manages Topics and Users
+  # ---------------------------------------------------------------------------
+  entityOperator:
+    template:
+      pod:
+        imagePullSecrets:
+          - name: {{ .Values.global.imagePullSecret }}
+    topicOperator:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+    userOperator:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+---
+# ---------------------------------------------------------------------------
+# KafkaTopic: raw-alerts
+# ---------------------------------------------------------------------------
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: raw-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    strimzi.io/cluster: alerthub-kafka
+    app.kubernetes.io/component: kafka
+spec:
+  partitions: 6
+  replicas: {{ .Values.kafka.replicas }}
+  config:
+    retention.ms: "604800000"
+    segment.bytes: "1073741824"
+---
+# ---------------------------------------------------------------------------
+# KafkaTopic: processed-alerts
+# ---------------------------------------------------------------------------
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: processed-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    strimzi.io/cluster: alerthub-kafka
+    app.kubernetes.io/component: kafka
+spec:
+  partitions: 3
+  replicas: {{ .Values.kafka.replicas }}
+  config:
+    retention.ms: "604800000"
+    segment.bytes: "1073741824"
+---
+# ---------------------------------------------------------------------------
+# KafkaTopic: rca-events
+# ---------------------------------------------------------------------------
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: rca-events
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    strimzi.io/cluster: alerthub-kafka
+    app.kubernetes.io/component: kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"
+    segment.bytes: "1073741824"

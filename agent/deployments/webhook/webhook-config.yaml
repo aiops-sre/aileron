@@ -1,0 +1,162 @@
+---
+# ValidatingWebhookConfiguration — registers kubesense-webhook with kube-apiserver
+# The webhook intercepts CREATE and UPDATE operations on Deployment, StatefulSet,
+# DaemonSet, Pod, ConfigMap, and Secret resources before they are admitted.
+#
+# Start with failurePolicy: Ignore and dry-run mode so misconfiguration never
+# blocks the cluster. Flip to Fail + DENY_ON_CRITICAL_SECURITY after validation.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: kubesense-admission
+  annotations:
+    # cert-manager injects the CA bundle automatically if you use cert-manager
+    # cert-manager.io/inject-ca-from: aileron-agent/kubesense-webhook-cert
+    kubesense.io/version: "v1"
+webhooks:
+  - name: validate.kubesense.io
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: Ignore          # Change to Fail after validating DRY_RUN output
+    matchPolicy: Equivalent
+    timeoutSeconds: 10
+    namespaceSelector:
+      matchExpressions:
+        - key: kubesense.io/skip-validation
+          operator: DoesNotExist   # Skip namespaces labeled with this key
+    rules:
+      - apiGroups:   ["apps"]
+        apiVersions: ["v1"]
+        operations:  ["CREATE", "UPDATE"]
+        resources:   ["deployments", "statefulsets", "daemonsets"]
+        scope:       "Namespaced"
+      - apiGroups:   [""]
+        apiVersions: ["v1"]
+        operations:  ["CREATE", "UPDATE"]
+        resources:   ["pods", "configmaps", "secrets"]
+        scope:       "Namespaced"
+    clientConfig:
+      service:
+        namespace: aileron-agent
+        name: kubesense-webhook
+        path: /validate
+        port: 8443
+      # caBundle is injected by cert-manager or set manually:
+      # base64-encode the webhook server's CA cert and paste here
+      caBundle: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubesense-webhook
+  namespace: aileron-agent
+  labels:
+    app: kubesense-webhook
+    component: admission-webhook
+spec:
+  selector:
+    app: kubesense-webhook
+  ports:
+    - name: https
+      port: 8443
+      targetPort: 8443
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubesense-webhook
+  namespace: aileron-agent
+  labels:
+    app: kubesense-webhook
+    component: admission-webhook
+spec:
+  replicas: 2               # Two replicas for HA — webhook cannot have single point of failure
+  selector:
+    matchLabels:
+      app: kubesense-webhook
+  template:
+    metadata:
+      labels:
+        app: kubesense-webhook
+        component: admission-webhook
+    spec:
+      serviceAccountName: aileron-agent-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: webhook
+          image: kubesense-webhook:latest
+          ports:
+            - containerPort: 8443
+              name: https
+          env:
+            - name: PORT
+              value: "8443"
+            - name: DRY_RUN
+              value: "true"               # Start dry-run; disable after validating
+            - name: DENY_ON_CRITICAL_SECURITY
+              value: "false"
+            - name: DENY_ON_HIGH_RISK
+              value: "false"
+            - name: SERVICE_NAME
+              value: kubesense-webhook
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # TLS: mount cert-manager secret or let the webhook generate self-signed
+            # - name: WEBHOOK_TLS_CERT_FILE
+            #   value: /tls/tls.crt
+            # - name: WEBHOOK_TLS_KEY_FILE
+            #   value: /tls/tls.key
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          # TLS cert volume (optional — auto-generated if not mounted)
+          # volumeMounts:
+          #   - name: tls
+          #     mountPath: /tls
+          #     readOnly: true
+      # volumes:
+      #   - name: tls
+      #     secret:
+      #       secretName: kubesense-webhook-tls
+---
+# PodDisruptionBudget — ensure at least one webhook replica is always available
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kubesense-webhook-pdb
+  namespace: aileron-agent
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: kubesense-webhook

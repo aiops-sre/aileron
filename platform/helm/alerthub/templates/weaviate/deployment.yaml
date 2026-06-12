@@ -1,0 +1,168 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weaviate
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vector-db
+    app: weaviate
+spec:
+  replicas: 1
+  # Weaviate is stateful; use Recreate to avoid split-brain on PVC
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: weaviate
+  template:
+    metadata:
+      labels:
+        app: weaviate
+        {{- include "alerthub.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: vector-db
+    spec:
+      {{- include "alerthub.imagePullSecrets" . | nindent 6 }}
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        {{- if .Values.whisper.enabled }}
+        - name: init-whisperctl
+          image: ghcr.io/aileron-platform/crypto-services/whisperctl:1.1.3
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              ./whisperctl secret fetch \
+                --server  \
+                --client-certificate /etc/ssl/whisper/tls.crt \
+                --client-key /etc/ssl/whisper/tls.key \
+                --client-certificate-format PEM \
+                --namespace aileron-admins \
+                --secret-name alerthub-app-secrets \
+                --output-dir /tmp/secrets
+          volumeMounts:
+            - name: whisper-secrets
+              mountPath: /tmp/secrets
+            - name: whisper-cert
+              mountPath: /etc/ssl/whisper
+              readOnly: true
+        {{- else }}
+        - name: init-k8s-secrets
+          image: "{{ .Values.images.redis.repository }}:{{ .Values.images.redis.tag }}"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              printf '{}' > /tmp/secrets/alerthub-app-secrets
+          volumeMounts:
+            - name: whisper-secrets
+              mountPath: /tmp/secrets
+        {{- end }}
+      containers:
+        - name: weaviate
+          image: "{{ .Values.images.weaviate.repository }}:{{ .Values.images.weaviate.tag }}"
+          imagePullPolicy: {{ .Values.images.weaviate.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              awk -F'"' '{for(i=2;i<NF;i+=4) if($i~/^[A-Z_][A-Z0-9_]*$/ && $(i+2)!="") print "export "$i"="$(i+2)}' \
+                /tmp/secrets/alerthub-app-secrets > /tmp/secrets/env.sh
+              . /tmp/secrets/env.sh
+              exec /bin/weaviate --host 0.0.0.0 --port 8080 --scheme http
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: grpc
+              containerPort: 50051
+              protocol: TCP
+          env:
+            - name: QUERY_DEFAULTS_LIMIT
+              value: "100"
+            - name: AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED
+              value: "false"
+            - name: AUTHENTICATION_APIKEY_ENABLED
+              value: "true"
+            - name: AUTHENTICATION_APIKEY_ALLOWED_KEYS
+              value: "weaviate-AIOps-Key-2024"
+            - name: AUTHENTICATION_APIKEY_USERS
+              value: "rca-orchestrator"
+            - name: PERSISTENCE_DATA_PATH
+              value: "/var/lib/weaviate"
+            - name: DEFAULT_VECTORIZER_MODULE
+              value: "none"
+            - name: ENABLE_MODULES
+              value: "text2vec-ollama,generative-ollama"
+            - name: CLUSTER_HOSTNAME
+              value: "weaviate-node-0"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: GOGC
+              value: "100"
+          volumeMounts:
+            - name: weaviate-data
+              mountPath: /var/lib/weaviate
+            - name: whisper-secrets
+              mountPath: /tmp/secrets
+          resources:
+            {{- toYaml .Values.weaviate.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /v1/.well-known/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /v1/.well-known/ready
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 5
+      volumes:
+        - name: weaviate-data
+          persistentVolumeClaim:
+            claimName: weaviate-data
+        - name: whisper-secrets
+          emptyDir: {}
+        {{- if .Values.whisper.enabled }}
+        - name: whisper-cert
+          csi:
+            driver: cmcs.crypto-services.example.com
+            readOnly: true
+            volumeAttributes:
+              cmcs.crypto-services.example.com/duration: "24h"
+              cmcs.crypto-services.example.com/fs-group: "1000"
+              cmcs.crypto-services.example.com/issuer-kind: AppleCertificateManagerCorpCA
+              cmcs.crypto-services.example.com/issuer-name: applecm-whisper-corpca-7915896-7915893
+              cmcs.crypto-services.example.com/key-usages: "client auth,digital signature,key encipherment"
+        {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: weaviate-data
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vector-db
+    app: weaviate
+  annotations:
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: ServerSideApply=false
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  {{- if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.weaviate.storage }}

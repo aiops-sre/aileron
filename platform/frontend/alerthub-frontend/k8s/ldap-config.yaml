@@ -1,0 +1,84 @@
+# =============================================================================
+# ORPHANED LEGACY — DO NOT APPLY
+# =============================================================================
+# This ConfigMap and Secret target namespace "alerthub" (not "aileron")
+# and reference a different application ("sre-command-center") from an earlier
+# iteration of this project. They use a direct LDAP bind approach that has been
+# replaced by DS-LDAP/MAS SSO via the alerthub-dsldap-config ConfigMap defined
+# in helm/alerthub/templates/configmaps/dsldap-config.yaml.
+#
+# The Secret also contains placeholder credentials (CHANGE_ME values).
+# DO NOT apply this file to any cluster.
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sre-command-center-ldap-config
+  namespace: alerthub
+  labels:
+    app: sre-command-center
+    component: backend
+data:
+  # LDAP Server Configuration
+  LDAP_ENABLED: "true"
+  LDAP_SERVER: ""
+  LDAP_PORT: "636"
+  LDAP_BASE_DN: "o=apple"
+  LDAP_USER_SEARCH_BASE: "ou=people"
+  LDAP_USER_FILTER: "appleconnectname=%s"
+  LDAP_GROUP_SEARCH_BASE: "ou=groups"
+  LDAP_GROUP_FILTER: "uniquemember=%s"
+  LDAP_USE_TLS: "true"
+  LDAP_DISPLAY_NAME_ATTR: "cn"
+  LDAP_EMAIL_ATTR: "mail"
+  LDAP_UPDATE_INTERVAL: "15"
+
+  # Group to Role Mapping
+  LDAP_ADMIN_GROUPS: "aileron,aileron-operators,aileron-operators,aileron-admins"
+  LDAP_MANAGER_GROUPS: "interactive-apps-systems,interactive-release-engineering"
+  LDAP_ENGINEER_GROUPS: "interactive-apps-dev,interactive-release-operations,int-auto-sample-build"
+  LDAP_VIEWER_GROUPS: "iasys-rome-cigniti,interactive-rome-dev-team-core,marcom-dotcom-qa-tools"
+  LDAP_DEFAULT_ROLE: "viewer"
+
+  # Audit Configuration
+  LDAP_AUDIT_ENABLED: "true"
+
+  # JWT Configuration
+  JWT_EXPIRATION: "24h"
+  JWT_REFRESH_EXPIRATION: "168h"
+
+  # Session Configuration
+  SESSION_TIMEOUT: "86400"
+  SESSION_COOKIE_SECURE: "true"
+  SESSION_COOKIE_HTTPONLY: "true"
+
+  # Application Configuration
+  APP_ENV: "production"
+  APP_PORT: "8080"
+  APP_HOST: "0.0.0.0"
+
+  # CORS Configuration
+  CORS_ORIGINS: "https://aileron.example.com"
+
+  # Frontend URL
+  FRONTEND_URL: "https://aileron.example.com"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sre-command-center-ldap-secret
+  namespace: alerthub
+  labels:
+    app: sre-command-center
+    component: backend
+type: Opaque
+stringData:
+  # LDAP Service Account - Replace with your AppID credentials
+  LDAP_BIND_DN: "appid=YOUR_APP_ID,ou=applications,o=apple"
+  LDAP_BIND_PASSWORD: "YOUR_APP_PASSWORD"
+
+  # JWT Secret - Generate a strong random key
+  JWT_SECRET: "CHANGE_ME_TO_RANDOM_SECRET_KEY"
+
+  # Database credentials
+  DATABASE_URL: "postgresql://user:password@postgres-service:5432/alerthub"

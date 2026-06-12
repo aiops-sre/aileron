@@ -1,0 +1,231 @@
+# KubeSense Extended Kafka Topics — APM, Anomaly, Security, Cost, SLO, Logs
+# Apply on the existing Strimzi Kafka cluster alongside kafka-topics.yaml
+# kubectl apply -f kafka-topics-extended.yaml -n aileron
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.apm.golden-signals
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "259200000"       # 3 days — high volume, short retention
+    retention.bytes: "21474836480"  # 20 GB
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.apm.regressions
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.apm.service-map
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "86400000"        # 1 day — service map is rebuilt continuously
+    cleanup.policy: "compact"       # keep latest service map per key
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.anomalies
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "5368709120"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.security.findings
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"      # 30 days — security findings are audit trail
+    retention.bytes: "5368709120"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.security.runtime
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "10737418240"  # 10 GB — high volume runtime events
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.cost.efficiency
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"      # 30 days — cost data for monthly attribution
+    retention.bytes: "2147483648"
+    cleanup.policy: "compact"       # keep latest efficiency per workload
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.cost.recommendations
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.slo.budgets
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "2147483648"
+    cleanup.policy: "compact"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.slo.burn-rate-alerts
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.logs.patterns
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "10737418240"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.logs.anomalies
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.remediation.recommendations
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"      # 30 days — used for outcome tracking
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.remediation.outcomes
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "7776000000"      # 90 days — long retention for learning
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+# Correlation — unified incident context topic consumed by AlertHub
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.correlation.incident-context
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "10737418240"
+    min.insync.replicas: "2"

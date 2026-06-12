@@ -1,0 +1,91 @@
+# ============================================================
+# AlertHub OIE — Operational Intelligence Engine
+# Default values (overridden by values-example-cluster.yaml)
+# ============================================================
+
+global:
+  imageRegistry: ghcr.io/aileron-platform/aileron-admins
+  imagePullSecret: jfrog-dockers-access
+  namespace: aileron
+  storageClass: example-cluster-netapp-sc
+
+images:
+  oie:
+    repository: ghcr.io/aileron-platform/aileron-admins/oie
+    tag: v1.0.0
+    pullPolicy: Always
+
+oie:
+  replicas: 2
+  port: 8080
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+  # Investigation concurrency — max simultaneous goroutines per pod.
+  maxConcurrentInvestigations: "20"
+  investigationTimeBudgetMs: "45000"
+  # Include medium so 91% of incidents (medium severity) get OIE investigation
+  autoInvestigateSeverities: "critical,high,medium"
+
+  # External service URLs (cluster-local DNS)
+  eirsBaseURL: ""
+  okgBaseURL: ""
+  ollamaBaseURL: "http://ollama:11434"
+  ollamaModel: "qwen2.5:3b"
+  # Per-role model routing (Aurora/LLMFit pattern).
+  # Falls back to ollamaModel when not set.
+  ollamaModelTriage: ""    # fast model for alert triage (leave blank to use ollamaModel)
+  ollamaModelRCA: ""       # quality model for hypothesis RCA synthesis
+  ollamaModelNarrative: "" # model for human-readable narrative generation
+  # AlertHub backend URL for RCA writeback + skip_rca policy evaluation.
+  # Set to http://alerthub-backend:<port> so OIE can call POST /api/v1/intelligence-policies/evaluate
+  alertHubBaseURL: ""
+
+  # Redis — shared with AlertHub cluster
+  redisAddr: "redis-cluster:6379"
+
+  # Kafka — shared Strimzi cluster
+  kafkaBrokers: "alerthub-kafka-kafka-bootstrap:9092"
+  kafkaConsumerGroup: "oie-investigation-consumer"
+  kafkaInvestigationsTopic: "oie.investigations"
+  kafkaDlqTopic: "oie.investigations.dlq"
+
+  # Kubeconfigs directory (mounted from Whisper-fetched secret)
+  kubeconfigsDir: "/etc/kubeconfigs"
+
+  # Jaeger/OTel tracing
+  jaegerEndpoint: ""
+  otelServiceName: "oie"
+
+  # CloudStack — sourced from Whisper (env vars injected at runtime)
+  # OIE_CS_CLUSTER_1_ENDPOINT, OIE_CS_CLUSTER_1_API_KEY, etc.
+
+  # NetApp ONTAP — cluster list (non-sensitive); password sourced from Whisper as NETAPP_PASSWORD
+  # Format: JSON array matching alerthub-config NETAPP_CLUSTERS
+  netappClusters: "[]"
+  netappUser: "harvest-user"
+
+build:
+  enabled: false
+
+whisper:
+  enabled: true
+
+postgres:
+  database: alerthub
+  user: alerthub
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 60
+
+podDisruptionBudget:
+  minAvailable: 1

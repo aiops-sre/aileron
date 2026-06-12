@@ -1,0 +1,30 @@
+# ============================================================
+# alerthub-oie — example-cluster overrides (Primary / RNO)
+# ============================================================
+
+global:
+  storageClass: example-cluster-netapp-sc
+  namespace: aileron
+
+build:
+  enabled: true
+
+whisper:
+  enabled: true
+
+oie:
+  replicas: 2
+  eirsBaseURL: ""
+  # OKG Change Intelligence: backed by alerthub-backend /api/v1/incidents/:id/changes
+  okgBaseURL: "http://alerthub-backend:3000"
+  # AlertHub backend URL: enables RCA writeback + OIE skip_rca policy evaluation
+  alertHubBaseURL: "http://alerthub-backend:3000"
+  # Per-role model routing
+  # qwen2.5:3b is what's actually loaded on Ollama — 7b is not available
+  ollamaModelRCA: "qwen2.5:3b"
+  ollamaModelNarrative: "qwen2.5:3b"
+  ollamaModelTriage: "qwen2.5:3b"
+  # NetApp clusters — same IPs used by alerthub-backend (from alerthub-config NETAPP_CLUSTERS)
+  # MDN + RNO clusters; password comes from Whisper as NETAPP_PASSWORD
+  netappClusters: '[{"cluster":"100.67.87.8","name":"netapp-mdn-cluster001","region":"mdn"},{"cluster":"100.67.60.23","name":"netapp-rno-cluster001","region":"rno"}]'
+  netappUser: "harvest-user"

@@ -1,0 +1,962 @@
+syntax = "proto3";
+
+package topology_knowledge;
+
+option go_package = "github.com/alerthub-enterprise/proto/topology_knowledge";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+// Topology Knowledge Service Definition
+service TopologyKnowledgeService {
+    // Node management
+    rpc CreateNode(CreateNodeRequest) returns (CreateNodeResponse);
+    rpc GetNode(GetNodeRequest) returns (GetNodeResponse);
+    rpc UpdateNode(UpdateNodeRequest) returns (UpdateNodeResponse);
+    rpc DeleteNode(DeleteNodeRequest) returns (DeleteNodeResponse);
+    rpc ListNodes(ListNodesRequest) returns (ListNodesResponse);
+    rpc SearchNodes(SearchNodesRequest) returns (SearchNodesResponse);
+    
+    // Relationship management
+    rpc CreateRelationship(CreateRelationshipRequest) returns (CreateRelationshipResponse);
+    rpc GetRelationship(GetRelationshipRequest) returns (GetRelationshipResponse);
+    rpc UpdateRelationship(UpdateRelationshipRequest) returns (UpdateRelationshipResponse);
+    rpc DeleteRelationship(DeleteRelationshipRequest) returns (DeleteRelationshipResponse);
+    rpc ListRelationships(ListRelationshipsRequest) returns (ListRelationshipsResponse);
+    
+    // Topology discovery
+    rpc StartDiscovery(StartDiscoveryRequest) returns (StartDiscoveryResponse);
+    rpc GetDiscoveryStatus(GetDiscoveryStatusRequest) returns (GetDiscoveryStatusResponse);
+    rpc ListDiscoveries(ListDiscoveriesRequest) returns (ListDiscoveriesResponse);
+    rpc StopDiscovery(StopDiscoveryRequest) returns (StopDiscoveryResponse);
+    
+    // Topology queries
+    rpc GetTopology(GetTopologyRequest) returns (GetTopologyResponse);
+    rpc GetSubTopology(GetSubTopologyRequest) returns (GetSubTopologyResponse);
+    rpc GetNodeNeighbors(GetNodeNeighborsRequest) returns (GetNodeNeighborsResponse);
+    rpc GetPath(GetPathRequest) returns (GetPathResponse);
+    rpc FindShortestPath(FindShortestPathRequest) returns (FindShortestPathResponse);
+    
+    // Impact analysis
+    rpc AnalyzeImpact(AnalyzeImpactRequest) returns (AnalyzeImpactResponse);
+    rpc GetDependencies(GetDependenciesRequest) returns (GetDependenciesResponse);
+    rpc GetDependents(GetDependentsRequest) returns (GetDependentsResponse);
+    rpc CalculateBlastRadius(CalculateBlastRadiusRequest) returns (CalculateBlastRadiusResponse);
+    
+    // Change tracking
+    rpc GetTopologyChanges(GetTopologyChangesRequest) returns (GetTopologyChangesResponse);
+    rpc GetChangeHistory(GetChangeHistoryRequest) returns (GetChangeHistoryResponse);
+    rpc CreateSnapshot(CreateSnapshotRequest) returns (CreateSnapshotResponse);
+    rpc RestoreSnapshot(RestoreSnapshotRequest) returns (RestoreSnapshotResponse);
+    
+    // Topology validation
+    rpc ValidateTopology(ValidateTopologyRequest) returns (ValidateTopologyResponse);
+    rpc DetectAnomalies(DetectAnomaliesRequest) returns (DetectAnomaliesResponse);
+    rpc CheckConsistency(CheckConsistencyRequest) returns (CheckConsistencyResponse);
+    
+    // Topology synchronization
+    rpc SyncTopology(SyncTopologyRequest) returns (SyncTopologyResponse);
+    rpc GetSyncStatus(GetSyncStatusRequest) returns (GetSyncStatusResponse);
+    
+    // Topology watching
+    rpc WatchTopologyChanges(WatchTopologyChangesRequest) returns (stream TopologyChangeEvent);
+    rpc WatchNodeChanges(WatchNodeChangesRequest) returns (stream NodeChangeEvent);
+    
+    // Metrics and analytics
+    rpc GetTopologyMetrics(GetTopologyMetricsRequest) returns (GetTopologyMetricsResponse);
+    rpc GetNodeMetrics(GetNodeMetricsRequest) returns (GetNodeMetricsResponse);
+    rpc GetRelationshipMetrics(GetRelationshipMetricsRequest) returns (GetRelationshipMetricsResponse);
+    
+    // Configuration management
+    rpc UpdateDiscoveryConfig(UpdateDiscoveryConfigRequest) returns (UpdateDiscoveryConfigResponse);
+    rpc GetDiscoveryConfig(GetDiscoveryConfigRequest) returns (GetDiscoveryConfigResponse);
+}
+
+// Node Management Messages
+message CreateNodeRequest {
+    TopologyNode node = 1;
+    string created_by = 2;
+    bool auto_discover_relationships = 3;
+}
+
+message CreateNodeResponse {
+    bool success = 1;
+    TopologyNode node = 2;
+    string node_id = 3;
+    repeated TopologyRelationship discovered_relationships = 4;
+    string error_message = 5;
+}
+
+message GetNodeRequest {
+    string node_id = 1;
+    bool include_relationships = 2;
+    bool include_metadata = 3;
+    bool include_metrics = 4;
+}
+
+message GetNodeResponse {
+    bool found = 1;
+    TopologyNode node = 2;
+    repeated TopologyRelationship relationships = 3;
+    NodeMetadata metadata = 4;
+    NodeMetrics metrics = 5;
+    string error_message = 6;
+}
+
+message UpdateNodeRequest {
+    string node_id = 1;
+    TopologyNode node = 2;
+    string updated_by = 3;
+    repeated string updated_fields = 4;
+}
+
+message UpdateNodeResponse {
+    bool success = 1;
+    TopologyNode node = 2;
+    string error_message = 3;
+}
+
+message DeleteNodeRequest {
+    string node_id = 1;
+    string deleted_by = 2;
+    bool cascade_delete = 3;
+    bool soft_delete = 4;
+}
+
+message DeleteNodeResponse {
+    bool success = 1;
+    repeated string deleted_relationship_ids = 2;
+    string message = 3;
+}
+
+message ListNodesRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string type_filter = 3;
+    string environment_filter = 4;
+    repeated string tag_filters = 5;
+    NodeHealthStatus health_filter = 6;
+    bool include_deleted = 7;
+}
+
+message ListNodesResponse {
+    repeated TopologyNode nodes = 1;
+    int32 total_count = 2;
+    int32 page = 3;
+    int32 page_size = 4;
+}
+
+message SearchNodesRequest {
+    string query = 1;
+    SearchOptions options = 2;
+    int32 limit = 3;
+}
+
+message SearchNodesResponse {
+    repeated TopologyNode nodes = 1;
+    int32 total_matches = 2;
+    float search_time_ms = 3;
+}
+
+// Relationship Management Messages
+message CreateRelationshipRequest {
+    TopologyRelationship relationship = 1;
+    string created_by = 2;
+    bool validate_nodes = 3;
+}
+
+message CreateRelationshipResponse {
+    bool success = 1;
+    TopologyRelationship relationship = 2;
+    string relationship_id = 3;
+    string error_message = 4;
+}
+
+message GetRelationshipRequest {
+    string relationship_id = 1;
+    bool include_metadata = 2;
+}
+
+message GetRelationshipResponse {
+    bool found = 1;
+    TopologyRelationship relationship = 2;
+    RelationshipMetadata metadata = 3;
+    string error_message = 4;
+}
+
+message UpdateRelationshipRequest {
+    string relationship_id = 1;
+    TopologyRelationship relationship = 2;
+    string updated_by = 3;
+}
+
+message UpdateRelationshipResponse {
+    bool success = 1;
+    TopologyRelationship relationship = 2;
+    string error_message = 3;
+}
+
+message DeleteRelationshipRequest {
+    string relationship_id = 1;
+    string deleted_by = 2;
+    bool soft_delete = 3;
+}
+
+message DeleteRelationshipResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ListRelationshipsRequest {
+    string source_node_id = 1;
+    string target_node_id = 2;
+    string relationship_type = 3;
+    int32 page = 4;
+    int32 page_size = 5;
+}
+
+message ListRelationshipsResponse {
+    repeated TopologyRelationship relationships = 1;
+    int32 total_count = 2;
+}
+
+// Discovery Messages
+message StartDiscoveryRequest {
+    DiscoveryConfig config = 1;
+    string started_by = 2;
+    bool async_mode = 3;
+}
+
+message StartDiscoveryResponse {
+    bool success = 1;
+    string discovery_id = 2;
+    DiscoveryStatus status = 3;
+    string error_message = 4;
+}
+
+message GetDiscoveryStatusRequest {
+    string discovery_id = 1;
+}
+
+message GetDiscoveryStatusResponse {
+    DiscoveryStatus status = 1;
+    DiscoveryStatistics statistics = 2;
+}
+
+message ListDiscoveriesRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string status_filter = 3;
+    google.protobuf.Timestamp from_time = 4;
+    google.protobuf.Timestamp to_time = 5;
+}
+
+message ListDiscoveriesResponse {
+    repeated Discovery discoveries = 1;
+    int32 total_count = 2;
+}
+
+message StopDiscoveryRequest {
+    string discovery_id = 1;
+    string stopped_by = 2;
+}
+
+message StopDiscoveryResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// Topology Query Messages
+message GetTopologyRequest {
+    TopologyFilter filter = 1;
+    bool include_metrics = 2;
+    int32 max_depth = 3;
+}
+
+message GetTopologyResponse {
+    repeated TopologyNode nodes = 1;
+    repeated TopologyRelationship relationships = 2;
+    TopologyMetrics metrics = 3;
+}
+
+message GetSubTopologyRequest {
+    string root_node_id = 1;
+    int32 depth = 2;
+    repeated string relationship_types = 3;
+    TopologyFilter filter = 4;
+}
+
+message GetSubTopologyResponse {
+    repeated TopologyNode nodes = 1;
+    repeated TopologyRelationship relationships = 2;
+}
+
+message GetNodeNeighborsRequest {
+    string node_id = 1;
+    int32 hops = 2;
+    repeated string relationship_types = 3;
+    string direction = 4; // "incoming", "outgoing", "both"
+}
+
+message GetNodeNeighborsResponse {
+    repeated TopologyNode neighbors = 1;
+    repeated TopologyRelationship paths = 2;
+}
+
+message GetPathRequest {
+    string source_node_id = 1;
+    string target_node_id = 2;
+    repeated string allowed_relationship_types = 3;
+    int32 max_hops = 4;
+}
+
+message GetPathResponse {
+    repeated TopologyPath paths = 1;
+}
+
+message FindShortestPathRequest {
+    string source_node_id = 1;
+    string target_node_id = 2;
+    PathAlgorithm algorithm = 3;
+    map<string, float> edge_weights = 4;
+}
+
+message FindShortestPathResponse {
+    TopologyPath shortest_path = 1;
+    float total_weight = 2;
+}
+
+// Impact Analysis Messages
+message AnalyzeImpactRequest {
+    string node_id = 1;
+    ImpactAnalysisOptions options = 2;
+}
+
+message AnalyzeImpactResponse {
+    ImpactAnalysis analysis = 1;
+    repeated TopologyNode affected_nodes = 2;
+    ImpactMetrics metrics = 3;
+}
+
+message GetDependenciesRequest {
+    string node_id = 1;
+    int32 depth = 2;
+    repeated string dependency_types = 3;
+}
+
+message GetDependenciesResponse {
+    repeated TopologyNode dependencies = 1;
+    repeated TopologyRelationship dependency_paths = 2;
+}
+
+message GetDependentsRequest {
+    string node_id = 1;
+    int32 depth = 2;
+    repeated string dependent_types = 3;
+}
+
+message GetDependentsResponse {
+    repeated TopologyNode dependents = 1;
+    repeated TopologyRelationship dependent_paths = 2;
+}
+
+message CalculateBlastRadiusRequest {
+    string node_id = 1;
+    BlastRadiusOptions options = 2;
+}
+
+message CalculateBlastRadiusResponse {
+    BlastRadiusAnalysis analysis = 1;
+    repeated TopologyNode affected_nodes = 2;
+    BlastRadiusMetrics metrics = 3;
+}
+
+// Change Tracking Messages
+message GetTopologyChangesRequest {
+    google.protobuf.Timestamp from_time = 1;
+    google.protobuf.Timestamp to_time = 2;
+    repeated string change_types = 3;
+    string node_id = 4;
+    int32 limit = 5;
+}
+
+message GetTopologyChangesResponse {
+    repeated TopologyChange changes = 1;
+    int32 total_changes = 2;
+}
+
+message GetChangeHistoryRequest {
+    string entity_id = 1; // node_id or relationship_id
+    string entity_type = 2; // "node" or "relationship"
+    google.protobuf.Timestamp from_time = 3;
+    google.protobuf.Timestamp to_time = 4;
+}
+
+message GetChangeHistoryResponse {
+    repeated TopologyChange changes = 1;
+}
+
+message CreateSnapshotRequest {
+    string name = 1;
+    string description = 2;
+    TopologyFilter filter = 3;
+    string created_by = 4;
+}
+
+message CreateSnapshotResponse {
+    bool success = 1;
+    TopologySnapshot snapshot = 2;
+    string error_message = 3;
+}
+
+message RestoreSnapshotRequest {
+    string snapshot_id = 1;
+    RestoreOptions options = 2;
+    string restored_by = 3;
+}
+
+message RestoreSnapshotResponse {
+    bool success = 1;
+    RestoreStatistics statistics = 2;
+    string error_message = 3;
+}
+
+// Validation Messages
+message ValidateTopologyRequest {
+    TopologyFilter filter = 1;
+    repeated string validation_rules = 2;
+}
+
+message ValidateTopologyResponse {
+    bool valid = 1;
+    repeated ValidationIssue issues = 2;
+    ValidationSummary summary = 3;
+}
+
+message DetectAnomaliesRequest {
+    AnomalyDetectionOptions options = 1;
+    TopologyFilter filter = 2;
+}
+
+message DetectAnomaliesResponse {
+    repeated TopologyAnomaly anomalies = 1;
+    AnomalyStatistics statistics = 2;
+}
+
+message CheckConsistencyRequest {
+    ConsistencyCheckOptions options = 1;
+}
+
+message CheckConsistencyResponse {
+    bool consistent = 1;
+    repeated ConsistencyIssue issues = 2;
+    ConsistencyReport report = 3;
+}
+
+// Synchronization Messages
+message SyncTopologyRequest {
+    SyncConfig config = 1;
+    string initiated_by = 2;
+}
+
+message SyncTopologyResponse {
+    bool success = 1;
+    string sync_id = 2;
+    SyncStatus status = 3;
+    string error_message = 4;
+}
+
+message GetSyncStatusRequest {
+    string sync_id = 1;
+}
+
+message GetSyncStatusResponse {
+    SyncStatus status = 1;
+    SyncStatistics statistics = 2;
+}
+
+// Watching Messages
+message WatchTopologyChangesRequest {
+    repeated string change_types = 1;
+    TopologyFilter filter = 2;
+}
+
+message TopologyChangeEvent {
+    string change_id = 1;
+    string change_type = 2;
+    string entity_type = 3;
+    string entity_id = 4;
+    google.protobuf.Any old_value = 5;
+    google.protobuf.Any new_value = 6;
+    google.protobuf.Timestamp timestamp = 7;
+    string changed_by = 8;
+    map<string, string> metadata = 9;
+}
+
+message WatchNodeChangesRequest {
+    string node_id = 1;
+    repeated string change_types = 2;
+}
+
+message NodeChangeEvent {
+    string node_id = 1;
+    string change_type = 2;
+    TopologyNode old_node = 3;
+    TopologyNode new_node = 4;
+    google.protobuf.Timestamp timestamp = 5;
+    string changed_by = 6;
+}
+
+// Metrics Messages
+message GetTopologyMetricsRequest {
+    TopologyFilter filter = 1;
+    repeated string metric_types = 2;
+    google.protobuf.Timestamp from_time = 3;
+    google.protobuf.Timestamp to_time = 4;
+}
+
+message GetTopologyMetricsResponse {
+    TopologyMetrics metrics = 1;
+    map<string, MetricTimeSeries> time_series = 2;
+}
+
+message GetNodeMetricsRequest {
+    string node_id = 1;
+    repeated string metric_types = 2;
+    google.protobuf.Timestamp from_time = 3;
+    google.protobuf.Timestamp to_time = 4;
+}
+
+message GetNodeMetricsResponse {
+    NodeMetrics metrics = 1;
+    map<string, MetricTimeSeries> time_series = 2;
+}
+
+message GetRelationshipMetricsRequest {
+    string relationship_id = 1;
+    repeated string metric_types = 2;
+    google.protobuf.Timestamp from_time = 3;
+    google.protobuf.Timestamp to_time = 4;
+}
+
+message GetRelationshipMetricsResponse {
+    RelationshipMetrics metrics = 1;
+    map<string, MetricTimeSeries> time_series = 2;
+}
+
+// Configuration Messages
+message UpdateDiscoveryConfigRequest {
+    DiscoveryConfig config = 1;
+    string updated_by = 2;
+}
+
+message UpdateDiscoveryConfigResponse {
+    bool success = 1;
+    DiscoveryConfig config = 2;
+    string error_message = 3;
+}
+
+message GetDiscoveryConfigRequest {
+    string config_name = 1;
+}
+
+message GetDiscoveryConfigResponse {
+    bool found = 1;
+    DiscoveryConfig config = 2;
+    string error_message = 3;
+}
+
+// Data Models
+message TopologyNode {
+    string id = 1;
+    string name = 2;
+    string type = 3;
+    string subtype = 4;
+    string environment = 5;
+    map<string, string> properties = 6;
+    map<string, string> labels = 7;
+    repeated string tags = 8;
+    NodeHealthStatus health_status = 9;
+    google.protobuf.Timestamp created_at = 10;
+    google.protobuf.Timestamp updated_at = 11;
+    google.protobuf.Timestamp last_seen = 12;
+    string discovery_source = 13;
+    bool is_active = 14;
+    string location = 15;
+    NodeConfiguration configuration = 16;
+}
+
+message TopologyRelationship {
+    string id = 1;
+    string source_node_id = 2;
+    string target_node_id = 3;
+    string relationship_type = 4;
+    string direction = 5; // "unidirectional", "bidirectional"
+    map<string, string> properties = 6;
+    float weight = 7;
+    bool is_active = 8;
+    google.protobuf.Timestamp created_at = 9;
+    google.protobuf.Timestamp updated_at = 10;
+    string discovery_source = 11;
+    RelationshipConfiguration configuration = 12;
+}
+
+message NodeMetadata {
+    string node_id = 1;
+    int32 relationship_count = 2;
+    int32 incoming_relationships = 3;
+    int32 outgoing_relationships = 4;
+    google.protobuf.Timestamp last_discovered = 5;
+    repeated string discovery_sources = 6;
+    map<string, string> external_references = 7;
+}
+
+message RelationshipMetadata {
+    string relationship_id = 1;
+    google.protobuf.Timestamp last_validated = 2;
+    string validation_status = 3;
+    map<string, string> external_references = 4;
+}
+
+message DiscoveryConfig {
+    string id = 1;
+    string name = 2;
+    string discoverer_type = 3; // "kubernetes", "cloudstack", "network", etc.
+    map<string, string> credentials = 4;
+    map<string, string> parameters = 5;
+    repeated string environments = 6;
+    ScheduleConfig schedule = 7;
+    bool enabled = 8;
+    DiscoveryOptions options = 9;
+}
+
+message ScheduleConfig {
+    string type = 1; // "cron", "interval"
+    string expression = 2;
+    bool enabled = 3;
+    google.protobuf.Timestamp next_run = 4;
+}
+
+message DiscoveryOptions {
+    bool auto_create_relationships = 1;
+    bool update_existing_nodes = 2;
+    bool remove_missing_nodes = 3;
+    int32 discovery_timeout_seconds = 4;
+    repeated string node_types_filter = 5;
+}
+
+message Discovery {
+    string id = 1;
+    string config_id = 2;
+    string status = 3; // "pending", "running", "completed", "failed", "stopped"
+    google.protobuf.Timestamp started_at = 4;
+    google.protobuf.Timestamp completed_at = 5;
+    string started_by = 6;
+    DiscoveryStatistics statistics = 7;
+    string error_message = 8;
+}
+
+message DiscoveryStatus {
+    string discovery_id = 1;
+    string status = 2;
+    string current_phase = 3;
+    int32 progress_percentage = 4;
+    google.protobuf.Timestamp started_at = 5;
+    google.protobuf.Timestamp estimated_completion = 6;
+    string message = 7;
+}
+
+message DiscoveryStatistics {
+    int32 nodes_discovered = 1;
+    int32 nodes_created = 2;
+    int32 nodes_updated = 3;
+    int32 nodes_deleted = 4;
+    int32 relationships_discovered = 5;
+    int32 relationships_created = 6;
+    int32 relationships_updated = 7;
+    int32 relationships_deleted = 8;
+    float discovery_duration_seconds = 9;
+}
+
+message TopologyPath {
+    repeated string node_ids = 1;
+    repeated string relationship_ids = 2;
+    float total_weight = 3;
+    int32 hop_count = 4;
+}
+
+message ImpactAnalysis {
+    string node_id = 1;
+    string analysis_type = 2;
+    int32 total_affected_nodes = 3;
+    map<string, int32> affected_by_type = 4;
+    repeated ImpactLevel impact_levels = 5;
+    google.protobuf.Timestamp analyzed_at = 6;
+}
+
+message ImpactLevel {
+    int32 level = 1;
+    repeated string node_ids = 2;
+    string impact_description = 3;
+}
+
+message BlastRadiusAnalysis {
+    string node_id = 1;
+    int32 radius = 2;
+    int32 total_affected = 3;
+    repeated BlastRadiusLevel levels = 4;
+    float criticality_score = 5;
+}
+
+message BlastRadiusLevel {
+    int32 level = 1;
+    repeated string node_ids = 2;
+    int32 count = 3;
+}
+
+message TopologyChange {
+    string id = 1;
+    string change_type = 2; // "created", "updated", "deleted"
+    string entity_type = 3; // "node", "relationship"
+    string entity_id = 4;
+    google.protobuf.Any before_value = 5;
+    google.protobuf.Any after_value = 6;
+    google.protobuf.Timestamp timestamp = 7;
+    string changed_by = 8;
+    string change_source = 9;
+    map<string, string> metadata = 10;
+}
+
+message TopologySnapshot {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    google.protobuf.Timestamp created_at = 4;
+    string created_by = 5;
+    SnapshotStatistics statistics = 6;
+    string storage_location = 7;
+}
+
+message SnapshotStatistics {
+    int32 total_nodes = 1;
+    int32 total_relationships = 2;
+    map<string, int32> nodes_by_type = 3;
+    map<string, int32> relationships_by_type = 4;
+    float snapshot_size_mb = 5;
+}
+
+// Enums
+enum NodeHealthStatus {
+    UNKNOWN = 0;
+    HEALTHY = 1;
+    WARNING = 2;
+    CRITICAL = 3;
+    UNAVAILABLE = 4;
+}
+
+enum PathAlgorithm {
+    DIJKSTRA = 0;
+    BELLMAN_FORD = 1;
+    A_STAR = 2;
+    BFS = 3;
+    DFS = 4;
+}
+
+// Additional supporting messages
+message TopologyFilter {
+    repeated string node_types = 1;
+    repeated string environments = 2;
+    repeated string tags = 3;
+    map<string, string> properties = 4;
+    NodeHealthStatus health_status = 5;
+}
+
+message SearchOptions {
+    repeated string search_fields = 1;
+    bool fuzzy_search = 2;
+    map<string, string> filters = 3;
+}
+
+message NodeConfiguration {
+    map<string, string> settings = 1;
+    repeated string capabilities = 2;
+    map<string, string> limits = 3;
+}
+
+message RelationshipConfiguration {
+    map<string, string> settings = 1;
+    repeated string protocols = 2;
+    map<string, int32> ports = 3;
+}
+
+message TopologyMetrics {
+    int32 total_nodes = 1;
+    int32 total_relationships = 2;
+    map<string, int32> nodes_by_type = 3;
+    map<string, int32> relationships_by_type = 4;
+    map<string, int32> nodes_by_environment = 5;
+    float avg_node_degree = 6;
+    int32 connected_components = 7;
+}
+
+message NodeMetrics {
+    string node_id = 1;
+    int32 degree = 2;
+    int32 in_degree = 3;
+    int32 out_degree = 4;
+    float betweenness_centrality = 5;
+    float closeness_centrality = 6;
+    float pagerank = 7;
+    map<string, double> custom_metrics = 8;
+}
+
+message RelationshipMetrics {
+    string relationship_id = 1;
+    float utilization = 2;
+    float latency_ms = 3;
+    int32 packet_loss = 4;
+    map<string, double> custom_metrics = 5;
+}
+
+message MetricTimeSeries {
+    string metric_name = 1;
+    repeated MetricDataPoint data_points = 2;
+}
+
+message MetricDataPoint {
+    google.protobuf.Timestamp timestamp = 1;
+    double value = 2;
+    map<string, string> labels = 3;
+}
+
+// Options messages
+message ImpactAnalysisOptions {
+    int32 max_depth = 1;
+    repeated string relationship_types = 2;
+    bool include_indirect_impact = 3;
+    repeated string node_types_filter = 4;
+}
+
+message BlastRadiusOptions {
+    int32 max_radius = 1;
+    repeated string relationship_types = 2;
+    map<string, float> impact_weights = 3;
+}
+
+message RestoreOptions {
+    bool backup_current = 1;
+    bool validate_before_restore = 2;
+    repeated string excluded_entities = 3;
+}
+
+message ValidationIssue {
+    string severity = 1;
+    string issue_type = 2;
+    string entity_id = 3;
+    string entity_type = 4;
+    string description = 5;
+    string recommendation = 6;
+}
+
+message ValidationSummary {
+    int32 total_entities = 1;
+    int32 issues_found = 2;
+    map<string, int32> issues_by_severity = 3;
+    map<string, int32> issues_by_type = 4;
+}
+
+message TopologyAnomaly {
+    string id = 1;
+    string anomaly_type = 2;
+    string entity_id = 3;
+    string entity_type = 4;
+    string description = 5;
+    float confidence_score = 6;
+    google.protobuf.Timestamp detected_at = 7;
+}
+
+message AnomalyStatistics {
+    int32 total_anomalies = 1;
+    map<string, int32> anomalies_by_type = 2;
+    map<string, int32> anomalies_by_severity = 3;
+}
+
+message AnomalyDetectionOptions {
+    repeated string anomaly_types = 1;
+    float confidence_threshold = 2;
+    google.protobuf.Timestamp baseline_start = 3;
+    google.protobuf.Timestamp baseline_end = 4;
+}
+
+message ConsistencyIssue {
+    string issue_type = 1;
+    string description = 2;
+    repeated string affected_entities = 3;
+    string severity = 4;
+}
+
+message ConsistencyReport {
+    int32 total_checks = 1;
+    int32 passed_checks = 2;
+    int32 failed_checks = 3;
+    map<string, int32> issues_by_type = 4;
+}
+
+message ConsistencyCheckOptions {
+    repeated string check_types = 1;
+    bool fix_issues = 2;
+    bool deep_validation = 3;
+}
+
+message SyncConfig {
+    string source_type = 1; // "database", "file", "api"
+    map<string, string> source_config = 2;
+    SyncOptions options = 3;
+}
+
+message SyncOptions {
+    bool incremental = 1;
+    bool validate_after_sync = 2;
+    repeated string entity_types = 3;
+}
+
+message SyncStatus {
+    string sync_id = 1;
+    string status = 2;
+    string current_phase = 3;
+    int32 progress_percentage = 4;
+    google.protobuf.Timestamp started_at = 5;
+    string message = 6;
+}
+
+message SyncStatistics {
+    int32 entities_processed = 1;
+    int32 entities_created = 2;
+    int32 entities_updated = 3;
+    int32 entities_deleted = 4;
+    int32 entities_skipped = 5;
+    float sync_duration_seconds = 6;
+}
+
+message ImpactMetrics {
+    float criticality_score = 1;
+    int32 total_impact_score = 2;
+    map<string, int32> impact_by_service = 3;
+    map<string, int32> impact_by_environment = 4;
+    float recovery_time_estimate_minutes = 5;
+}
+
+message BlastRadiusMetrics {
+    int32 total_nodes_in_radius = 1;
+    int32 critical_nodes_affected = 2;
+    float business_impact_score = 3;
+    map<string, int32> affected_services = 4;
+    float estimated_downtime_minutes = 5;
+}
+
+message RestoreStatistics {
+    int32 nodes_restored = 1;
+    int32 relationships_restored = 2;
+    int32 conflicts_resolved = 3;
+    float restore_duration_seconds = 4;
+}

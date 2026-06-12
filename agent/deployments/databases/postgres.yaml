@@ -1,0 +1,201 @@
+# KubeSense PostgreSQL — dedicated instance, separate from AlertHub postgres
+# Uses TimescaleDB for time-series metric data (PVC exhaustion, capacity trends)
+# Deployed in aileron-agent namespace alongside the KubeSense services
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubesense-postgres-init
+  namespace: aileron-agent
+data:
+  init.sql: |
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS timescaledb;
+
+    -- Cluster registry
+    CREATE TABLE IF NOT EXISTS kubesense_clusters (
+        id             TEXT        PRIMARY KEY,
+        first_seen     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_heartbeat TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_agent_id  TEXT,
+        agent_version  TEXT,
+        node_count     INTEGER     NOT NULL DEFAULT 0,
+        status         TEXT        NOT NULL DEFAULT 'active'
+    );
+
+    -- Raw events store (recent 7 days — hot path for queries)
+    CREATE TABLE IF NOT EXISTS kubesense_events (
+        id          UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+        event_id    TEXT        NOT NULL,
+        cluster_id  TEXT        NOT NULL,
+        agent_id    TEXT,
+        event_type  TEXT        NOT NULL,
+        severity    TEXT        NOT NULL DEFAULT 'info',
+        kind        TEXT,
+        namespace   TEXT,
+        resource_name TEXT,
+        uid         TEXT,
+        payload     JSONB,
+        occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_ks_events_cluster_time ON kubesense_events(cluster_id, occurred_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_ks_events_type ON kubesense_events(event_type, occurred_at DESC);
+    SELECT create_hypertable('kubesense_events', 'occurred_at',
+        chunk_time_interval => INTERVAL '1 day',
+        if_not_exists => TRUE);
+
+    -- Resource metrics time-series (CPU, memory, PVC usage)
+    CREATE TABLE IF NOT EXISTS kubesense_metrics (
+        time            TIMESTAMPTZ NOT NULL,
+        cluster_id      TEXT        NOT NULL,
+        namespace       TEXT,
+        resource_name   TEXT        NOT NULL,
+        resource_kind   TEXT        NOT NULL,
+        metric_name     TEXT        NOT NULL,
+        value           FLOAT       NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_ks_metrics_lookup
+        ON kubesense_metrics(cluster_id, resource_name, metric_name, time DESC);
+    SELECT create_hypertable('kubesense_metrics', 'time',
+        chunk_time_interval => INTERVAL '6 hours',
+        if_not_exists => TRUE);
+
+    -- Health events (CrashLoopBackOff, OOMKilled, NodeNotReady)
+    CREATE TABLE IF NOT EXISTS kubesense_health_events (
+        id              UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+        cluster_id      TEXT        NOT NULL,
+        namespace       TEXT,
+        resource_kind   TEXT        NOT NULL,
+        resource_name   TEXT        NOT NULL,
+        event_type      TEXT        NOT NULL,
+        severity        TEXT        NOT NULL,
+        details         JSONB,
+        first_seen      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_seen       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        count           INTEGER     NOT NULL DEFAULT 1,
+        resolved        BOOLEAN     NOT NULL DEFAULT FALSE,
+        resolved_at     TIMESTAMPTZ,
+        UNIQUE (cluster_id, resource_kind, resource_name, event_type)
+    );
+    CREATE INDEX IF NOT EXISTS idx_ks_health_cluster
+        ON kubesense_health_events(cluster_id, severity, resolved);
+
+    -- Configuration violations
+    CREATE TABLE IF NOT EXISTS kubesense_violations (
+        id              UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+        cluster_id      TEXT        NOT NULL,
+        rule_id         TEXT        NOT NULL,
+        severity        TEXT        NOT NULL,
+        resource_kind   TEXT        NOT NULL,
+        namespace       TEXT,
+        resource_name   TEXT        NOT NULL,
+        message         TEXT        NOT NULL,
+        remediation     TEXT,
+        first_seen      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_seen       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        resolved        BOOLEAN     NOT NULL DEFAULT FALSE,
+        UNIQUE (cluster_id, rule_id, resource_kind, namespace, resource_name)
+    );
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kubesense-postgres-secret
+  namespace: aileron-agent
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "ks-postgres-2026-secure"
+  POSTGRES_USER: "kubesense"
+  POSTGRES_DB: "kubesense"
+  DATABASE_URL: "postgres://kubesense:ks-postgres-2026-secure@kubesense-postgres.aileron-agent.svc.cluster.local:5432/kubesense?sslmode=disable"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kubesense-postgres
+  namespace: aileron-agent
+  labels:
+    app.kubernetes.io/name: kubesense-postgres
+spec:
+  serviceName: kubesense-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubesense-postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubesense-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: timescale/timescaledb:latest-pg16
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-postgres-secret
+                  key: POSTGRES_DB
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "kubesense"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "kubesense"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: init
+          configMap:
+            name: kubesense-postgres-init
+      imagePullSecrets:
+        - name: jfrog-dockers-access
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: example-cluster-netapp-sc
+        resources:
+          requests:
+            storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubesense-postgres
+  namespace: aileron-agent
+spec:
+  selector:
+    app.kubernetes.io/name: kubesense-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

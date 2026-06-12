@@ -1,0 +1,93 @@
+# KubeSense — New SRE Intelligence Topics
+# Toil, Drift, Chaos readiness, Postmortems, On-call routing, Noise budget
+# kubectl apply -f kafka-topics-sre.yaml -n aileron
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.toil.events
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "7776000000"     # 90 days — toil tracking needs long history
+    retention.bytes: "536870912"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.drift.detected
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"     # 30 days
+    retention.bytes: "268435456"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.chaos.scores
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 1
+  replicas: 3
+  config:
+    cleanup.policy: "compact"      # compacted — latest score per workload
+    retention.ms: "-1"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.postmortems
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 1
+  replicas: 3
+  config:
+    retention.ms: "-1"             # retain forever — postmortems are permanent records
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.noisebudget.suppressions
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"     # 30 days — suppression audit trail
+    retention.bytes: "268435456"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.oncall.routing
+  namespace: aileron
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "7776000000"     # 90 days — routing decisions for ML training
+    retention.bytes: "268435456"
+    min.insync.replicas: "2"

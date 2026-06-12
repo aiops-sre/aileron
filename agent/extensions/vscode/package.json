@@ -1,0 +1,97 @@
+{
+  "name": "kubesense-vscode",
+  "displayName": "KubeSense Intelligence",
+  "description": "Kubernetes intelligence overlay in VS Code — chaos scores, drift detection, RCA, risk scoring before you apply",
+  "version": "1.0.0",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Other"],
+  "keywords": ["kubernetes", "kubesense", "k8s", "sre", "observability"],
+  "activationEvents": [
+    "onLanguage:yaml",
+    "onView:kubesenseExplorer",
+    "onCommand:kubesense.investigate"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id":    "kubesense-sidebar",
+          "title": "KubeSense",
+          "icon":  "resources/kubesense.svg"
+        }
+      ]
+    },
+    "views": {
+      "kubesense-sidebar": [
+        { "id": "kubesenseExplorer", "name": "Cluster Intelligence",  "icon": "resources/kubesense.svg" },
+        { "id": "kubesenseChaos",    "name": "Chaos Readiness",        "icon": "resources/chaos.svg" },
+        { "id": "kubesenseDrift",    "name": "Drift Detection",         "icon": "resources/drift.svg" },
+        { "id": "kubesensePlaybooks","name": "Playbooks",               "icon": "resources/playbook.svg" }
+      ]
+    },
+    "commands": [
+      { "command": "kubesense.refresh",     "title": "KubeSense: Refresh",                    "icon": "$(refresh)" },
+      { "command": "kubesense.investigate", "title": "KubeSense: Investigate Resource",        "icon": "$(search)" },
+      { "command": "kubesense.scoreRisk",   "title": "KubeSense: Score Risk Before Applying",  "icon": "$(shield)" },
+      { "command": "kubesense.openDashboard","title": "KubeSense: Open Intelligence Dashboard", "icon": "$(dashboard)" },
+      { "command": "kubesense.setApiUrl",   "title": "KubeSense: Configure API URL" }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when":    "resourceLangId == yaml",
+          "command": "kubesense.scoreRisk",
+          "group":   "kubesense@1"
+        },
+        {
+          "when":    "resourceLangId == yaml",
+          "command": "kubesense.investigate",
+          "group":   "kubesense@2"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "kubesense.refresh",
+          "when":    "view == kubesenseExplorer",
+          "group":   "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "KubeSense",
+      "properties": {
+        "kubesense.apiUrl": {
+          "type":    "string",
+          "default": "http://localhost:8080",
+          "description": "URL of the kubesense-api service"
+        },
+        "kubesense.apiToken": {
+          "type":    "string",
+          "default": "",
+          "description": "Bearer token for KubeSense API authentication"
+        },
+        "kubesense.clusterId": {
+          "type":    "string",
+          "default": "",
+          "description": "Active cluster ID to use for intelligence queries"
+        },
+        "kubesense.autoScoreOnSave": {
+          "type":    "boolean",
+          "default": true,
+          "description": "Automatically score risk when saving a Kubernetes manifest YAML"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile":           "tsc -p ./",
+    "watch":             "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "@types/node":   "^22.0.0",
+    "typescript":    "^5.5.4"
+  }
+}

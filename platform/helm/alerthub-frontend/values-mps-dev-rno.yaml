@@ -1,0 +1,13 @@
+# ============================================================
+# alerthub-frontend — example-cluster overrides (Primary)
+# ============================================================
+
+global:
+  storageClass: example-cluster-netapp-sc
+  namespace: aileron
+
+build:
+  enabled: true
+
+whisper:
+  enabled: true

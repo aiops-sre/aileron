@@ -1,0 +1,119 @@
+============================================================
+AlertHub Enterprise — Post-Install Notes
+============================================================
+
+Release : {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Chart    : {{ .Chart.Name }}-{{ .Chart.Version }}
+AppVersion: {{ .Chart.AppVersion }}
+
+------------------------------------------------------------
+SECRETS — must be created BEFORE the chart is deployed
+------------------------------------------------------------
+
+AlertHub never stores plaintext credentials in this chart.
+The following Kubernetes Secrets must exist in namespace
+"{{ .Release.Namespace }}" with the exact keys listed below.
+
+A commented-out example manifest is available at:
+  helm/alerthub/templates/secrets-template.yaml
+
+1. {{ .Values.secrets.name }} (alerthub-secrets)
+   Keys:
+     DB_PASSWORD              — PostgreSQL password for the "alerthub" user
+     jwt-secret               — JWT signing secret (min 32 random bytes)
+     jwt-refresh-secret       — JWT refresh signing secret (min 32 random bytes)
+     redis-password           — Redis AUTH password
+     neo4j-auth               — Neo4j password (just the password, not neo4j/<pw>)
+     netapp-password          — NetApp ONTAP harvest user password
+     weaviate-api-key         — Weaviate API key (can be any random string)
+     INTERNAL_SERVICE_TOKEN   — Shared token used between backend ↔ rca-orchestrator
+
+     # Kubeconfig files (base64-encoded YAML) — used by backend and rca-orchestrator
+     mps-build-rno.yaml
+     example-cluster-oidc.yaml
+     example-cluster.yaml
+     mps-mondev-mdn.yaml
+     mps-monprod-mdn.yaml
+     mps-nonprod-rno.yaml
+     mps-preview-rno.yaml
+     mps-prod-rno.yaml
+     mps-sandbox-mdn.yaml
+     mps-sandbox-rno.yaml
+     mps-tooling-dev-mdn.yaml
+     mps-tooling-mdn.yaml
+
+2. {{ .Values.secrets.dsldapName }} (alerthub-dsldap-credentials)
+   Keys:
+     LDAP_APP_ID       — DS-LDAP / IdMS application ID
+     LDAP_APP_PASSWORD — DS-LDAP / IdMS application password
+
+3. {{ .Values.secrets.hclName }} (alerthub-hcl-credentials)
+   Keys:
+     IDMS_APP_ID       — IdMS HCL / Kentaurus application ID
+     IDMS_APP_PASSWORD — IdMS HCL / Kentaurus application password
+
+4. {{ .Values.secrets.neo4jCredsName }} (neo4j-credentials)
+   Keys:
+     NEO4J_AUTH        — Neo4j password (same value as neo4j-auth in alerthub-secrets)
+
+5. {{ .Values.secrets.infraCredsName }} (infrastructure-credentials)
+   Keys:
+     dynatrace-api-token   — Dynatrace API token for the RCA orchestrator
+     cloudstack-api-key    — CloudStack API key (RNO + MDN shared)
+     cloudstack-secret-key — CloudStack secret key
+
+6. endor-credentials  (optional — Apple internal LLM gateway)
+   Keys:
+     client-id        oidc-app-id
+     client-secret    account-name
+     totp-secret      account-password
+     app-id-key
+
+7. {{ .Values.secrets.whisperCertName }} (alerthub-whisper-cert)
+   Keys:
+     tls.crt  — Whisper/internal TLS certificate (PEM)
+     tls.key  — Whisper/internal TLS private key (PEM)
+
+------------------------------------------------------------
+INGRESS
+------------------------------------------------------------
+
+The chart installs three Ingress objects on:
+  https://{{ .Values.ingress.host }}
+
+  /api/*  → alerthub-backend:{{ .Values.backend.port }}
+  /ws     → alerthub-backend:{{ .Values.backend.port }}  (WebSocket — backend proxies to rca-orchestrator internally)
+  /       → alerthub-frontend:80
+
+TLS secret : {{ .Values.ingress.tlsSecret }}
+DNS target : {{ .Values.ingress.dnsTarget }}
+
+------------------------------------------------------------
+KAFKA (Strimzi)
+------------------------------------------------------------
+
+Strimzi {{ .Values.images.strimzi.tag }} operator is deployed in this release.
+The Kafka cluster "alerthub-kafka" will be created once the Strimzi CRDs are
+registered. If this is a fresh cluster with no Strimzi CRDs, wait ~2 minutes
+for the operator to install them before the Kafka CR becomes Ready.
+
+Bootstrap address (internal):
+  alerthub-kafka-kafka-bootstrap:9092
+
+Topics created automatically:
+  raw-alerts, processed-alerts, rca-events
+
+------------------------------------------------------------
+QUICK HEALTH CHECK
+------------------------------------------------------------
+
+  kubectl -n {{ .Release.Namespace }} get pods
+  kubectl -n {{ .Release.Namespace }} get ingress
+
+  # Verify backend is reachable
+  kubectl -n {{ .Release.Namespace }} exec -it \
+    $(kubectl -n {{ .Release.Namespace }} get pods -l app=alerthub-backend -o name | head -1) \
+    -- wget -qO- http://localhost:{{ .Values.backend.port }}/health
+
+------------------------------------------------------------

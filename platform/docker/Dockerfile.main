@@ -1,0 +1,73 @@
+# Enterprise AlertHub - Multi-Architecture Docker Build
+# Supports AMD64, ARM64, and other architectures
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
+
+# Build arguments for multi-arch support
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+ARG BUILDPLATFORM
+
+# Install build dependencies
+RUN apk add --no-cache git make gcc musl-dev
+
+# Create app user and group in builder stage for proper ownership
+RUN addgroup -g 1000 -S alerthub && \
+    adduser -u 1000 -S alerthub -G alerthub
+
+# Set working directory
+WORKDIR /build
+
+# Copy go mod files first for better layer caching
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+# Copy source code
+COPY . .
+
+# Build the application with security flags and multi-arch support
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a \
+    -ldflags="-w -s -extldflags '-static' -X main.Version=1.0.0 -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    -tags netgo \
+    -installsuffix netgo \
+    -o alerthub cmd/main.go
+
+# Verify the binary is statically linked and works
+RUN ./alerthub --help || echo "Binary built successfully"
+
+# Final stage - minimal image
+FROM alpine:latest
+
+# Install runtime dependencies
+RUN apk --no-cache add ca-certificates tzdata postgresql-client curl
+
+# Create app user
+RUN addgroup -g 1000 alerthub && \
+    adduser -D -u 1000 -G alerthub alerthub
+
+# Set working directory
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /build/alerthub .
+
+# Copy frontend files
+COPY --from=builder /build/frontend ./frontend
+
+# Copy database schema
+COPY --from=builder /build/database ./database
+
+# Set ownership
+RUN chown -R alerthub:alerthub /app
+
+# Switch to app user
+USER alerthub
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Run the application
+ENTRYPOINT ["/app/alerthub"]

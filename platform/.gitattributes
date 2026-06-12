@@ -1,0 +1,61 @@
+# ============================================================
+# Line endings — normalize to LF in repo, checkout as-is on
+# Windows (core.autocrlf handled per-platform by .gitconfig)
+# ============================================================
+* text=auto eol=lf
+
+# Explicitly text
+*.go    text eol=lf diff=golang
+*.ts    text eol=lf diff=typescript
+*.tsx   text eol=lf diff=typescript
+*.js    text eol=lf
+*.json  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.md    text eol=lf diff=markdown
+*.sh    text eol=lf
+*.sql   text eol=lf
+*.proto text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.env   text eol=lf
+Makefile text eol=lf
+
+# Binary — never diff or merge
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+
+# Compiled binaries — must never be committed; flagged here for clarity
+alerthub_linux_amd64  binary
+*.exe   binary
+
+# ============================================================
+# Merge strategies
+# ============================================================
+
+# Lock files: always keep ours to avoid merge conflicts on auto-generated files;
+# they should be regenerated after merging the manifest files.
+go.sum              merge=ours
+package-lock.json   merge=ours
+
+# Generated protobuf output: always regenerate, never auto-merge
+*.pb.go             merge=union
+
+# ============================================================
+# Linguist (GitHub language stats & diffs)
+# ============================================================
+
+# Don't count vendored / generated files in language stats
+vendor/             linguist-vendored
+*.pb.go             linguist-generated=true
+frontend/alerthub-frontend/dist/ linguist-generated=true
+
+# Treat shell scripts as shell (not being miscategorised)
+*.sh linguist-language=Shell

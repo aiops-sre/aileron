@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: alerthub-frontend
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+    app: alerthub-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: alerthub-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP

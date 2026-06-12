@@ -1,0 +1,40 @@
+# CODEOWNERS — every PR must be approved by the owners of changed files.
+# Last team wins when multiple rules match, so order from least to most specific.
+
+# Global fallback — repo owner approves everything not matched below
+* @vk-patha
+
+# Go backend
+/cmd/                                   @vk-patha @interactive-service-delivery/sre-backend
+/internal/                              @vk-patha @interactive-service-delivery/sre-backend
+/pkg/                                   @vk-patha @interactive-service-delivery/sre-backend
+go.mod                                  @vk-patha @interactive-service-delivery/sre-backend
+go.sum                                  @vk-patha @interactive-service-delivery/sre-backend
+
+# Alert pipeline — critical path, requires senior review
+/internal/services/pipeline/            @vk-patha
+/internal/services/correlation/         @vk-patha
+/internal/services/normalization/       @vk-patha
+
+# Auth & security — any change needs owner sign-off
+/internal/auth/                         @vk-patha
+/internal/api/middleware/               @vk-patha
+/internal/services/rbac/               @vk-patha
+/internal/services/oauth/              @vk-patha
+
+# Frontend
+/frontend/                              @vk-patha @interactive-service-delivery/sre-frontend
+
+# Infrastructure & deployments — devops must review
+/helm/                                  @vk-patha @interactive-service-delivery/sre-devops
+/k8s/                                   @vk-patha @interactive-service-delivery/sre-devops
+/docker/                                @vk-patha @interactive-service-delivery/sre-devops
+Dockerfile                              @vk-patha @interactive-service-delivery/sre-devops
+
+# CI/CD pipelines — devops + owner
+/.github/workflows/                     @vk-patha @interactive-service-delivery/sre-devops
+/scripts/                               @vk-patha @interactive-service-delivery/sre-devops
+
+# Database migrations — owner only, no accidental schema changes
+/internal/db/                           @vk-patha
+/database/                              @vk-patha

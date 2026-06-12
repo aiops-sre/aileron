@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# pre-push hook — runs `go vet` and `go build` before pushing to remote.
+# Catches broken builds before CI sees them.
+
+set -euo pipefail
+
+REMOTE="$1"
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "HEAD")
+
+# ── 1. Block direct push to master ──────────────────────────────────────────
+if [ "$BRANCH" = "master" ] && [ "$REMOTE" = "origin" ]; then
+  echo "BLOCK: Direct push to master is not allowed."
+  echo "       Create a feature branch and open a pull request:"
+  echo "         git checkout -b fix/your-fix"
+  echo "         git push origin fix/your-fix"
+  exit 1
+fi
+
+# ── 2. Go vet ───────────────────────────────────────────────────────────────
+if command -v go &>/dev/null; then
+  echo "Running go vet..."
+  if ! go vet ./... 2>&1; then
+    echo ""
+    echo "BLOCK: go vet failed. Fix the issues above before pushing."
+    exit 1
+  fi
+  echo "go vet passed."
+else
+  echo "WARN: go not found — skipping go vet"
+fi
+
+echo "Pre-push checks passed. Pushing to $REMOTE/$BRANCH..."

@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oie-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "oie.labels" . | nindent 4 }}
+data:
+  OIE_PORT: "8080"
+  OIE_ENVIRONMENT: "production"
+  OIE_VERSION: {{ .Values.imageTag | default .Values.images.oie.tag | quote }}
+
+  # Investigation tuning
+  OIE_MAX_CONCURRENT_INVESTIGATIONS: {{ .Values.oie.maxConcurrentInvestigations | quote }}
+  OIE_INVESTIGATION_TIME_BUDGET_MS: {{ .Values.oie.investigationTimeBudgetMs | quote }}
+  OIE_AUTO_INVESTIGATE_SEVERITIES: {{ .Values.oie.autoInvestigateSeverities | quote }}
+
+  # Kafka
+  OIE_KAFKA_BROKERS: {{ .Values.oie.kafkaBrokers | quote }}
+  OIE_KAFKA_CONSUMER_GROUP: {{ .Values.oie.kafkaConsumerGroup | quote }}
+  OIE_KAFKA_INVESTIGATIONS_TOPIC: {{ .Values.oie.kafkaInvestigationsTopic | quote }}
+  OIE_KAFKA_DLQ_TOPIC: {{ .Values.oie.kafkaDlqTopic | quote }}
+
+  # Redis (circuit breakers)
+  OIE_REDIS_ADDR: {{ .Values.oie.redisAddr | quote }}
+
+  # External service URLs
+  OIE_EIRS_BASE_URL: {{ .Values.oie.eirsBaseURL | quote }}
+  OIE_OKG_BASE_URL: {{ .Values.oie.okgBaseURL | quote }}
+  OIE_OLLAMA_BASE_URL: {{ .Values.oie.ollamaBaseURL | quote }}
+  OIE_OLLAMA_MODEL: {{ .Values.oie.ollamaModel | quote }}
+  # Per-role model routing (LLMFit pattern — falls back to OIE_OLLAMA_MODEL when empty)
+  OIE_OLLAMA_MODEL_TRIAGE: {{ .Values.oie.ollamaModelTriage | quote }}
+  OIE_OLLAMA_MODEL_RCA: {{ .Values.oie.ollamaModelRCA | quote }}
+  OIE_OLLAMA_MODEL_NARRATIVE: {{ .Values.oie.ollamaModelNarrative | quote }}
+  # AlertHub backend URL for RCA writeback and skip_rca policy evaluation
+  OIE_ALERTHUB_BASE_URL: {{ .Values.oie.alertHubBaseURL | quote }}
+
+  # Kubernetes kubeconfigs (populated from Whisper by the init container)
+  OIE_KUBECONFIGS_DIR: {{ .Values.oie.kubeconfigsDir | quote }}
+
+  # Tracing
+  JAEGER_COLLECTOR_ENDPOINT: {{ .Values.oie.jaegerEndpoint | quote }}
+  OTEL_SERVICE_NAME: {{ .Values.oie.otelServiceName | quote }}
+
+  # DB connection settings (URL built from Whisper at runtime; these tune the pool)
+  OIE_DB_MAX_OPEN_CONNS: "30"
+  OIE_DB_MAX_IDLE_CONNS: "5"
+  OIE_DB_CONN_MAX_LIFETIME: "30m"
+
+  # NetApp ONTAP (non-sensitive config; password injected from Whisper as NETAPP_PASSWORD)
+  NETAPP_CLUSTERS: {{ .Values.oie.netappClusters | quote }}
+  NETAPP_USER: {{ .Values.oie.netappUser | quote }}

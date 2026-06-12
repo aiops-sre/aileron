@@ -1,0 +1,13 @@
+# ============================================================
+# alerthub-rca — mps-tooling-mdn overrides (DR / Warm-Standby)
+# ============================================================
+
+global:
+  storageClass: tooling-mdn-netapp-default
+  namespace: alert-engine
+
+rca:
+  defaultCluster: mps-tooling-mdn
+
+build:
+  enabled: false

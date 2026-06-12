@@ -1,0 +1,156 @@
+# kubesense-collector deployment — aileron-agent namespace
+# Consumes all kubesense.events.* topics and writes to PostgreSQL + Neo4j
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubesense-collector
+  namespace: aileron-agent
+  labels:
+    app.kubernetes.io/name: kubesense-collector
+    app.kubernetes.io/version: v0.1.0
+spec:
+  replicas: 2                      # 2 replicas: consumer group ensures no double-processing
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubesense-collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubesense-collector
+    spec:
+      serviceAccountName: aileron-agent-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+      containers:
+        - name: collector
+          image: ghcr.io/aileron-platform/aileron-admins/kubesense-collector:v0.1.0
+          imagePullPolicy: Always
+          env:
+            - name: KAFKA_BROKERS
+              value: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-postgres-secret
+                  key: DATABASE_URL
+            - name: NEO4J_URL
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-neo4j-secret
+                  key: NEO4J_URL
+            - name: NEO4J_USER
+              value: "neo4j"
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-neo4j-secret
+                  key: NEO4J_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      imagePullSecrets:
+        - name: jfrog-dockers-access
+---
+# kubesense-core deployment — serves REST API over Neo4j + PostgreSQL
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubesense-core
+  namespace: aileron-agent
+  labels:
+    app.kubernetes.io/name: kubesense-core
+    app.kubernetes.io/version: v0.1.0
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubesense-core
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubesense-core
+    spec:
+      serviceAccountName: aileron-agent-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+      containers:
+        - name: core
+          image: ghcr.io/aileron-platform/aileron-admins/kubesense-core:v0.1.0
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            # Kafka — investigation request consumer (AlertHub → KubeSense → AlertHub)
+            - name: KAFKA_BROKERS
+              value: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-postgres-secret
+                  key: DATABASE_URL
+            - name: NEO4J_URL
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-neo4j-secret
+                  key: NEO4J_URL
+            - name: NEO4J_USER
+              value: "neo4j"
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-neo4j-secret
+                  key: NEO4J_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      imagePullSecrets:
+        - name: jfrog-dockers-access
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubesense-core
+  namespace: aileron-agent
+spec:
+  selector:
+    app.kubernetes.io/name: kubesense-core
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

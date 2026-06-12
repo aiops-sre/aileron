@@ -1,0 +1,58 @@
+version: 2
+updates:
+  # Go modules
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    reviewers:
+      - vk-patha
+    labels:
+      - dependencies
+      - go
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      # Only patch/minor for indirect deps — major requires manual review
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # npm (frontend)
+  - package-ecosystem: npm
+    directory: /frontend/alerthub-frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    reviewers:
+      - vk-patha
+    labels:
+      - dependencies
+      - frontend
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Los_Angeles
+    reviewers:
+      - vk-patha
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: "chore(ci)"

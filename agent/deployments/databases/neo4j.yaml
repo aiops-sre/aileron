@@ -1,0 +1,122 @@
+# KubeSense Neo4j — dedicated topology graph instance
+# Separate from the AlertHub Neo4j instance
+# Neo4j Community Edition (open source, single instance)
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kubesense-neo4j-secret
+  namespace: aileron-agent
+type: Opaque
+stringData:
+  NEO4J_AUTH: "neo4j/ks-neo4j-2026-secure"
+  NEO4J_PASSWORD: "ks-neo4j-2026-secure"
+  NEO4J_URL: "neo4j://kubesense-neo4j.aileron-agent.svc.cluster.local:7687"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kubesense-neo4j
+  namespace: aileron-agent
+  labels:
+    app.kubernetes.io/name: kubesense-neo4j
+spec:
+  serviceName: kubesense-neo4j
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubesense-neo4j
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubesense-neo4j
+    spec:
+      containers:
+        - name: neo4j
+          image: neo4j:5.18-community
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: bolt
+              containerPort: 7687
+            - name: http
+              containerPort: 7474
+          env:
+            - name: NEO4J_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-neo4j-secret
+                  key: NEO4J_AUTH
+            - name: NEO4J_PLUGINS
+              value: '["apoc"]'
+            # Memory configuration
+            - name: NEO4J_server_memory_heap_initial__size
+              value: "512m"
+            - name: NEO4J_server_memory_heap_max__size
+              value: "1g"
+            - name: NEO4J_server_memory_pagecache_size
+              value: "512m"
+            # Accept license
+            - name: NEO4J_ACCEPT_LICENSE_AGREEMENT
+              value: "yes"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: logs
+              mountPath: /logs
+          resources:
+            requests:
+              cpu: 300m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 3Gi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 7474
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 7474
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      securityContext:
+        fsGroup: 7474
+      imagePullSecrets:
+        - name: jfrog-dockers-access
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: example-cluster-netapp-sc
+        resources:
+          requests:
+            storage: 50Gi
+    - metadata:
+        name: logs
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: example-cluster-netapp-sc
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubesense-neo4j
+  namespace: aileron-agent
+spec:
+  selector:
+    app.kubernetes.io/name: kubesense-neo4j
+  ports:
+    - name: bolt
+      port: 7687
+      targetPort: 7687
+    - name: http
+      port: 7474
+      targetPort: 7474

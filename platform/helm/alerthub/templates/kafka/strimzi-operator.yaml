@@ -1,0 +1,286 @@
+# ============================================================
+# Strimzi Cluster Operator — RBAC + Deployment
+# Scoped to a single namespace (aileron) for safety.
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Log4j2 config for the cluster operator
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: strimzi-cluster-operator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka-operator
+data:
+  log4j2.properties: |
+    name = COConfig
+    monitorInterval = 30
+
+    appender.console.type = Console
+    appender.console.name = STDOUT
+    appender.console.layout.type = PatternLayout
+    appender.console.layout.pattern = %d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n
+
+    rootLogger.level = ${env:STRIMZI_LOG_LEVEL:-INFO}
+    rootLogger.appenderRefs = stdout
+    rootLogger.appenderRef.console.ref = STDOUT
+
+    # Kafka AdminClient logging is a bit noisy at INFO level
+    logger.kafka.name = org.apache.kafka
+    logger.kafka.level = WARN
+
+    # Zookeeper is very verbose even on INFO level -> We set it to WARN by default
+    logger.zookeepertrustmanager.name = org.apache.zookeeper
+    logger.zookeepertrustmanager.level = WARN
+
+    # Keeps separate level for Netty logging -> to not be changed by the root logger
+    logger.netty.name = io.netty
+    logger.netty.level = INFO
+---
+# ---------------------------------------------------------------------------
+# ServiceAccount
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: strimzi-cluster-operator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka-operator
+---
+# ---------------------------------------------------------------------------
+# ClusterRole — minimal permissions required by Strimzi 0.38
+# ---------------------------------------------------------------------------
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: strimzi-cluster-operator-{{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka-operator
+rules:
+  # Core resources
+  - apiGroups: [""]
+    resources:
+      - serviceaccounts
+      - configmaps
+      - services
+      - endpoints
+      - secrets
+      - persistentvolumeclaims
+      - pods
+      - pods/log
+      - events
+      - replicationcontrollers
+      - nodes
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Apps
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - statefulsets
+      - replicasets
+      - daemonsets
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Networking
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - networkpolicies
+      - ingresses
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Policy
+  - apiGroups: ["policy"]
+    resources:
+      - poddisruptionbudgets
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # RBAC
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources:
+      - clusterroles
+      - clusterrolebindings
+      - roles
+      - rolebindings
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "bind", "escalate"]
+  # Strimzi CRDs
+  - apiGroups: ["kafka.strimzi.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["core.strimzi.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Storage
+  - apiGroups: ["storage.k8s.io"]
+    resources:
+      - storageclasses
+    verbs: ["get", "list", "watch"]
+---
+# ---------------------------------------------------------------------------
+# ClusterRoleBinding
+# ---------------------------------------------------------------------------
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: strimzi-cluster-operator-{{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: strimzi-cluster-operator-{{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: strimzi-cluster-operator
+    namespace: {{ .Release.Namespace }}
+---
+# ---------------------------------------------------------------------------
+# Strimzi Cluster Operator Deployment
+# ---------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: strimzi-cluster-operator
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka-operator
+    app: strimzi-cluster-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: strimzi-cluster-operator
+  template:
+    metadata:
+      labels:
+        app: strimzi-cluster-operator
+        strimzi.io/kind: cluster-operator
+        {{- include "alerthub.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: kafka-operator
+    spec:
+      {{- include "alerthub.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: strimzi-cluster-operator
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: strimzi-cluster-operator
+          image: "{{ .Values.images.strimzi.repository }}:{{ .Values.images.strimzi.tag }}"
+          imagePullPolicy: {{ .Values.images.strimzi.pullPolicy }}
+          args:
+            - /opt/strimzi/bin/cluster_operator_run.sh
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: STRIMZI_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: STRIMZI_OPERATOR_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: STRIMZI_FULL_RECONCILIATION_INTERVAL_MS
+              value: "300000"
+            - name: JAVA_OPTS
+              value: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=100"
+            - name: STRIMZI_OPERATION_TIMEOUT_MS
+              value: "300000"
+            - name: STRIMZI_LOG_LEVEL
+              value: "INFO"
+            - name: STRIMZI_LEADER_ELECTION_ENABLED
+              value: "true"
+            - name: STRIMZI_LEADER_ELECTION_LEASE_NAME
+              value: strimzi-cluster-operator
+            - name: STRIMZI_LEADER_ELECTION_LEASE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: STRIMZI_LEADER_ELECTION_IDENTITY
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: STRIMZI_FEATURE_GATES
+              value: ""
+            - name: KUBERNETES_SERVICE_DNS_DOMAIN
+              value: "cluster.local"
+            - name: STRIMZI_KAFKA_IMAGES
+              value: |
+                3.5.0=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.5.0
+                3.5.1=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.5.1
+                3.6.0=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.6.0
+            - name: STRIMZI_KAFKA_CONNECT_IMAGES
+              value: |
+                3.5.0=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.5.0
+                3.5.1=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.5.1
+                3.6.0=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.6.0
+            - name: STRIMZI_KAFKA_MIRROR_MAKER_IMAGES
+              value: |
+                3.5.0=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.5.0
+                3.5.1=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.5.1
+                3.6.0=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.6.0
+            - name: STRIMZI_KAFKA_MIRROR_MAKER_2_IMAGES
+              value: |
+                3.5.0=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.5.0
+                3.5.1=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.5.1
+                3.6.0=ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.6.0
+            - name: STRIMZI_DEFAULT_TLS_SIDECAR_ENTITY_OPERATOR_IMAGE
+              value: "ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.6.0"
+            - name: STRIMZI_DEFAULT_TOPIC_OPERATOR_IMAGE
+              value: "ghcr.io/aileron-platform/aileron-admins/operator:0.38.0"
+            - name: STRIMZI_DEFAULT_USER_OPERATOR_IMAGE
+              value: "ghcr.io/aileron-platform/aileron-admins/operator:0.38.0"
+            - name: STRIMZI_DEFAULT_KAFKA_INIT_IMAGE
+              value: "ghcr.io/aileron-platform/aileron-admins/operator:0.38.0"
+            - name: STRIMZI_DEFAULT_KAFKA_EXPORTER_IMAGE
+              value: "ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.6.0"
+            - name: STRIMZI_DEFAULT_CRUISE_CONTROL_IMAGE
+              value: "ghcr.io/aileron-platform/aileron-admins/kafka:0.38.0-kafka-3.6.0"
+            - name: STRIMZI_DEFAULT_KAFKA_BRIDGE_IMAGE
+              value: "ghcr.io/aileron-platform/aileron-admins/kafka-bridge:0.27.0"
+            - name: STRIMZI_DEFAULT_KANIKO_EXECUTOR_IMAGE
+              value: "ghcr.io/aileron-platform/aileron-admins/kaniko-executor:0.38.0"
+            - name: STRIMZI_DEFAULT_MAVEN_BUILDER
+              value: "ghcr.io/aileron-platform/aileron-admins/maven-builder:0.38.0"
+          volumeMounts:
+            - name: strimzi-tmp
+              mountPath: /tmp
+            - name: co-config-volume
+              mountPath: /opt/strimzi/custom-config/
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 1
+            failureThreshold: 3
+      volumes:
+        - name: strimzi-tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
+        - name: co-config-volume
+          configMap:
+            name: strimzi-cluster-operator

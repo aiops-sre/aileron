@@ -1,0 +1,601 @@
+syntax = "proto3";
+
+package config_management;
+
+option go_package = "github.com/alerthub-enterprise/proto/config_management";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+// Config Management Service Definition
+service ConfigManagementService {
+    // Configuration CRUD operations
+    rpc CreateConfig(CreateConfigRequest) returns (CreateConfigResponse);
+    rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
+    rpc UpdateConfig(UpdateConfigRequest) returns (UpdateConfigResponse);
+    rpc DeleteConfig(DeleteConfigRequest) returns (DeleteConfigResponse);
+    rpc ListConfigs(ListConfigsRequest) returns (ListConfigsResponse);
+    
+    // Configuration templates
+    rpc CreateTemplate(CreateTemplateRequest) returns (CreateTemplateResponse);
+    rpc GetTemplate(GetTemplateRequest) returns (GetTemplateResponse);
+    rpc ListTemplates(ListTemplatesRequest) returns (ListTemplatesResponse);
+    rpc ApplyTemplate(ApplyTemplateRequest) returns (ApplyTemplateResponse);
+    
+    // Configuration validation
+    rpc ValidateConfig(ValidateConfigRequest) returns (ValidateConfigResponse);
+    rpc ValidateTemplate(ValidateTemplateRequest) returns (ValidateTemplateResponse);
+    
+    // Configuration versioning
+    rpc GetConfigHistory(GetConfigHistoryRequest) returns (GetConfigHistoryResponse);
+    rpc RollbackConfig(RollbackConfigRequest) returns (RollbackConfigResponse);
+    rpc CompareConfigs(CompareConfigsRequest) returns (CompareConfigsResponse);
+    
+    // Configuration deployment
+    rpc DeployConfig(DeployConfigRequest) returns (DeployConfigResponse);
+    rpc GetDeploymentStatus(GetDeploymentStatusRequest) returns (GetDeploymentStatusResponse);
+    rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
+    
+    // Configuration synchronization
+    rpc SyncConfig(SyncConfigRequest) returns (SyncConfigResponse);
+    rpc GetSyncStatus(GetSyncStatusRequest) returns (GetSyncStatusResponse);
+    
+    // Configuration watching
+    rpc WatchConfig(WatchConfigRequest) returns (stream ConfigChangeEvent);
+    rpc WatchTemplate(WatchTemplateRequest) returns (stream TemplateChangeEvent);
+    
+    // Configuration schemas
+    rpc RegisterSchema(RegisterSchemaRequest) returns (RegisterSchemaResponse);
+    rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse);
+    rpc ListSchemas(ListSchemasRequest) returns (ListSchemasResponse);
+    
+    // Configuration security
+    rpc EncryptConfig(EncryptConfigRequest) returns (EncryptConfigResponse);
+    rpc DecryptConfig(DecryptConfigRequest) returns (DecryptConfigResponse);
+    
+    // Configuration compliance
+    rpc CheckCompliance(CheckComplianceRequest) returns (CheckComplianceResponse);
+    rpc GetComplianceReport(GetComplianceReportRequest) returns (GetComplianceReportResponse);
+}
+
+// Configuration CRUD Messages
+message CreateConfigRequest {
+    Configuration config = 1;
+    string created_by = 2;
+    string comment = 3;
+    bool validate_before_create = 4;
+}
+
+message CreateConfigResponse {
+    bool success = 1;
+    Configuration config = 2;
+    string config_id = 3;
+    repeated ValidationError validation_errors = 4;
+    string error_message = 5;
+}
+
+message GetConfigRequest {
+    string config_id = 1;
+    string version = 2; // optional, gets latest if not specified
+    bool include_metadata = 3;
+    bool decrypt_sensitive = 4;
+}
+
+message GetConfigResponse {
+    bool found = 1;
+    Configuration config = 2;
+    ConfigurationMetadata metadata = 3;
+    string error_message = 4;
+}
+
+message UpdateConfigRequest {
+    string config_id = 1;
+    Configuration config = 2;
+    string updated_by = 3;
+    string comment = 4;
+    bool validate_before_update = 5;
+    bool create_backup = 6;
+}
+
+message UpdateConfigResponse {
+    bool success = 1;
+    Configuration config = 2;
+    string new_version = 3;
+    repeated ValidationError validation_errors = 4;
+    string error_message = 5;
+}
+
+message DeleteConfigRequest {
+    string config_id = 1;
+    string deleted_by = 2;
+    string reason = 3;
+    bool soft_delete = 4;
+}
+
+message DeleteConfigResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ListConfigsRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string category_filter = 3;
+    string environment_filter = 4;
+    repeated string tag_filters = 5;
+    string search_query = 6;
+    bool include_deleted = 7;
+}
+
+message ListConfigsResponse {
+    repeated Configuration configs = 1;
+    int32 total_count = 2;
+    int32 page = 3;
+    int32 page_size = 4;
+}
+
+// Template Messages
+message CreateTemplateRequest {
+    ConfigurationTemplate template = 1;
+    string created_by = 2;
+    string comment = 3;
+}
+
+message CreateTemplateResponse {
+    bool success = 1;
+    ConfigurationTemplate template = 2;
+    string template_id = 3;
+    string error_message = 4;
+}
+
+message GetTemplateRequest {
+    string template_id = 1;
+    string version = 2;
+}
+
+message GetTemplateResponse {
+    bool found = 1;
+    ConfigurationTemplate template = 2;
+    string error_message = 3;
+}
+
+message ListTemplatesRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string category_filter = 3;
+    repeated string tag_filters = 4;
+}
+
+message ListTemplatesResponse {
+    repeated ConfigurationTemplate templates = 1;
+    int32 total_count = 2;
+}
+
+message ApplyTemplateRequest {
+    string template_id = 1;
+    map<string, string> parameters = 2;
+    string target_environment = 3;
+    string applied_by = 4;
+    bool validate_before_apply = 5;
+}
+
+message ApplyTemplateResponse {
+    bool success = 1;
+    repeated Configuration generated_configs = 2;
+    repeated ValidationError validation_errors = 3;
+    string error_message = 4;
+}
+
+// Validation Messages
+message ValidateConfigRequest {
+    Configuration config = 1;
+    string schema_id = 2;
+    string environment = 3;
+}
+
+message ValidateConfigResponse {
+    bool valid = 1;
+    repeated ValidationError errors = 2;
+    repeated ValidationWarning warnings = 3;
+}
+
+message ValidateTemplateRequest {
+    ConfigurationTemplate template = 1;
+    map<string, string> test_parameters = 2;
+}
+
+message ValidateTemplateResponse {
+    bool valid = 1;
+    repeated ValidationError errors = 2;
+    repeated ValidationWarning warnings = 3;
+}
+
+// Versioning Messages
+message GetConfigHistoryRequest {
+    string config_id = 1;
+    int32 limit = 2;
+    int32 offset = 3;
+}
+
+message GetConfigHistoryResponse {
+    repeated ConfigurationVersion versions = 1;
+    int32 total_versions = 2;
+}
+
+message RollbackConfigRequest {
+    string config_id = 1;
+    string target_version = 2;
+    string rolled_back_by = 3;
+    string reason = 4;
+}
+
+message RollbackConfigResponse {
+    bool success = 1;
+    Configuration config = 2;
+    string new_version = 3;
+    string error_message = 4;
+}
+
+message CompareConfigsRequest {
+    string config_id = 1;
+    string version1 = 2;
+    string version2 = 3;
+}
+
+message CompareConfigsResponse {
+    repeated ConfigurationDiff differences = 1;
+    ComparisonSummary summary = 2;
+}
+
+// Deployment Messages
+message DeployConfigRequest {
+    string config_id = 1;
+    string version = 2;
+    repeated string target_environments = 3;
+    DeploymentOptions options = 4;
+    string deployed_by = 5;
+}
+
+message DeployConfigResponse {
+    bool success = 1;
+    string deployment_id = 2;
+    repeated DeploymentStatus statuses = 3;
+    string error_message = 4;
+}
+
+message GetDeploymentStatusRequest {
+    string deployment_id = 1;
+}
+
+message GetDeploymentStatusResponse {
+    DeploymentInfo deployment = 1;
+    repeated DeploymentStatus statuses = 2;
+}
+
+message ListDeploymentsRequest {
+    string config_id = 1;
+    string environment = 2;
+    int32 limit = 3;
+}
+
+message ListDeploymentsResponse {
+    repeated DeploymentInfo deployments = 1;
+}
+
+// Synchronization Messages
+message SyncConfigRequest {
+    string config_id = 1;
+    string source_environment = 2;
+    repeated string target_environments = 3;
+    SyncOptions options = 4;
+}
+
+message SyncConfigResponse {
+    bool success = 1;
+    string sync_id = 2;
+    repeated SyncStatus statuses = 3;
+    string error_message = 4;
+}
+
+message GetSyncStatusRequest {
+    string sync_id = 1;
+}
+
+message GetSyncStatusResponse {
+    SyncInfo sync_info = 1;
+    repeated SyncStatus statuses = 2;
+}
+
+// Watching Messages
+message WatchConfigRequest {
+    string config_id = 1;
+    repeated string event_types = 2;
+}
+
+message ConfigChangeEvent {
+    string config_id = 1;
+    string event_type = 2;
+    Configuration old_config = 3;
+    Configuration new_config = 4;
+    google.protobuf.Timestamp timestamp = 5;
+    string changed_by = 6;
+}
+
+message WatchTemplateRequest {
+    string template_id = 1;
+    repeated string event_types = 2;
+}
+
+message TemplateChangeEvent {
+    string template_id = 1;
+    string event_type = 2;
+    ConfigurationTemplate old_template = 3;
+    ConfigurationTemplate new_template = 4;
+    google.protobuf.Timestamp timestamp = 5;
+    string changed_by = 6;
+}
+
+// Schema Messages
+message RegisterSchemaRequest {
+    ConfigurationSchema schema = 1;
+    string registered_by = 2;
+}
+
+message RegisterSchemaResponse {
+    bool success = 1;
+    string schema_id = 2;
+    string error_message = 3;
+}
+
+message GetSchemaRequest {
+    string schema_id = 1;
+    string version = 2;
+}
+
+message GetSchemaResponse {
+    bool found = 1;
+    ConfigurationSchema schema = 2;
+    string error_message = 3;
+}
+
+message ListSchemasRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string category_filter = 3;
+}
+
+message ListSchemasResponse {
+    repeated ConfigurationSchema schemas = 1;
+    int32 total_count = 2;
+}
+
+// Security Messages
+message EncryptConfigRequest {
+    string config_id = 1;
+    repeated string sensitive_fields = 2;
+    string encryption_key_id = 3;
+}
+
+message EncryptConfigResponse {
+    bool success = 1;
+    Configuration encrypted_config = 2;
+    string error_message = 3;
+}
+
+message DecryptConfigRequest {
+    string config_id = 1;
+    string decryption_key_id = 2;
+    string requesting_user = 3;
+}
+
+message DecryptConfigResponse {
+    bool success = 1;
+    Configuration decrypted_config = 2;
+    string error_message = 3;
+}
+
+// Compliance Messages
+message CheckComplianceRequest {
+    string config_id = 1;
+    repeated string compliance_rules = 2;
+    string environment = 3;
+}
+
+message CheckComplianceResponse {
+    bool compliant = 1;
+    repeated ComplianceViolation violations = 2;
+    ComplianceScore score = 3;
+}
+
+message GetComplianceReportRequest {
+    repeated string config_ids = 1;
+    string environment = 2;
+    google.protobuf.Timestamp from_date = 3;
+    google.protobuf.Timestamp to_date = 4;
+}
+
+message GetComplianceReportResponse {
+    ComplianceReport report = 1;
+}
+
+// Data Models
+message Configuration {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string category = 4;
+    string environment = 5;
+    string version = 6;
+    google.protobuf.Any data = 7; // The actual configuration data
+    map<string, string> metadata = 8;
+    repeated string tags = 9;
+    google.protobuf.Timestamp created_at = 10;
+    google.protobuf.Timestamp updated_at = 11;
+    string created_by = 12;
+    string updated_by = 13;
+    bool is_active = 14;
+    bool is_encrypted = 15;
+    string schema_id = 16;
+}
+
+message ConfigurationTemplate {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string category = 4;
+    string version = 5;
+    string template_data = 6; // Template with placeholders
+    repeated TemplateParameter parameters = 7;
+    map<string, string> metadata = 8;
+    repeated string tags = 9;
+    google.protobuf.Timestamp created_at = 10;
+    google.protobuf.Timestamp updated_at = 11;
+    string created_by = 12;
+    string schema_id = 13;
+}
+
+message ConfigurationMetadata {
+    string config_id = 1;
+    int32 version_count = 2;
+    google.protobuf.Timestamp last_deployed = 3;
+    repeated string deployment_environments = 4;
+    map<string, string> usage_stats = 5;
+    repeated string dependencies = 6;
+}
+
+message ConfigurationVersion {
+    string version = 1;
+    Configuration config = 2;
+    string change_summary = 3;
+    string changed_by = 4;
+    google.protobuf.Timestamp timestamp = 5;
+}
+
+message ConfigurationDiff {
+    string path = 1;
+    string operation = 2; // "added", "removed", "modified"
+    string old_value = 3;
+    string new_value = 4;
+}
+
+message ComparisonSummary {
+    int32 total_differences = 1;
+    int32 additions = 2;
+    int32 deletions = 3;
+    int32 modifications = 4;
+}
+
+message DeploymentInfo {
+    string deployment_id = 1;
+    string config_id = 2;
+    string version = 3;
+    repeated string environments = 4;
+    google.protobuf.Timestamp started_at = 5;
+    google.protobuf.Timestamp completed_at = 6;
+    string deployed_by = 7;
+    string status = 8;
+}
+
+message DeploymentStatus {
+    string environment = 1;
+    string status = 2; // "pending", "in_progress", "completed", "failed"
+    string message = 3;
+    google.protobuf.Timestamp timestamp = 4;
+    map<string, string> details = 5;
+}
+
+message SyncInfo {
+    string sync_id = 1;
+    string config_id = 2;
+    string source_environment = 3;
+    repeated string target_environments = 4;
+    google.protobuf.Timestamp started_at = 5;
+    google.protobuf.Timestamp completed_at = 6;
+    string status = 7;
+}
+
+message SyncStatus {
+    string target_environment = 1;
+    string status = 2;
+    string message = 3;
+    google.protobuf.Timestamp timestamp = 4;
+}
+
+message ConfigurationSchema {
+    string id = 1;
+    string name = 2;
+    string version = 3;
+    string schema_type = 4; // "json_schema", "yaml_schema", etc.
+    string schema_definition = 5;
+    repeated string supported_categories = 6;
+    google.protobuf.Timestamp created_at = 7;
+    string created_by = 8;
+}
+
+message TemplateParameter {
+    string name = 1;
+    string type = 2;
+    string description = 3;
+    string default_value = 4;
+    bool required = 5;
+    repeated string allowed_values = 6;
+}
+
+message ValidationError {
+    string field = 1;
+    string message = 2;
+    string error_code = 3;
+}
+
+message ValidationWarning {
+    string field = 1;
+    string message = 2;
+    string warning_code = 3;
+}
+
+message ComplianceViolation {
+    string rule_name = 1;
+    string severity = 2;
+    string description = 3;
+    string field_path = 4;
+    string recommendation = 5;
+}
+
+message ComplianceScore {
+    float overall_score = 1;
+    map<string, float> category_scores = 2;
+    int32 total_rules = 3;
+    int32 passed_rules = 4;
+    int32 failed_rules = 5;
+}
+
+message ComplianceReport {
+    google.protobuf.Timestamp generated_at = 1;
+    string environment = 2;
+    repeated ConfigurationCompliance config_compliance = 3;
+    ComplianceScore overall_score = 4;
+    repeated ComplianceViolation critical_violations = 5;
+}
+
+message ConfigurationCompliance {
+    string config_id = 1;
+    string config_name = 2;
+    ComplianceScore score = 3;
+    repeated ComplianceViolation violations = 4;
+}
+
+// Options Messages
+message DeploymentOptions {
+    bool dry_run = 1;
+    bool rollback_on_failure = 2;
+    int32 timeout_seconds = 3;
+    repeated string validation_checks = 4;
+    map<string, string> deployment_params = 5;
+}
+
+message SyncOptions {
+    bool force_sync = 1;
+    bool backup_before_sync = 2;
+    repeated string excluded_fields = 3;
+    map<string, string> sync_params = 4;
+}

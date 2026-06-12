@@ -1,0 +1,11 @@
+service:
+  name: alert-engine
+  image_backend: ghcr.io/aileron-platform/aileron-admins/sre-command-center-be
+  image_frontend: ghcr.io/aileron-platform/aileron-admins/sre-command-center-fe
+  namespace: aileron
+  branch: master
+  autoTag: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

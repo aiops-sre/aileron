@@ -1,0 +1,99 @@
+# Binaries
+/alerthub
+/alerthub_linux_amd64
+/alerthub-linux-amd64
+/main
+/unified-backend-microservice
+/universal-alert-gateway
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+vendor/
+dist/
+build/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+.last-deployed-version
+
+# Screenshots and media (keep in docs if needed)
+screenshots/
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# React build output
+sre-command-center/dist/
+sre-command-center/build/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Development artifacts
+*-backup.html
+*-legacy.html
+*-old.html
+*-working.html
+*-modular-backup.html
+FIXES_TO_APPLY.js
+
+# Build scripts (versioned - keep essential ones only)
+build-frontend-v*.sh
+build-backend-v*.sh
+build-and-push-v*.sh
+deploy-*.sh
+build-mas-fix.sh
+
+# Test and experimental files
+test_*.py
+test_*.go
+browser_correlation.js
+batch_correlate_alerts.py
+*.correlation.js
+
+# Old/deprecated versions (now archived)
+frontend-2.0/
+frontend/alerthub-v2-modular/
+frontend/frontend-3.0/
+Incident-SRE-AI-RCA-Repo/
+aurora/
+
+# Archived content (prevent re-creation)
+archive/
+
+# Plans (archived, not needed in production repo)
+plans/
+CLAUDE.md

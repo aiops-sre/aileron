@@ -1,0 +1,47 @@
+name: Branch Naming
+
+on:
+  pull_request:
+    branches: [master, develop]
+  workflow_dispatch: {}
+
+jobs:
+  branch-name:
+    name: Validate branch name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name convention
+        run: |
+          # On workflow_dispatch github.head_ref is empty — skip the check
+          # (the rule only makes sense for PRs).
+          BRANCH="${{ github.head_ref }}"
+          if [ -z "$BRANCH" ]; then
+            echo "workflow_dispatch — no branch name to validate. Skipping."
+            exit 0
+          fi
+          # Allowed patterns:
+          #   feat/short-description
+          #   fix/short-description
+          #   hotfix/short-description
+          #   chore/short-description
+          #   refactor/short-description
+          #   docs/short-description
+          #   test/short-description
+          #   ci/short-description
+          #   release/v1.2.3
+          #   dependabot/** (automated)
+          PATTERN='^(feat|fix|hotfix|chore|refactor|docs|test|ci|release|dependabot)/.+'
+          if ! echo "$BRANCH" | grep -qP "$PATTERN"; then
+            echo "Branch name \"$BRANCH\" does not follow the naming convention."
+            echo ""
+            echo "Use one of:"
+            echo "  feat/my-new-feature"
+            echo "  fix/alert-dedup-bug"
+            echo "  hotfix/critical-pipeline-fix"
+            echo "  chore/update-dependencies"
+            echo "  refactor/correlation-engine"
+            echo "  docs/update-runbook"
+            echo "  release/v1.2.0"
+            exit 1
+          fi
+          echo "Branch name \"$BRANCH\" is valid."

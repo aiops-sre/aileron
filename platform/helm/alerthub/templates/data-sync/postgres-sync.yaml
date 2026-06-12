@@ -1,0 +1,129 @@
+{{- /*
+  PostgreSQL data sync resources.
+
+  RNO (primary):
+    - NodePort service to expose postgres-primary:5432 outside the cluster
+
+  Replicator user creation is handled in the postgres StatefulSet's postStart
+  lifecycle hook (runs as the superuser with local trust auth — no separate
+  Job or Whisper secrets required).
+
+  MDN (standby):
+    - No extra resources; standby bootstrap is handled in the StatefulSet
+      start command via pg_basebackup on first boot.
+*/ -}}
+
+{{- if .Values.dataSync.postgres.primary.enabled }}
+---
+# NodePort: exposes RNO Postgres for MDN streaming replication
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-primary-nodeport
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database-sync
+spec:
+  type: NodePort
+  selector:
+    app: postgres-primary
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      nodePort: {{ .Values.dataSync.postgres.primary.nodePort }}
+{{- end }}
+
+{{- if .Values.dataSync.postgres.backup.enabled }}
+---
+# pg_basebackup CronJob — daily physical backup of primary PostgreSQL.
+# Backup is written to postgres-backup-storage PVC and pruned after 7 days.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backup-storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database-backup
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.global.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.dataSync.postgres.backup.storageSize | default "200Gi" }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database-backup
+spec:
+  schedule: {{ .Values.dataSync.postgres.backup.schedule | default "0 3 * * *" | quote }}
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 7200
+      template:
+        metadata:
+          labels:
+            app: postgres-backup
+          annotations:
+            oneagent.dynatrace.com/inject: "false"
+        spec:
+          {{- include "alerthub.imagePullSecrets" . | nindent 10 }}
+          restartPolicy: OnFailure
+          containers:
+            - name: postgres-backup
+              image: "{{ .Values.images.postgres.repository }}:{{ .Values.images.postgres.tag }}"
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+                  BACKUP_LABEL="alerthub-$(date -u +%Y%m%d-%H%M)"
+                  DEST="/backup/${BACKUP_LABEL}"
+                  mkdir -p "${DEST}"
+                  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Starting pg_basebackup to ${DEST}"
+                  PGPASSWORD="${DB_PASSWORD}" pg_basebackup \
+                    -h postgres-primary \
+                    -p 5432 \
+                    -U {{ .Values.postgres.user }} \
+                    -D "${DEST}" \
+                    -Ft -z -Xs -P \
+                    --checkpoint=fast \
+                    -l "${BACKUP_LABEL}"
+                  echo "${BACKUP_LABEL}" > /backup/latest.txt
+                  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Backup complete: $(du -sh ${DEST} | cut -f1)"
+                  find /backup -maxdepth 1 -type d -name 'alerthub-*' -mtime +7 -exec rm -rf {} + || true
+              env:
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secrets.name | default "alerthub-secrets" }}
+                      key: DB_PASSWORD
+              resources:
+                requests:
+                  cpu: 200m
+                  memory: 256Mi
+                limits:
+                  cpu: "1"
+                  memory: 512Mi
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: postgres-backup-storage
+{{- end }}

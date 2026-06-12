@@ -1,0 +1,55 @@
+FROM golang:1.22-alpine AS builder
+
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ARG GOPROXY=https://proxy.golang.org,direct
+
+ENV HTTP_PROXY=${HTTP_PROXY} \
+    HTTPS_PROXY=${HTTPS_PROXY} \
+    NO_PROXY=${NO_PROXY} \
+    GOPROXY=${GOPROXY} \
+    GONOSUMDB=* \
+    GOFLAGS=-mod=mod \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+WORKDIR /build
+
+# Install Apple Corporate Root CA so go mod download can verify TLS through the corporate proxy
+RUN apk --no-cache add git ca-certificates
+RUN git clone git@github.com:crypto-services/trust-apple-corp-root-cas.git /tmp/apple-cas 2>/dev/null \
+    || true
+RUN if [ -d /tmp/apple-cas ]; then \
+      cp /tmp/apple-cas/*.pem /usr/local/share/ca-certificates/ 2>/dev/null; \
+      cp /tmp/apple-cas/*.crt /usr/local/share/ca-certificates/ 2>/dev/null; \
+      update-ca-certificates; \
+    fi
+
+# Use committed go.sum — prevents go mod tidy from pulling incompatible deps
+COPY go.mod ./
+
+RUN go mod download
+
+# Full source
+COPY . .
+
+# Build kubesense-agent binary
+RUN go build -ldflags="-s -w -X main.version=${VERSION:-dev}" \
+    -o /kubesense-agent \
+    ./services/agent/cmd/agent/
+
+# ─────────────────────────────────────────────────────────
+FROM alpine:3.19 AS runtime
+
+RUN apk --no-cache add ca-certificates && \
+    addgroup -S kubesense && adduser -S kubesense -G kubesense
+
+COPY --from=builder /kubesense-agent /usr/local/bin/kubesense-agent
+
+USER kubesense:kubesense
+
+EXPOSE 8081
+
+ENTRYPOINT ["/usr/local/bin/kubesense-agent"]

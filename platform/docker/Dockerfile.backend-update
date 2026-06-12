@@ -1,0 +1,9 @@
+FROM ghcr.io/aileron-platform/aileron-admins/sre-command-center-be:t1.2.1
+
+USER root
+COPY alerthub_linux_amd64 /app/alerthub
+RUN chmod +x /app/alerthub
+
+COPY database /app/database
+
+USER alerthub

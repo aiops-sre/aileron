@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alerthub-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: configuration
+data:
+  # -----------------------------------------------------------------------
+  # Runtime / environment
+  # -----------------------------------------------------------------------
+  ENV: {{ .Values.config.env | quote }}
+  PORT: {{ .Values.config.port | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+
+  # -----------------------------------------------------------------------
+  # App URLs
+  # -----------------------------------------------------------------------
+  APP_BASE_URL: {{ .Values.backend.appBaseUrl | quote }}
+  OAUTH_CALLBACK_URL: {{ .Values.backend.oauthCallbackUrl | quote }}
+  OAUTH_CLIENT_ID: {{ .Values.backend.oauthClientId | quote }}
+
+  # -----------------------------------------------------------------------
+  # Database (PostgreSQL)
+  # -----------------------------------------------------------------------
+  DB_HOST: "postgres-primary"
+  DB_PORT: "5432"
+  DB_NAME: {{ .Values.postgres.database | quote }}
+  DB_USER: {{ .Values.postgres.user | quote }}
+  DB_SSL_MODE: "disable"
+
+  # -----------------------------------------------------------------------
+  # Redis
+  # -----------------------------------------------------------------------
+  REDIS_ADDR: "redis-cluster:6379"
+  REDIS_ENABLED: "true"
+  REDIS_DB: "0"
+
+  # -----------------------------------------------------------------------
+  # Kafka
+  # -----------------------------------------------------------------------
+  KAFKA_BROKERS: {{ .Values.backend.kafkaBrokers | quote }}
+  KAFKA_ENABLED: "true"
+  KAFKA_TOPIC_ALERTS: "raw-alerts"
+
+  # -----------------------------------------------------------------------
+  # Neo4j
+  # -----------------------------------------------------------------------
+  NEO4J_URL: {{ .Values.backend.neo4jUrl | quote }}
+  NEO4J_HTTP_URL: {{ .Values.backend.neo4jHttpUrl | quote }}
+  NEO4J_USERNAME: {{ .Values.backend.neo4jUsername | quote }}
+  NEO4J_ENABLED: "true"
+
+  # -----------------------------------------------------------------------
+  # Weaviate
+  # -----------------------------------------------------------------------
+  WEAVIATE_URL: {{ .Values.backend.weaviateUrl | quote }}
+  WEAVIATE_ENABLED: "true"
+
+  # -----------------------------------------------------------------------
+  # Downstream services
+  # -----------------------------------------------------------------------
+  RCA_ORCHESTRATOR_URL: {{ .Values.backend.rcaOrchestratorUrl | quote }}
+  BERT_URL: {{ .Values.backend.bertUrl | quote }}
+  OLLAMA_URL: {{ .Values.backend.ollamaUrl | quote }}
+  LLM_MODEL: {{ .Values.ollama.model | quote }}
+
+  # -----------------------------------------------------------------------
+  # NetApp ONTAP topology
+  # -----------------------------------------------------------------------
+  NETAPP_USER: {{ .Values.backend.netappUser | quote }}
+  NETAPP_CLUSTERS: {{ .Values.backend.netappClusters | quote }}
+
+  # -----------------------------------------------------------------------
+  # IDMS OAuth2 SSO
+  # -----------------------------------------------------------------------
+  IDMS_AUTH_ENABLED: {{ .Values.config.idmsEnabled | quote }}
+  IDMS_AUTO_PROVISION: {{ .Values.config.idmsAutoProvision | quote }}
+  IDMS_DEFAULT_ROLE: {{ .Values.config.idmsDefaultRole | quote }}
+  IDMS_STRICT_MODE: {{ .Values.config.idmsStrictMode | quote }}
+
+  # -----------------------------------------------------------------------
+  # TLS / security
+  # -----------------------------------------------------------------------
+  INTERNAL_TLS_INSECURE: {{ .Values.config.internalTlsInsecure | quote }}
+
+  # -----------------------------------------------------------------------
+  # Cluster identity
+  # -----------------------------------------------------------------------
+  CLUSTER: {{ .Values.config.cluster | quote }}
+  NAMESPACE: {{ .Release.Namespace | quote }}

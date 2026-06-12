@@ -1,0 +1,40 @@
+FROM ollama/ollama:latest
+
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY=*.example.com,ghcr.io/aileron-platform,github.com/aileron-platform
+
+ENV HTTP_PROXY=${HTTP_PROXY} \
+    HTTPS_PROXY=${HTTPS_PROXY} \
+    NO_PROXY=${NO_PROXY} \
+    OLLAMA_MODELS=/ollama-models
+
+# registry.ollama.ai is unreachable through Apple's proxy. Download GGUF files
+# from HuggingFace (accessible) at build time. Model registration (ollama create)
+# runs at first container startup via the entrypoint wrapper — ollama serve cannot
+# run in the BuildKit environment (capability restrictions).
+RUN apt-get update -qq && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /ollama-models-raw && \
+    echo "Downloading qwen2.5:3b (Q4_K_M) from HuggingFace..." && \
+    curl -fsSL --retry 3 --retry-delay 10 --connect-timeout 30 \
+      "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf" \
+      -o /ollama-models-raw/qwen2.5-3b.gguf && \
+    echo "Downloaded $(du -h /ollama-models-raw/qwen2.5-3b.gguf | cut -f1)" && \
+    echo "Downloading nomic-embed-text (Q8_0) from HuggingFace..." && \
+    curl -fsSL --retry 3 --retry-delay 10 --connect-timeout 30 \
+      "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.Q8_0.gguf" \
+      -o /ollama-models-raw/nomic-embed-text.gguf && \
+    echo "Downloaded $(du -h /ollama-models-raw/nomic-embed-text.gguf | cut -f1)"
+
+RUN printf 'FROM /ollama-models-raw/qwen2.5-3b.gguf\nTEMPLATE """<|im_start|>system\n{{ .System }}<|im_end|>\n<|im_start|>user\n{{ .Prompt }}<|im_end|>\n<|im_start|>assistant\n{{ .Response }}<|im_end|>"""\nPARAMETER stop "<|im_start|>"\nPARAMETER stop "<|im_end|>"\n' > /Modelfile-qwen && \
+    printf 'FROM /ollama-models-raw/nomic-embed-text.gguf\n' > /Modelfile-nomic
+
+COPY docker/ollama-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENV HTTP_PROXY="" \
+    HTTPS_PROXY="" \
+    NO_PROXY=""
+
+ENTRYPOINT ["/entrypoint.sh"]

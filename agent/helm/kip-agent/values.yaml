@@ -1,0 +1,52 @@
+# kubesense-agent/values.yaml
+image:
+  repository: registry.example.com/kubesense-agent
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+# REQUIRED — unique identifier for this cluster (e.g. "example-cluster", "mps-tooling-mdn")
+clusterID: ""
+
+# Strimzi Kafka bootstrap — reuses the AlertHub Kafka cluster.
+# Format: <cluster-name>-kafka-bootstrap.<namespace>.svc.cluster.local:9092
+kafkaBrokers: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+
+# Max events buffered locally when Kafka is temporarily unavailable
+localBufferMax: 5000
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+watchNamespaces: []
+excludeNamespaces:
+  - kube-system
+  - kube-public
+  - kube-node-lease
+
+secretsMetadataOnly: true
+resyncPeriod: 30s
+
+serviceAccount:
+  create: true
+  name: kubesense-agent
+
+rbac:
+  create: true
+
+tolerations:
+  - operator: Exists
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: kubesense-agent
+          topologyKey: kubernetes.io/hostname

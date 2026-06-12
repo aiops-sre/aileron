@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: oie
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "oie.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      app: oie
+      {{- include "oie.selectorLabels" . | nindent 6 }}

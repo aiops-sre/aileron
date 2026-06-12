@@ -1,0 +1,80 @@
+# ============================================================
+# AlertHub RCA Orchestrator — Values
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Global
+# ---------------------------------------------------------------------------
+global:
+  imageRegistry: ghcr.io/aileron-platform/aileron-admins
+  imagePullSecret: jfrog-dockers-access
+  namespace: aileron
+  storageClass: example-cluster-netapp-sc
+
+# ---------------------------------------------------------------------------
+# Images
+# ---------------------------------------------------------------------------
+images:
+  rca:
+    repository: ghcr.io/aileron-platform/aileron-admins/rca-orchestrator
+    tag: v1.0.3
+    pullPolicy: Always
+  redis:
+    repository: ghcr.io/aileron-platform/aileron-admins/redis
+    tag: "7-alpine"
+
+# ---------------------------------------------------------------------------
+# RCA Orchestrator
+# ---------------------------------------------------------------------------
+rca:
+  ollamaModel: qwen2.5:3b
+  ollamaTimeout: "180"
+  investigationTimeout: "900"
+  maxToolRounds: "12"
+  dynatraceUrl: https://mps-dynatrace-hybrid.k.example.com
+  cloudstackMdnUrl: https://interactive-cs-mdn-prod.example.com/client/api
+  cloudstackRnoUrl: https://interactive-cs-rno-prod.example.com/client/api
+  defaultCluster: example-cluster
+  embedModel: nomic-embed-text
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+
+# ---------------------------------------------------------------------------
+# Database (used to construct POSTGRES_URL at runtime)
+# ---------------------------------------------------------------------------
+postgres:
+  database: alerthub
+  user: alerthub
+
+# ---------------------------------------------------------------------------
+# Backend (used by configmap for BACKEND_URL and KAFKA_BROKERS)
+# ---------------------------------------------------------------------------
+backend:
+  port: 3000
+  kafkaBrokers: alerthub-kafka-kafka-bootstrap:9092
+
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+config:
+  internalTlsInsecure: "true"
+
+# ---------------------------------------------------------------------------
+# Build / Whisper
+# ---------------------------------------------------------------------------
+build:
+  enabled: true
+
+whisper:
+  enabled: true
+
+# ---------------------------------------------------------------------------
+# CMP plugin runtime values (set at deploy time; fallbacks below)
+# ---------------------------------------------------------------------------
+imageTag: ""
+Branch: ""

@@ -1,0 +1,96 @@
+{{- /*
+  Kafka data sync resources.
+
+  RNO (source):
+    - NodePort service to expose kafka-bootstrap outside the cluster
+
+  MDN (target):
+    - KafkaMirrorMaker2 CR: replicates all alert topics from RNO → MDN
+      Topics mirrored: raw-alerts, normalized-alerts, processed-alerts,
+                       correlation-results, rca-events
+*/ -}}
+
+{{- if .Values.dataSync.kafka.bootstrap.enabled }}
+---
+# NodePort: exposes RNO Kafka bootstrap for MirrorMaker2 on MDN
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-bootstrap-nodeport
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka-sync
+spec:
+  type: NodePort
+  selector:
+    strimzi.io/cluster: alerthub-kafka
+    strimzi.io/kind: Kafka
+    strimzi.io/name: alerthub-kafka-kafka
+  ports:
+    - name: kafka-plain
+      port: 9092
+      targetPort: 9092
+      nodePort: {{ .Values.dataSync.kafka.bootstrap.nodePort }}
+{{- end }}
+
+{{- if .Values.dataSync.kafka.mirrorMaker2.enabled }}
+---
+# KafkaMirrorMaker2: replicates alert topics from RNO Kafka into MDN Kafka
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaMirrorMaker2
+metadata:
+  name: alerthub-mm2
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kafka-sync
+spec:
+  version: "3.6.0"
+  replicas: {{ .Values.dataSync.kafka.mirrorMaker2.replicas }}
+  connectCluster: alerthub-kafka
+  clusters:
+    - alias: source
+      bootstrapServers: {{ .Values.dataSync.kafka.mirrorMaker2.sourceBootstrap }}
+      config:
+        ssl.endpoint.identification.algorithm: ""
+    - alias: alerthub-kafka
+      bootstrapServers: alerthub-kafka-kafka-bootstrap:9092
+      config:
+        ssl.endpoint.identification.algorithm: ""
+  mirrors:
+    - sourceCluster: source
+      targetCluster: alerthub-kafka
+      sourceConnector:
+        tasksMax: 3
+        config:
+          replication.factor: "{{ .Values.kafka.replicas }}"
+          offset-syncs.topic.replication.factor: "{{ .Values.kafka.replicas }}"
+          sync.topic.acls.enabled: "false"
+          refresh.topics.interval.seconds: "60"
+          replication.policy.class: org.apache.kafka.connect.mirror.IdentityReplicationPolicy
+      heartbeatConnector:
+        config:
+          heartbeats.topic.replication.factor: "1"
+      checkpointConnector:
+        config:
+          checkpoints.topic.replication.factor: "1"
+          sync.group.offsets.enabled: "true"
+          sync.group.offsets.interval.seconds: "60"
+      topicsPattern: {{ .Values.dataSync.kafka.mirrorMaker2.topics | quote }}
+      groupsPattern: "alerthub.*"
+  template:
+    pod:
+      metadata:
+        labels:
+          app.kubernetes.io/part-of: alerthub-enterprise
+      imagePullSecrets:
+        - name: {{ .Values.global.imagePullSecret }}
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+{{- end }}

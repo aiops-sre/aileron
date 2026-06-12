@@ -1,0 +1,163 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-platform:
+    name: Test Platform (Go 1.24)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go 1.24
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+
+      - name: Build platform
+        working-directory: platform
+        run: go build ./...
+
+      - name: Vet platform
+        working-directory: platform
+        run: go vet ./...
+
+      - name: Build OIE
+        working-directory: platform/services/oie
+        run: go build ./...
+
+      - name: Vet OIE
+        working-directory: platform/services/oie
+        run: go vet ./...
+
+      - name: Test platform
+        working-directory: platform
+        run: go test ./... -race -timeout 120s
+
+      - name: Test OIE
+        working-directory: platform/services/oie
+        run: go test ./... -race -timeout 120s
+
+  test-agent:
+    name: Test Agent (Go 1.22)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go 1.22
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Build agent
+        working-directory: agent
+        run: go build ./...
+
+      - name: Vet agent
+        working-directory: agent
+        run: go vet ./...
+
+      - name: Test agent
+        working-directory: agent
+        run: go test ./... -race -timeout 120s
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: platform/frontend/alerthub-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: platform/frontend/alerthub-frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: platform/frontend/alerthub-frontend
+        run: npm run build
+
+  publish:
+    name: Publish Images
+    runs-on: ubuntu-latest
+    needs: [test-platform, test-agent, test-frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push aileron-platform
+        uses: docker/build-push-action@v6
+        with:
+          context: ./platform
+          file: ./platform/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/aileron-platform/aileron-platform:latest
+            ghcr.io/aileron-platform/aileron-platform:${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push aileron-oie
+        uses: docker/build-push-action@v6
+        with:
+          context: ./platform/services/oie
+          file: ./platform/services/oie/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/aileron-platform/aileron-oie:latest
+            ghcr.io/aileron-platform/aileron-oie:${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push aileron-agent
+        uses: docker/build-push-action@v6
+        with:
+          context: ./agent
+          file: ./agent/Dockerfile.agent
+          push: true
+          tags: |
+            ghcr.io/aileron-platform/aileron-agent:latest
+            ghcr.io/aileron-platform/aileron-agent:${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push aileron-collector
+        uses: docker/build-push-action@v6
+        with:
+          context: ./agent
+          file: ./agent/Dockerfile.collector
+          push: true
+          tags: |
+            ghcr.io/aileron-platform/aileron-collector:latest
+            ghcr.io/aileron-platform/aileron-collector:${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

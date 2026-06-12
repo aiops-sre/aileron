@@ -1,0 +1,319 @@
+{{/* Agent Deployment */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubesense-agent
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: kubesense-agent
+    app.kubernetes.io/version: {{ .Values.imageTag | default .Values.images.agent.tag | quote }}
+spec:
+  replicas: {{ .Values.agent.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubesense-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubesense-agent
+    spec:
+      serviceAccountName: aileron-agent-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+      {{- if .Values.global.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.global.imagePullSecret }}
+      {{- end }}
+      containers:
+        - name: agent
+          image: "{{ .Values.images.agent.repository }}:{{ .Values.imageTag | default .Values.images.agent.tag }}"
+          imagePullPolicy: {{ .Values.images.agent.pullPolicy }}
+          args:
+            - --cluster-id={{ .Values.agent.clusterID }}
+            - --kafka-brokers={{ .Values.agent.kafkaBrokers }}
+            - --buffer-max={{ .Values.agent.localBufferMax }}
+          env:
+            - name: CLUSTER_ID
+              value: {{ .Values.agent.clusterID | quote }}
+            - name: KAFKA_BROKERS
+              value: {{ .Values.agent.kafkaBrokers | quote }}
+          ports:
+            - name: health
+              containerPort: 8081
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8081 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8081 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.agent.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+{{/* Collector Deployment */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubesense-collector
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: kubesense-collector
+    app.kubernetes.io/version: {{ .Values.imageTag | default .Values.images.collector.tag | quote }}
+spec:
+  replicas: {{ .Values.collector.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubesense-collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubesense-collector
+    spec:
+      serviceAccountName: aileron-agent-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+      {{- if .Values.global.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.global.imagePullSecret }}
+      {{- end }}
+      containers:
+        - name: collector
+          image: "{{ .Values.images.collector.repository }}:{{ .Values.imageTag | default .Values.images.collector.tag }}"
+          imagePullPolicy: {{ .Values.images.collector.pullPolicy }}
+          env:
+            - name: KAFKA_BROKERS
+              value: {{ .Values.collector.kafkaBrokers | quote }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: kubesense-postgres-secret, key: DATABASE_URL }
+            - name: NEO4J_URL
+              valueFrom:
+                secretKeyRef: { name: kubesense-neo4j-secret, key: NEO4J_URL }
+            - name: NEO4J_USER
+              value: "neo4j"
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: kubesense-neo4j-secret, key: NEO4J_PASSWORD }
+          resources:
+            {{- toYaml .Values.collector.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+{{/* Core API Deployment */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubesense-core
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: kubesense-core
+    app.kubernetes.io/version: {{ .Values.imageTag | default .Values.images.core.tag | quote }}
+spec:
+  replicas: {{ .Values.core.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubesense-core
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubesense-core
+    spec:
+      serviceAccountName: aileron-agent-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+      {{- if .Values.global.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.global.imagePullSecret }}
+      {{- end }}
+      containers:
+        - name: core
+          image: "{{ .Values.images.core.repository }}:{{ .Values.imageTag | default .Values.images.core.tag }}"
+          imagePullPolicy: {{ .Values.images.core.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: KAFKA_BROKERS
+              value: {{ .Values.core.kafkaBrokers | quote }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: kubesense-postgres-secret, key: DATABASE_URL }
+            - name: NEO4J_URL
+              valueFrom:
+                secretKeyRef: { name: kubesense-neo4j-secret, key: NEO4J_URL }
+            - name: NEO4J_USER
+              value: "neo4j"
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: kubesense-neo4j-secret, key: NEO4J_PASSWORD }
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.core.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+{{/* Core Service */}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubesense-core
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app.kubernetes.io/name: kubesense-core
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+{{/* API Intelligence Service Deployment */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubesense-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: kubesense-api
+    app.kubernetes.io/version: {{ .Values.imageTag | default .Values.images.api.tag | quote }}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubesense-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubesense-api
+    spec:
+      serviceAccountName: aileron-agent-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+      {{- if .Values.global.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.global.imagePullSecret }}
+      {{- end }}
+      containers:
+        - name: api
+          image: "{{ .Values.images.api.repository }}:{{ .Values.imageTag | default .Values.images.api.tag }}"
+          imagePullPolicy: {{ .Values.images.api.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: KAFKA_BROKERS
+              value: {{ .Values.api.kafkaBrokers | quote }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: kubesense-postgres-secret, key: DATABASE_URL }
+            - name: NEO4J_URL
+              valueFrom:
+                secretKeyRef: { name: kubesense-neo4j-secret, key: NEO4J_URL }
+            - name: NEO4J_USER
+              value: "neo4j"
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: kubesense-neo4j-secret, key: NEO4J_PASSWORD }
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubesense-api
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app.kubernetes.io/name: kubesense-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+{{/* LLM Narrator Deployment — Claude API + Ollama fallback + deterministic */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubesense-llm
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: kubesense-llm
+spec:
+  replicas: {{ .Values.llm.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubesense-llm
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubesense-llm
+        app: kubesense-llm
+    spec:
+      serviceAccountName: aileron-agent-sa
+      securityContext: { runAsNonRoot: true, runAsUser: 65532 }
+      {{- if .Values.global.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.global.imagePullSecret }}
+      {{- end }}
+      containers:
+        - name: llm
+          image: "{{ .Values.images.llm.repository }}:{{ .Values.imageTag | default .Values.images.llm.tag }}"
+          imagePullPolicy: {{ .Values.images.llm.pullPolicy | default "IfNotPresent" }}
+          env:
+            - name: KAFKA_BROKERS
+              value: {{ .Values.collector.kafkaBrokers | quote }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: kubesense-postgres-secret, key: DATABASE_URL }
+            - name: OLLAMA_BASE_URL
+              value: {{ .Values.llm.ollamaURL | default "http://ollama.aileron.svc.cluster.local:11434" | quote }}
+            - name: OLLAMA_MODEL
+              value: {{ .Values.llm.ollamaModel | default "qwen2.5:7b" | quote }}
+            - name: CLAUDE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kubesense-llm-secret
+                  key: CLAUDE_API_KEY
+                  optional: true
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits:   { cpu: 200m, memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }

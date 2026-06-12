@@ -1,0 +1,16 @@
+# ============================================================
+# alerthub-rca — example-cluster overrides (Primary)
+# ============================================================
+
+global:
+  storageClass: example-cluster-netapp-sc
+  namespace: aileron
+
+rca:
+  defaultCluster: example-cluster
+
+build:
+  enabled: true
+
+whisper:
+  enabled: true

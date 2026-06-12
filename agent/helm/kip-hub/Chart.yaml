@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kip-hub
+description: KubeSense Intelligence Hub — collector, core API, and agent services
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

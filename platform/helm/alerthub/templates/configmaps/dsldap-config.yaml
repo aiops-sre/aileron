@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alerthub-dsldap-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: auth
+data:
+  DSLDAP_ENABLED: {{ .Values.dsldap.enabled | quote }}
+  DSLDAP_SERVER_URL: {{ .Values.dsldap.serverUrl | quote }}
+  DSLDAP_USER_SEARCH_BASE: {{ .Values.dsldap.userSearchBase | quote }}
+  # How long to cache LDAP group memberships (Apple DS-LDAP syncs AD in 3-10 min)
+  DSLDAP_CACHE_TTL_MINUTES: {{ .Values.dsldap.cacheTtlMinutes | quote }}
+  # AD group CNs that map to each AlertHub role (comma-separated)
+  OIDC_ADMIN_GROUPS: {{ .Values.dsldap.adminGroups | quote }}
+  OIDC_OPERATOR_GROUPS: {{ .Values.dsldap.operatorGroups | quote }}
+  OIDC_VIEWER_GROUPS: {{ .Values.dsldap.viewerGroups | quote }}

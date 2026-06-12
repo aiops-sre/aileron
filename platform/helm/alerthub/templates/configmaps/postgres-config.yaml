@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+data:
+  postgresql.conf: |
+    # -----------------------------------------------------------------------
+    # AlertHub PostgreSQL tuning
+    # Sized for 500 Gi NVMe storage, 8 Gi RAM limit
+    # -----------------------------------------------------------------------
+
+    # Connections
+    max_connections = {{ .Values.postgres.config.maxConnections }}
+    listen_addresses = '*'
+
+    # Memory
+    shared_buffers = {{ .Values.postgres.config.sharedBuffers }}
+    effective_cache_size = {{ .Values.postgres.config.effectiveCacheSize }}
+    maintenance_work_mem = {{ .Values.postgres.config.maintenanceWorkMem }}
+    work_mem = {{ .Values.postgres.config.workMem }}
+
+    # Write-ahead log
+    wal_level = replica
+    max_wal_senders = 5
+    wal_keep_size = 512MB
+    max_wal_size = 4GB
+    min_wal_size = 1GB
+    checkpoint_completion_target = 0.9
+
+    # Query planner
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+
+    # Parallel query
+    max_worker_processes = 8
+    max_parallel_workers_per_gather = 4
+    max_parallel_workers = 8
+
+    # Logging
+    log_timezone = 'UTC'
+    log_min_duration_statement = 1000
+    log_checkpoints = on
+    log_connections = off
+    log_disconnections = off
+    log_lock_waits = on
+    log_temp_files = 0
+
+    # Locale
+    datestyle = 'iso, mdy'
+    timezone = 'UTC'
+    lc_messages = 'en_US.utf8'
+    lc_monetary = 'en_US.utf8'
+    lc_numeric = 'en_US.utf8'
+    lc_time = 'en_US.utf8'
+    default_text_search_config = 'pg_catalog.english'
+
+    # pgvector — enable vector index build concurrency
+    max_parallel_maintenance_workers = 4
+  pg_hba.conf: |
+    # TYPE  DATABASE        USER            ADDRESS                 METHOD
+    local   all             all                                     trust
+    host    all             all             127.0.0.1/32            md5
+    host    all             all             ::1/128                 md5
+    host    all             all             0.0.0.0/0               md5
+    # Streaming replication — allow replicator user from any address
+    host    replication     replicator      0.0.0.0/0               md5

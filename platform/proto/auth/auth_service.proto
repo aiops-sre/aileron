@@ -1,0 +1,236 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/alerthub-enterprise/proto/auth";
+
+import "google/protobuf/timestamp.proto";
+
+// Auth Service Definition
+service AuthService {
+    // Authentication methods
+    rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+    rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+    rpc Logout(LogoutRequest) returns (LogoutResponse);
+    
+    // User management
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+    rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+    rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+    
+    // Role and permission management
+    rpc CreateRole(CreateRoleRequest) returns (CreateRoleResponse);
+    rpc AssignRole(AssignRoleRequest) returns (AssignRoleResponse);
+    rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+    
+    // Service-to-service authentication
+    rpc IssueServiceToken(IssueServiceTokenRequest) returns (IssueServiceTokenResponse);
+    rpc ValidateServiceToken(ValidateServiceTokenRequest) returns (ValidateServiceTokenResponse);
+}
+
+// Authentication Messages
+message AuthenticateRequest {
+    string username = 1;
+    string password = 2;
+    string auth_method = 3; // "local", "ldap", "oauth"
+    map<string, string> additional_params = 4;
+}
+
+message AuthenticateResponse {
+    bool success = 1;
+    string access_token = 2;
+    string refresh_token = 3;
+    google.protobuf.Timestamp expires_at = 4;
+    User user = 5;
+    string error_message = 6;
+}
+
+message ValidateTokenRequest {
+    string token = 1;
+    string token_type = 2; // "access", "refresh", "service"
+}
+
+message ValidateTokenResponse {
+    bool valid = 1;
+    string user_id = 2;
+    repeated string roles = 3;
+    repeated string permissions = 4;
+    google.protobuf.Timestamp expires_at = 5;
+    string error_message = 6;
+}
+
+message RefreshTokenRequest {
+    string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+    bool success = 1;
+    string access_token = 2;
+    string refresh_token = 3;
+    google.protobuf.Timestamp expires_at = 4;
+    string error_message = 5;
+}
+
+message LogoutRequest {
+    string token = 1;
+    string user_id = 2;
+}
+
+message LogoutResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// User Management Messages
+message CreateUserRequest {
+    string username = 1;
+    string email = 2;
+    string password = 3;
+    string first_name = 4;
+    string last_name = 5;
+    repeated string roles = 6;
+    map<string, string> attributes = 7;
+}
+
+message CreateUserResponse {
+    bool success = 1;
+    User user = 2;
+    string error_message = 3;
+}
+
+message GetUserRequest {
+    oneof identifier {
+        string user_id = 1;
+        string username = 2;
+        string email = 3;
+    }
+}
+
+message GetUserResponse {
+    bool found = 1;
+    User user = 2;
+    string error_message = 3;
+}
+
+message UpdateUserRequest {
+    string user_id = 1;
+    string email = 2;
+    string first_name = 3;
+    string last_name = 4;
+    repeated string roles = 5;
+    map<string, string> attributes = 6;
+}
+
+message UpdateUserResponse {
+    bool success = 1;
+    User user = 2;
+    string error_message = 3;
+}
+
+message DeleteUserRequest {
+    string user_id = 1;
+}
+
+message DeleteUserResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ListUsersRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string filter = 3;
+}
+
+message ListUsersResponse {
+    repeated User users = 1;
+    int32 total_count = 2;
+    int32 page = 3;
+    int32 page_size = 4;
+}
+
+// Role Management Messages
+message CreateRoleRequest {
+    string name = 1;
+    string description = 2;
+    repeated string permissions = 3;
+}
+
+message CreateRoleResponse {
+    bool success = 1;
+    Role role = 2;
+    string error_message = 3;
+}
+
+message AssignRoleRequest {
+    string user_id = 1;
+    string role_name = 2;
+}
+
+message AssignRoleResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message CheckPermissionRequest {
+    string user_id = 1;
+    string permission = 2;
+    string resource = 3;
+}
+
+message CheckPermissionResponse {
+    bool allowed = 1;
+    string reason = 2;
+}
+
+// Service Authentication Messages
+message IssueServiceTokenRequest {
+    string service_name = 1;
+    repeated string scopes = 2;
+    int64 ttl_seconds = 3;
+}
+
+message IssueServiceTokenResponse {
+    bool success = 1;
+    string service_token = 2;
+    google.protobuf.Timestamp expires_at = 3;
+    string error_message = 4;
+}
+
+message ValidateServiceTokenRequest {
+    string service_token = 1;
+    string required_scope = 2;
+}
+
+message ValidateServiceTokenResponse {
+    bool valid = 1;
+    string service_name = 2;
+    repeated string scopes = 3;
+    google.protobuf.Timestamp expires_at = 4;
+    string error_message = 5;
+}
+
+// Data Models
+message User {
+    string id = 1;
+    string username = 2;
+    string email = 3;
+    string first_name = 4;
+    string last_name = 5;
+    repeated string roles = 6;
+    map<string, string> attributes = 7;
+    google.protobuf.Timestamp created_at = 8;
+    google.protobuf.Timestamp updated_at = 9;
+    bool active = 10;
+}
+
+message Role {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    repeated string permissions = 4;
+    google.protobuf.Timestamp created_at = 5;
+}

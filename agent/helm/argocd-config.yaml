@@ -1,0 +1,15 @@
+# ============================================================
+# KubeSense — ArgoCD app config (mirrors alert-engine pattern)
+# ============================================================
+service:
+  name: kubesense
+  image_agent:     ghcr.io/aileron-platform/aileron-admins/kubesense-agent
+  image_collector: ghcr.io/aileron-platform/aileron-admins/kubesense-collector
+  image_core:      ghcr.io/aileron-platform/aileron-admins/kubesense-core
+  namespace: aileron-agent
+  branch: main
+  autoTag: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

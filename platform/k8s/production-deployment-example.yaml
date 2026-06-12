@@ -1,0 +1,594 @@
+---
+# =============================================================================
+# SUPERSEDED — DO NOT APPLY
+# =============================================================================
+# This file is a legacy raw-manifest from before the Helm chart existed.
+# It deploys a stale image (sre-command-center-be:v1.0.14-dev), two phantom
+# microservices (security-scanning-engine, topology-graph-engine) that have
+# never existed in the current architecture, and a ConfigMap that disables
+# Kafka and Redis.
+#
+# The canonical deployment is now:
+#   helm upgrade --install alerthub helm/alerthub/ \
+#     -f helm/alerthub/values-example-cluster.yaml \
+#     -n aileron
+#
+# This file is kept for historical reference only. It MUST NOT be applied
+# to any cluster.
+# =============================================================================
+
+# AlertHub Enterprise Production Deployment for example-cluster cluster
+# Connects to existing infrastructure: Weaviate, Neo4j, Kafka, Redis, PostgreSQL
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alerthub-enterprise-production-config
+  namespace: aileron
+  labels:
+    app: alerthub-enterprise
+    component: production-configuration
+    cluster: example-cluster
+    version: v3.0.0
+data:
+  # =============================================================================
+  # PRODUCTION INFRASTRUCTURE (EXISTING IN example-cluster)
+  # =============================================================================
+
+  # Database Configuration (Existing PostgreSQL)
+  DB_HOST: "postgres-primary.aileron.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "alerthub"
+  DB_SSL_MODE: "disable"
+
+  # Redis Configuration (Disabled due to auth issues - app works without cache)
+  REDIS_ADDR: "redis-cluster.aileron.svc.cluster.local:6379"
+  REDIS_ENABLED: "false"
+  REDIS_DB: "0"
+
+  # Kafka Configuration (Disabled - Kafka pods not running)
+  KAFKA_BROKERS: "localhost:9092"
+  KAFKA_ENABLED: "false"
+  KAFKA_CLUSTER_NAME: "disabled"
+
+  # Weaviate Vector Database (Existing)
+  WEAVIATE_URL: "http://weaviate.aileron.svc.cluster.local:8080"
+  WEAVIATE_ENABLED: "true"
+
+  # Neo4j Graph Database (Existing)
+  NEO4J_URL: "neo4j://neo4j.aileron.svc.cluster.local:7687"
+  NEO4J_HTTP_URL: "http://neo4j.aileron.svc.cluster.local:7474"
+  NEO4J_ENABLED: "true"
+
+  # =============================================================================
+  # MICROSERVICES INTEGRATION (Production URLs)
+  # =============================================================================
+
+  # Core AI Services (Priority 1) - EXISTING WORKING SERVICES
+  AUTONOMOUS_CORRELATION_URL: "http://autonomous-ai-correlation.aileron.svc.cluster.local:8005"
+  AI_CORRELATION_URL: "http://ai-correlation-engine.aileron.svc.cluster.local:8002"
+  VECTOR_EMBEDDING_URL: "http://vector-embedding-service.aileron.svc.cluster.local:80"
+
+  # Advanced AI Services (Priority 2) - EXISTING WORKING SERVICES
+  AI_INVESTIGATION_ENGINE_URL: "http://ai-investigation-engine-phase2.aileron.svc.cluster.local:80"
+  AUTONOMOUS_LEARNING_URL: "http://autonomous-ai-correlation.aileron.svc.cluster.local:8005"
+  ALERTHUB_BERT_URL: "http://vector-embedding-service.aileron.svc.cluster.local:80"
+  LOCAL_BERT_URL: "http://vector-embedding-service.aileron.svc.cluster.local:80"
+
+  # Integration Services (Priority 3) - EXISTING IMAGES AVAILABLE
+  INTEGRATION_PROXY_URL: "http://integration-proxy.aileron.svc.cluster.local:8080"
+  TOPOLOGY_GRAPH_ENGINE_URL: "http://topology-graph-engine.aileron.svc.cluster.local:8003"
+  UNIVERSAL_ALERT_GATEWAY_URL: "http://universal-alert-gateway.aileron.svc.cluster.local:8080"
+
+  # Infrastructure Services (Priority 4)
+  PERFORMANCE_OPTIMIZATION_URL: "http://performance-optimization-engine.aileron.svc.cluster.local:8007"
+  CHAOS_ENGINEERING_URL: "http://chaos-engineering-service.aileron.svc.cluster.local:8008"
+  DATABASE_OPTIMIZATION_URL: "http://database-optimization-engine.aileron.svc.cluster.local:8009"
+  SECURITY_SCANNING_ENGINE_URL: "http://security-scanning-engine.aileron.svc.cluster.local:8015"
+
+  # Frontend Service
+  ALERTHUB_FRONTEND_URL: "http://alerthub-frontend.aileron.svc.cluster.local:80"
+
+  # =============================================================================
+  # PRODUCTION FEATURE FLAGS
+  # =============================================================================
+
+  # AI Services (Disabled during startup - can be enabled via admin UI later)
+  ENABLE_AI_CORRELATION: "false"
+  ENABLE_AUTONOMOUS_LEARNING: "false"
+  ENABLE_VECTOR_EMBEDDINGS: "false"
+  ENABLE_WEAVIATE_INTEGRATION: "true"
+  ENABLE_NEO4J_TOPOLOGY: "true"
+  SKIP_AI_HEALTH_CHECK: "true"
+
+  # Infrastructure
+  ENABLE_KAFKA_EVENT_STREAMING: "false"
+  ENABLE_REDIS_CACHING: "false"
+  ENABLE_SECURITY_SCANNING: "true"
+  ENABLE_TOPOLOGY_GRAPH_ENGINE: "true"
+
+  # Production Settings
+  ENV: "production"
+  CLUSTER: "example-cluster"
+  NAMESPACE: "aileron"
+  VERSION: "v3.0.0"
+  ARTIFACTORY_REGISTRY: "ghcr.io/aileron-platform/aileron-admins"
+  # Apple's corporate CA is not in container trust stores; allow insecure TLS for internal services
+  INTERNAL_TLS_INSECURE: "true"
+  # NetApp ONTAP topology integration — harvest-user read-only access to both DC clusters
+  NETAPP_CLUSTERS: '[{"cluster":"100.67.87.8","name":"netapp-mdn-cluster001","region":"mdn"},{"cluster":"100.67.60.23","name":"netapp-rno-cluster001","region":"rno"}]'
+  NETAPP_USER: "harvest-user"
+---
+# AlertHub Enterprise Main Application Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alerthub-enterprise-main
+  namespace: aileron
+  labels:
+    app: alerthub-enterprise
+    component: main-application
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: alerthub-enterprise
+      component: main-application
+  template:
+    metadata:
+      labels:
+        app: alerthub-enterprise
+        component: main-application
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+      - name: jfrog-dockers-access
+      containers:
+      - name: alerthub-main
+        image: ghcr.io/aileron-platform/aileron-admins/sre-command-center-be:v1.0.14-dev
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        # Load all configuration from ConfigMap
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: DB_PORT
+        - name: REDIS_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: REDIS_ADDR
+        - name: KAFKA_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: KAFKA_ENABLED
+        - name: WEAVIATE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: WEAVIATE_URL
+        - name: NEO4J_URL
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: NEO4J_URL
+        # Load all microservices URLs
+        - name: AUTONOMOUS_CORRELATION_URL
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: AUTONOMOUS_CORRELATION_URL
+        - name: TOPOLOGY_GRAPH_ENGINE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: TOPOLOGY_GRAPH_ENGINE_URL
+        # Load secrets from existing alerthub-secrets
+        - name: DB_USER
+          value: "alerthub"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: alerthub-secrets
+              key: postgres-password
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: alerthub-secrets
+              key: jwt-secret
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: alerthub-secrets
+              key: redis-password
+        - name: NEO4J_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: alerthub-secrets
+              key: neo4j-auth
+        # Enable Redis caching
+        - name: REDIS_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: REDIS_ENABLED
+        # Skip AI health check during startup
+        - name: SKIP_AI_HEALTH_CHECK
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: SKIP_AI_HEALTH_CHECK
+        # DS-LDAP group-based RBAC (credentials from K8s Secret, config from ConfigMap)
+        - name: LDAP_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: alerthub-dsldap-credentials
+              key: LDAP_APP_ID
+              optional: true
+        - name: LDAP_APP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: alerthub-dsldap-credentials
+              key: LDAP_APP_PASSWORD
+              optional: true
+        - name: OIDC_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: alerthub-hcl-credentials
+              key: OIDC_APP_ID
+              optional: true
+        - name: IDMS_APP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: alerthub-hcl-credentials
+              key: IDMS_APP_PASSWORD
+              optional: true
+        - name: DSLDAP_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-dsldap-config
+              key: DSLDAP_ENABLED
+              optional: true
+        - name: DSLDAP_SERVER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-dsldap-config
+              key: DSLDAP_SERVER_URL
+              optional: true
+        - name: DSLDAP_USER_SEARCH_BASE
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-dsldap-config
+              key: DSLDAP_USER_SEARCH_BASE
+              optional: true
+        - name: DSLDAP_CACHE_TTL_MINUTES
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-dsldap-config
+              key: DSLDAP_CACHE_TTL_MINUTES
+              optional: true
+        - name: OIDC_ADMIN_GROUPS
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-dsldap-config
+              key: OIDC_ADMIN_GROUPS
+              optional: true
+        - name: OIDC_OPERATOR_GROUPS
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-dsldap-config
+              key: OIDC_OPERATOR_GROUPS
+              optional: true
+        - name: OIDC_VIEWER_GROUPS
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-dsldap-config
+              key: OIDC_VIEWER_GROUPS
+              optional: true
+        - name: INTERNAL_TLS_INSECURE
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: INTERNAL_TLS_INSECURE
+        # NetApp ONTAP topology integration
+        - name: NETAPP_CLUSTERS
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: NETAPP_CLUSTERS
+        - name: NETAPP_USER
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: NETAPP_USER
+        - name: NETAPP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: alerthub-secrets
+              key: netapp-password
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+        # Resource limits for production
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 5
+---
+# Security Scanning Engine Deployment (EXISTING IMAGE)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-scanning-engine
+  namespace: aileron
+  labels:
+    app: security-scanning-engine
+    component: security
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: security-scanning-engine
+  template:
+    metadata:
+      labels:
+        app: security-scanning-engine
+    spec:
+      imagePullSecrets:
+      - name: jfrog-dockers-access
+      containers:
+      - name: security-scanner
+        image: ghcr.io/aileron-platform/aileron-admins/security-scanning-engine:v3.0.0
+        ports:
+        - containerPort: 8015
+          name: http
+        env:
+        - name: NEO4J_URL
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: NEO4J_URL
+        - name: KAFKA_BROKERS
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: KAFKA_BROKERS
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+---
+# Topology Graph Engine Deployment (EXISTING IMAGE)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: topology-graph-engine
+  namespace: aileron
+  labels:
+    app: topology-graph-engine
+    component: topology
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: topology-graph-engine
+  template:
+    metadata:
+      labels:
+        app: topology-graph-engine
+    spec:
+      imagePullSecrets:
+      - name: jfrog-dockers-access
+      containers:
+      - name: topology-engine
+        image: ghcr.io/aileron-platform/aileron-admins/topology-graph-engine:v3.0.0
+        ports:
+        - containerPort: 8003
+          name: http
+        env:
+        - name: NEO4J_URL
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: NEO4J_URL
+        - name: WEAVIATE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: WEAVIATE_URL
+        - name: KAFKA_BROKERS
+          valueFrom:
+            configMapKeyRef:
+              name: alerthub-enterprise-production-config
+              key: KAFKA_BROKERS
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "400m"
+---
+# Service for AlertHub Main Application
+apiVersion: v1
+kind: Service
+metadata:
+  name: alerthub-enterprise-main
+  namespace: aileron
+  labels:
+    app: alerthub-enterprise
+    component: main-application
+spec:
+  selector:
+    app: alerthub-enterprise
+    component: main-application
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+  type: ClusterIP
+---
+# Service for Security Scanning Engine
+apiVersion: v1
+kind: Service
+metadata:
+  name: security-scanning-engine
+  namespace: aileron
+  labels:
+    app: security-scanning-engine
+spec:
+  selector:
+    app: security-scanning-engine
+  ports:
+  - name: http
+    port: 8015
+    targetPort: 8015
+  type: ClusterIP
+---
+# Service for Topology Graph Engine  
+apiVersion: v1
+kind: Service
+metadata:
+  name: topology-graph-engine
+  namespace: aileron
+  labels:
+    app: topology-graph-engine
+spec:
+  selector:
+    app: topology-graph-engine
+  ports:
+  - name: http
+    port: 8003
+    targetPort: 8003
+  type: ClusterIP
+
+# Note: Using existing alerthub-secrets instead of creating new ones
+---
+# Ingress for AlertHub Enterprise (Apple internal)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alerthub-enterprise-ingress
+  namespace: aileron
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+spec:
+  tls:
+  - hosts:
+    - alerthub-enterprise.example-cluster.k8s.example.com
+    secretName: alerthub-tls-secret
+  rules:
+  - host: alerthub-enterprise.example-cluster.k8s.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: alerthub-enterprise-main
+            port:
+              number: 3000
+---
+# NetworkPolicy: restrict traffic to/from alerthub pods
+# Allows ingress from same namespace + ingress-nginx
+# Allows egress to internal k8s services + Apple internal/external services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: alerthub-network-policy
+  namespace: aileron
+spec:
+  podSelector:
+    matchLabels:
+      app: alerthub-enterprise
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from any pod within the same namespace (DB, Redis, Weaviate, etc.)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: aileron
+  # Allow traffic from the ingress-nginx controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+  egress:
+  # Allow DNS resolution (UDP+TCP port 53) to any destination
+  - ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow all traffic to pods within the same namespace
+  # (PostgreSQL:5432, Redis:6379, Weaviate:8080, Neo4j:7687/7474, Kafka:9092)
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: aileron
+  # Allow HTTPS (443) outbound to all IPs — covers Apple internal corporate services:
+  # -  (Floodgate/Claude GenAI — 17.x.x.x)
+  # - hclapi.example.com (Kentaurus incident management — 17.x.x.x)
+  # - directory.example.com (IDMS CSS photo/user lookup — corp network)
+  # - , idmsac-uat.example.com (IDMS OAuth2 — corp network)
+  # - oncall-pd.k.example.com (PagerDuty OnCall API — corp network)
+  # Apple's corporate services span 17.0.0.0/8 and VPN-only subnets;
+  # we allow all destinations on 443 since IPs are not fixed or publicly documented.
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow LDAP/LDAPS to  (Apple DS-LDAP group lookup)
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+    - protocol: TCP
+      port: 636
+    - protocol: TCP
+      port: 389

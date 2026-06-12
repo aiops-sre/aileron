@@ -1,0 +1,129 @@
+# ============================================================
+# AlertHub Ingress resources
+# Three ingress objects on the same host:
+#   1. frontend-api  — /api  → alerthub-backend:3000
+#   2. frontend-ui   — /     → alerthub-frontend:80
+#   3. rca-ws        — /ws   → rca-orchestrator:8006  (WebSocket)
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# 1. API ingress — /api  → backend
+# ---------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alerthub-frontend-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.ingressClass | quote }}
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    # Apple-specific: DNS external CNAME target
+    external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.dnsTarget | quote }}
+    # IDMS trusted-ingress header: backend middleware validates X-Internal-Auth to confirm
+    # that IDMS identity headers (X-Forwarded-User etc.) came through this trusted NGINX
+    # and not from a direct in-cluster caller forging identity. Value must match
+    # IDMS_INGRESS_SECRET in the alerthub-secrets K8s secret.
+    {{- if .Values.ingress.idmsIngressSecret }}
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-Internal-Auth {{ .Values.ingress.idmsIngressSecret | quote }};
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.ingressClass }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tlsSecret }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: alerthub-backend
+                port:
+                  number: {{ .Values.backend.port }}
+---
+# ---------------------------------------------------------------------------
+# 2. UI ingress — /  → frontend
+# ---------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alerthub-frontend-ui
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.ingressClass | quote }}
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.dnsTarget | quote }}
+spec:
+  ingressClassName: {{ .Values.ingress.ingressClass }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tlsSecret }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: alerthub-frontend
+                port:
+                  number: 80
+---
+# ---------------------------------------------------------------------------
+# 3. WebSocket ingress — /ws  → alerthub-backend
+# The backend exposes /ws/investigations/:id and internally proxies to
+# rca-orchestrator via its own WebSocket relay. Routing /ws directly to
+# rca-orchestrator would bypass the backend's auth and proxy logic.
+# ---------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alerthub-ws
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.ingressClass | quote }}
+    # WebSocket upgrade headers
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.dnsTarget | quote }}
+spec:
+  ingressClassName: {{ .Values.ingress.ingressClass }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tlsSecret }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: alerthub-backend
+                port:
+                  number: {{ .Values.backend.port }}

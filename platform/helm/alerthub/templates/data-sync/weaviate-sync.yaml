@@ -1,0 +1,283 @@
+{{- /*
+  Weaviate data sync resources.
+
+  RNO (source):
+    - CronJob: triggers Weaviate backup API daily, stores to PVC
+    - Deployment + NodePort: nginx serving the backup PVC so MDN can fetch it
+
+  MDN (target):
+    - CronJob: fetches backup archive from RNO nginx, restores via Weaviate API
+
+  Weaviate has a native backup/restore REST API — no service downtime required.
+*/ -}}
+
+{{- if .Values.dataSync.weaviate.backup.enabled }}
+---
+# PVC: stores the latest Weaviate backup on RNO
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: weaviate-backup-storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: weaviate-sync
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: 30Gi
+---
+# CronJob: trigger Weaviate backup API daily
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weaviate-backup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: weaviate-sync
+spec:
+  schedule: {{ .Values.dataSync.weaviate.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: weaviate-backup
+          annotations:
+            oneagent.dynatrace.com/inject: "false"
+        spec:
+          {{- include "alerthub.imagePullSecrets" . | nindent 10 }}
+          restartPolicy: OnFailure
+          containers:
+            - name: weaviate-backup
+              image: "{{ .Values.images.redis.repository }}:{{ .Values.images.redis.tag }}"
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+                  WEAVIATE_URL="http://weaviate:8080"
+                  BACKUP_ID="alerthub-$(date -u +%Y%m%d)"
+                  BACKUP_DIR="/backup/${BACKUP_ID}"
+
+                  echo "Starting Weaviate backup ${BACKUP_ID} ..."
+                  # Trigger backup via REST API (filesystem backend)
+                  RESPONSE=$(wget -q -O - \
+                    --header='Content-Type: application/json' \
+                    --post-data="{\"id\":\"${BACKUP_ID}\",\"include\":[]}" \
+                    "${WEAVIATE_URL}/v1/backups/filesystem")
+                  echo "Backup response: ${RESPONSE}"
+
+                  # Wait for backup to complete (poll every 10s, max 10 min)
+                  for i in $(seq 1 60); do
+                    STATUS=$(wget -q -O - "${WEAVIATE_URL}/v1/backups/filesystem/${BACKUP_ID}" | \
+                      grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+                    echo "Status: ${STATUS}"
+                    if [ "${STATUS}" = "SUCCESS" ]; then break; fi
+                    if [ "${STATUS}" = "FAILED" ]; then echo "Backup failed!"; exit 1; fi
+                    sleep 10
+                  done
+
+                  # Weaviate writes backup to its own data dir; copy to our PVC
+                  cp -r /weaviate-data/backups/${BACKUP_ID} /backup/ 2>/dev/null || \
+                    echo "Backup data at Weaviate default location"
+
+                  # Create tarball on PVC for easy transfer
+                  cd /backup && tar czf alerthub-latest.tar.gz "${BACKUP_ID}" 2>/dev/null || \
+                    tar czf alerthub-latest.tar.gz .
+                  date -u +%Y-%m-%dT%H:%M:%SZ > /backup/backup.timestamp
+                  echo "Backup complete: $(ls -lh /backup/alerthub-latest.tar.gz)"
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: weaviate-backup-storage
+---
+# Deployment: serves Weaviate backup via HTTP so MDN can fetch it
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weaviate-backup-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: weaviate-sync
+    app: weaviate-backup-server
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: weaviate-backup-server
+  template:
+    metadata:
+      labels:
+        app: weaviate-backup-server
+    spec:
+      {{- include "alerthub.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: file-server
+          image: "{{ .Values.images.redis.repository }}:{{ .Values.images.redis.tag }}"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              DIR=/backup
+              PORT=8080
+              echo "File server listening on :${PORT} serving ${DIR}"
+              while true; do
+                {
+                  IFS= read -r request
+                  path=$(printf '%s' "$request" | sed 's/^GET \/\([^ ]*\).*/\1/')
+                  while IFS= read -r line; do
+                    stripped=$(printf '%s' "$line" | tr -d '\r\n')
+                    [ -z "$stripped" ] && break
+                  done
+                  target="${DIR}/${path}"
+                  if [ -f "$target" ]; then
+                    printf 'HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\n\r\n'
+                    cat "$target"
+                  else
+                    printf 'HTTP/1.0 404 Not Found\r\n\r\n'
+                  fi
+                } | nc -l -p "${PORT}" 2>/dev/null || true
+              done
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: backup-storage
+          persistentVolumeClaim:
+            claimName: weaviate-backup-storage
+---
+# NodePort: exposes the backup nginx server to MDN
+apiVersion: v1
+kind: Service
+metadata:
+  name: weaviate-backup-server-nodeport
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: weaviate-sync
+spec:
+  type: NodePort
+  selector:
+    app: weaviate-backup-server
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      nodePort: {{ .Values.dataSync.weaviate.backup.serverNodePort }}
+{{- end }}
+
+{{- if .Values.dataSync.weaviate.restore.enabled }}
+---
+# CronJob: fetch Weaviate backup from RNO and restore via API on MDN
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weaviate-restore
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: weaviate-sync
+spec:
+  schedule: {{ .Values.dataSync.weaviate.restore.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: weaviate-restore
+        spec:
+          {{- include "alerthub.imagePullSecrets" . | nindent 10 }}
+          restartPolicy: OnFailure
+          containers:
+            - name: weaviate-restore
+              image: "{{ .Values.images.redis.repository }}:{{ .Values.images.redis.tag }}"
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+                  SOURCE="http://{{ .Values.dataSync.weaviate.restore.sourceHost }}:{{ .Values.dataSync.weaviate.restore.sourcePort }}"
+                  WEAVIATE_URL="http://weaviate:8080"
+                  BACKUP_ID="alerthub-$(date -u +%Y%m%d)"
+
+                  echo "Fetching backup from ${SOURCE}/alerthub-latest.tar.gz ..."
+                  wget -q -O /tmp/weaviate-backup.tar.gz "${SOURCE}/alerthub-latest.tar.gz"
+                  echo "Downloaded: $(ls -lh /tmp/weaviate-backup.tar.gz)"
+
+                  TIMESTAMP=$(wget -q -O - "${SOURCE}/backup.timestamp" 2>/dev/null || echo "unknown")
+                  echo "Backup timestamp: ${TIMESTAMP}"
+
+                  # Extract to Weaviate backup directory
+                  mkdir -p /tmp/backup
+                  tar xzf /tmp/weaviate-backup.tar.gz -C /tmp/backup
+                  EXTRACTED_ID=$(ls /tmp/backup/ | head -1)
+                  echo "Extracted backup: ${EXTRACTED_ID}"
+
+                  # Trigger restore via REST API
+                  RESPONSE=$(wget -q -O - \
+                    --header='Content-Type: application/json' \
+                    --post-data="{}" \
+                    "${WEAVIATE_URL}/v1/backups/filesystem/${EXTRACTED_ID}/restore")
+                  echo "Restore response: ${RESPONSE}"
+
+                  # Wait for restore to complete
+                  for i in $(seq 1 60); do
+                    STATUS=$(wget -q -O - \
+                      "${WEAVIATE_URL}/v1/backups/filesystem/${EXTRACTED_ID}/restore" | \
+                      grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+                    echo "Restore status: ${STATUS}"
+                    if [ "${STATUS}" = "SUCCESS" ]; then
+                      echo "Weaviate restore complete at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                      exit 0
+                    fi
+                    if [ "${STATUS}" = "FAILED" ]; then echo "Restore failed!"; exit 1; fi
+                    sleep 10
+                  done
+                  echo "Timeout waiting for restore to complete"
+                  exit 1
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+{{- end }}

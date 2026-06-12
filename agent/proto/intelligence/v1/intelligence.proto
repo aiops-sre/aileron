@@ -1,0 +1,329 @@
+syntax = "proto3";
+
+package intelligence.v1;
+
+option go_package = "kubesense/proto/intelligence/v1;intelligencepb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+// IntelligenceService is the main KubeSense API called by AlertHub and operators.
+service IntelligenceService {
+    // Trigger a full investigation for an incident.
+    rpc InvestigateIncident(InvestigationRequest) returns (InvestigationResponse);
+
+    // Get investigation result by ID (used when async=true).
+    rpc GetInvestigation(GetInvestigationRequest) returns (InvestigationResponse);
+
+    // Stream investigation progress updates.
+    rpc StreamInvestigation(GetInvestigationRequest) returns (stream InvestigationUpdate);
+
+    // Topology queries.
+    rpc GetClusterTopology(TopologyRequest) returns (TopologyResponse);
+    rpc GetDependencyChain(DependencyRequest) returns (DependencyResponse);
+    rpc GetBlastRadius(BlastRadiusRequest) returns (BlastRadiusResponse);
+
+    // Change intelligence.
+    rpc GetChangeHistory(ChangeHistoryRequest) returns (ChangeHistoryResponse);
+
+    // Configuration intelligence.
+    rpc GetConfigViolations(ConfigViolationsRequest) returns (ConfigViolationsResponse);
+    rpc ValidateManifest(ValidateManifestRequest) returns (ValidateManifestResponse);
+
+    // Forecasting.
+    rpc GetForecasts(ForecastRequest) returns (ForecastResponse);
+
+    // Resource search across clusters.
+    rpc SearchResources(SearchRequest) returns (SearchResponse);
+}
+
+// ─── Investigation ───────────────────────────────────────────────────────────
+
+message InvestigationRequest {
+    string                    incident_id        = 1;  // AlertHub incident ID
+    string                    cluster_id         = 2;
+    repeated ResourceRef      affected_resources = 3;
+    google.protobuf.Timestamp incident_time      = 4;
+    map<string, string>       alert_context      = 5;
+    bool                      async              = 6;  // return immediately with investigation_id
+}
+
+message InvestigationResponse {
+    string               investigation_id    = 1;
+    InvestigationStatus  status              = 2;
+    RCAResult            rca                 = 3;
+    repeated Evidence    evidence            = 4;
+    repeated Hypothesis  rejected_hypotheses = 5;
+    DependencyChain      dependency_chain    = 6;
+    repeated ChangeRecord recent_changes     = 7;
+    repeated RecommendedAction actions       = 8;
+    float                confidence          = 9;
+    string               summary            = 10;  // LLM-generated, evidence-grounded
+    string               evidence_grade     = 11;  // A/B/C/D/F
+    google.protobuf.Duration duration       = 12;
+}
+
+message InvestigationUpdate {
+    string              investigation_id = 1;
+    InvestigationStatus status           = 2;
+    string              step             = 3;  // "building_topology" | "gathering_evidence" | etc.
+    int32               progress_pct     = 4;  // 0-100
+    string              message          = 5;
+}
+
+message GetInvestigationRequest {
+    string investigation_id = 1;
+}
+
+enum InvestigationStatus {
+    INVESTIGATION_STATUS_UNSPECIFIED = 0;
+    INVESTIGATION_STATUS_PENDING     = 1;
+    INVESTIGATION_STATUS_RUNNING     = 2;
+    INVESTIGATION_STATUS_COMPLETED   = 3;
+    INVESTIGATION_STATUS_FAILED      = 4;
+}
+
+message RCAResult {
+    string  entity_id         = 1;
+    string  entity_kind       = 2;
+    string  entity_namespace  = 3;
+    string  entity_name       = 4;
+    float   confidence        = 5;
+    string  confidence_band   = 6;  // HIGH | MEDIUM | LOW | VERY_LOW
+    string  failure_mode      = 7;  // OOMKilled | CrashLoopBackOff | PVCPending | ...
+    string  failure_domain    = 8;  // compute | storage | network | config | ...
+    repeated string evidence_sources = 9;
+}
+
+message Hypothesis {
+    string           entity_id              = 1;
+    string           entity_kind            = 2;
+    string           entity_name            = 3;
+    string           entity_namespace       = 4;
+    float            confidence             = 5;
+    string           rejected_reason        = 6;
+    repeated Evidence supporting_evidence   = 7;
+    repeated Evidence refuting_evidence     = 8;
+}
+
+message Evidence {
+    string                    type         = 1;  // k8s_event | metric | change | topology
+    string                    source       = 2;
+    string                    description  = 3;
+    float                     strength     = 4;  // 0-1
+    google.protobuf.Timestamp occurred_at  = 5;
+    ResourceRef               resource_ref = 6;
+    map<string, string>       data         = 7;
+}
+
+message DependencyChain {
+    repeated DependencyNode nodes = 1;
+    repeated DependencyEdge edges = 2;
+    int32                   depth = 3;
+}
+
+message DependencyNode {
+    string entity_id   = 1;
+    string entity_kind = 2;
+    string namespace   = 3;
+    string name        = 4;
+    int32  depth       = 5;
+    string status      = 6;
+}
+
+message DependencyEdge {
+    string source_id  = 1;
+    string target_id  = 2;
+    string edge_type  = 3;  // RUNS_ON | MANAGED_BY | MOUNTS_PVC | ...
+}
+
+message ChangeRecord {
+    string                    change_type              = 1;
+    string                    resource_kind            = 2;
+    string                    namespace                = 3;
+    string                    resource_name            = 4;
+    string                    actor                    = 5;
+    string                    source                   = 6;  // informer | argocd | helm | github
+    google.protobuf.Timestamp occurred_at              = 7;
+    int64                     seconds_before_incident  = 8;
+    float                     correlation_score        = 9;
+}
+
+message RecommendedAction {
+    string action_type   = 1;  // restart | scale | rollback | investigate | escalate
+    string target        = 2;
+    string description   = 3;
+    string command       = 4;  // kubectl command, if applicable
+    float  confidence    = 5;
+    string rationale     = 6;
+}
+
+// ─── Common Types ────────────────────────────────────────────────────────────
+
+message ResourceRef {
+    string api_version = 1;
+    string kind        = 2;
+    string namespace   = 3;
+    string name        = 4;
+    string uid         = 5;
+}
+
+// ─── Topology ────────────────────────────────────────────────────────────────
+
+message TopologyRequest {
+    string cluster_id        = 1;
+    string namespace         = 2;  // empty = all namespaces
+    repeated string kinds    = 3;  // empty = all kinds
+}
+
+message TopologyResponse {
+    repeated TopologyNode nodes = 1;
+    repeated TopologyEdge edges = 2;
+    int32 total_nodes           = 3;
+    int32 total_edges           = 4;
+}
+
+message TopologyNode {
+    string              id          = 1;
+    string              kind        = 2;
+    string              namespace   = 3;
+    string              name        = 4;
+    string              uid         = 5;
+    string              status      = 6;
+    map<string, string> labels      = 7;
+}
+
+message TopologyEdge {
+    string source_id  = 1;
+    string target_id  = 2;
+    string edge_type  = 3;
+    map<string, string> metadata = 4;
+}
+
+message DependencyRequest {
+    string cluster_id = 1;
+    string kind       = 2;
+    string namespace  = 3;
+    string name       = 4;
+    int32  max_depth  = 5;  // default 8
+}
+
+message DependencyResponse {
+    DependencyChain chain = 1;
+}
+
+message BlastRadiusRequest {
+    string cluster_id = 1;
+    string kind       = 2;
+    string namespace  = 3;
+    string name       = 4;
+}
+
+message BlastRadiusResponse {
+    repeated DependencyNode affected_resources = 1;
+    int32                   total_affected     = 2;
+}
+
+// ─── Changes ─────────────────────────────────────────────────────────────────
+
+message ChangeHistoryRequest {
+    string                    cluster_id    = 1;
+    google.protobuf.Timestamp from          = 2;
+    google.protobuf.Timestamp until         = 3;
+    repeated string           resource_kinds = 4;
+    string                    namespace      = 5;
+    string                    resource_name  = 6;
+}
+
+message ChangeHistoryResponse {
+    repeated ChangeRecord changes = 1;
+    int32                 total   = 2;
+}
+
+// ─── Configuration ────────────────────────────────────────────────────────────
+
+message ConfigViolationsRequest {
+    string          cluster_id    = 1;
+    string          namespace     = 2;
+    repeated string severities    = 3;  // critical | high | medium | low
+    bool            unresolved_only = 4;
+}
+
+message ConfigViolationsResponse {
+    repeated ConfigViolation violations = 1;
+    int32                    total      = 2;
+}
+
+message ConfigViolation {
+    string                    rule_id       = 1;
+    string                    severity      = 2;
+    string                    resource_kind = 3;
+    string                    namespace     = 4;
+    string                    resource_name = 5;
+    string                    message       = 6;
+    string                    remediation   = 7;
+    google.protobuf.Timestamp first_seen    = 8;
+    google.protobuf.Timestamp last_seen     = 9;
+}
+
+message ValidateManifestRequest {
+    string cluster_id = 1;
+    string manifest   = 2;  // raw YAML/JSON manifest
+}
+
+message ValidateManifestResponse {
+    repeated ConfigViolation violations = 1;
+    bool                     valid      = 2;
+}
+
+// ─── Forecasting ─────────────────────────────────────────────────────────────
+
+message ForecastRequest {
+    string          cluster_id     = 1;
+    string          namespace      = 2;
+    repeated string forecast_types = 3;  // pvc_exhaustion | node_cpu | node_memory | cert_expiry
+}
+
+message ForecastResponse {
+    repeated Forecast forecasts = 1;
+}
+
+message Forecast {
+    string                    forecast_type      = 1;
+    string                    resource_kind      = 2;
+    string                    namespace          = 3;
+    string                    resource_name      = 4;
+    float                     current_value      = 5;  // current utilization 0-1
+    float                     threshold          = 6;  // alert threshold 0-1
+    google.protobuf.Timestamp predicted_breach   = 7;
+    google.protobuf.Timestamp confidence_low     = 8;
+    google.protobuf.Timestamp confidence_high    = 9;
+    float                     trend_per_day      = 10; // % change per day
+    int32                     data_points        = 11;
+    float                     model_confidence   = 12; // R² or equivalent
+}
+
+// ─── Search ──────────────────────────────────────────────────────────────────
+
+message SearchRequest {
+    string          query      = 1;
+    string          cluster_id = 2;  // empty = all clusters
+    repeated string kinds      = 3;  // empty = all kinds
+    string          namespace  = 4;
+    int32           limit      = 5;  // default 50
+}
+
+message SearchResponse {
+    repeated SearchResult results = 1;
+    int32                 total   = 2;
+}
+
+message SearchResult {
+    string cluster_id  = 1;
+    string kind        = 2;
+    string namespace   = 3;
+    string name        = 4;
+    string uid         = 5;
+    string status      = 6;
+    float  score       = 7;  // relevance score
+}

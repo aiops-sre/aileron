@@ -1,0 +1,40 @@
+FROM golang:1.22-alpine AS builder
+
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ARG GOPROXY=https://proxy.golang.org,direct
+ARG VERSION=dev
+ARG CACHE_BUST=2
+
+ENV HTTP_PROXY=${HTTP_PROXY} \
+    HTTPS_PROXY=${HTTPS_PROXY} \
+    NO_PROXY=${NO_PROXY} \
+    GOPROXY=${GOPROXY} \
+    GONOSUMDB=* \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+WORKDIR /build
+RUN apk --no-cache add git ca-certificates
+RUN git clone git@github.com:crypto-services/trust-apple-corp-root-cas.git /tmp/apple-cas 2>/dev/null || true
+RUN if [ -d /tmp/apple-cas ]; then \
+      cp /tmp/apple-cas/*.pem /usr/local/share/ca-certificates/ 2>/dev/null; \
+      cp /tmp/apple-cas/*.crt /usr/local/share/ca-certificates/ 2>/dev/null; \
+      update-ca-certificates; \
+    fi
+
+COPY go.mod go.sum* ./
+RUN go mod download
+COPY . .
+RUN go build -mod=mod -ldflags="-s -w -X main.version=${VERSION}" \
+    -o /app/kubesense-llm \
+    ./services/llm/cmd/llm
+
+FROM alpine:3.19 AS runtime
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+RUN addgroup -S kubesense && adduser -S kubesense -G kubesense
+COPY --from=builder /app/kubesense-llm /usr/local/bin/kubesense-llm
+USER kubesense:kubesense
+ENTRYPOINT ["/usr/local/bin/kubesense-llm"]

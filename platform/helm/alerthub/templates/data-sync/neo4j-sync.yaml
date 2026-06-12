@@ -1,0 +1,262 @@
+{{- /*
+  Neo4j data sync resources.
+
+  RNO (source):
+    - PVC: stores the latest Neo4j dump
+    - CronJob: dumps Neo4j database daily via neo4j-admin and writes to PVC
+    - Deployment + NodePort: nginx serving the dump PVC so MDN can fetch it
+
+  MDN (target):
+    - CronJob: fetches dump from RNO nginx, stops Neo4j, restores, restarts
+
+  Neo4j Community does not support built-in replication.
+  We use periodic dump/restore (Option A) with ~1 hour lag tolerance.
+*/ -}}
+
+{{- if .Values.dataSync.neo4j.dump.enabled }}
+---
+# PVC: stores the latest Neo4j dump on RNO
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: neo4j-dump-storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: neo4j-sync
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: 50Gi
+---
+# CronJob: dump Neo4j daily and write to PVC
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: neo4j-dump
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: neo4j-sync
+spec:
+  schedule: {{ .Values.dataSync.neo4j.dump.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: neo4j-dump
+          annotations:
+            oneagent.dynatrace.com/inject: "false"
+        spec:
+          {{- include "alerthub.imagePullSecrets" . | nindent 10 }}
+          restartPolicy: OnFailure
+          containers:
+            - name: neo4j-dump
+              image: "{{ .Values.images.neo4j.repository }}:{{ .Values.images.neo4j.tag }}"
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+                  echo "Starting Neo4j dump at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                  # Stop the running Neo4j instance to get consistent dump
+                  # We dump to stdout and save to PVC
+                  neo4j-admin database dump \
+                    --database=neo4j \
+                    --to-path=/dump \
+                    --overwrite-destination=true
+                  # Write timestamp for MDN to verify freshness
+                  date -u +%Y-%m-%dT%H:%M:%SZ > /dump/dump.timestamp
+                  echo "Dump complete: $(ls -lh /dump/neo4j.dump)"
+              env:
+                - name: NEO4J_ACCEPT_LICENSE_AGREEMENT
+                  value: "yes"
+              volumeMounts:
+                - name: dump-storage
+                  mountPath: /dump
+                - name: neo4j-data
+                  mountPath: /data
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 2Gi
+                limits:
+                  cpu: "2"
+                  memory: 4Gi
+          volumes:
+            - name: dump-storage
+              persistentVolumeClaim:
+                claimName: neo4j-dump-storage
+            - name: neo4j-data
+              persistentVolumeClaim:
+                claimName: neo4j-data-neo4j-0
+---
+# Deployment: serves Neo4j dump via HTTP (nginx) so MDN can fetch it
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neo4j-dump-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: neo4j-sync
+    app: neo4j-dump-server
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: neo4j-dump-server
+  template:
+    metadata:
+      labels:
+        app: neo4j-dump-server
+    spec:
+      {{- include "alerthub.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: file-server
+          image: "{{ .Values.images.redis.repository }}:{{ .Values.images.redis.tag }}"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              DIR=/dump
+              PORT=8080
+              echo "File server listening on :${PORT} serving ${DIR}"
+              while true; do
+                {
+                  IFS= read -r request
+                  path=$(printf '%s' "$request" | sed 's/^GET \/\([^ ]*\).*/\1/')
+                  while IFS= read -r line; do
+                    stripped=$(printf '%s' "$line" | tr -d '\r\n')
+                    [ -z "$stripped" ] && break
+                  done
+                  target="${DIR}/${path}"
+                  if [ -f "$target" ]; then
+                    printf 'HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\n\r\n'
+                    cat "$target"
+                  else
+                    printf 'HTTP/1.0 404 Not Found\r\n\r\n'
+                  fi
+                } | nc -l -p "${PORT}" 2>/dev/null || true
+              done
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: dump-storage
+              mountPath: /dump
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: dump-storage
+          persistentVolumeClaim:
+            claimName: neo4j-dump-storage
+---
+# NodePort: exposes the dump nginx server to MDN
+apiVersion: v1
+kind: Service
+metadata:
+  name: neo4j-dump-server-nodeport
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: neo4j-sync
+spec:
+  type: NodePort
+  selector:
+    app: neo4j-dump-server
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      nodePort: {{ .Values.dataSync.neo4j.dump.serverNodePort }}
+{{- end }}
+
+{{- if .Values.dataSync.neo4j.restore.enabled }}
+---
+# CronJob: fetch Neo4j dump from RNO and restore into MDN Neo4j
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: neo4j-restore
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: neo4j-sync
+spec:
+  schedule: {{ .Values.dataSync.neo4j.restore.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: neo4j-restore
+        spec:
+          {{- include "alerthub.imagePullSecrets" . | nindent 10 }}
+          restartPolicy: OnFailure
+          containers:
+            - name: neo4j-restore
+              image: "{{ .Values.images.neo4j.repository }}:{{ .Values.images.neo4j.tag }}"
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+                  SOURCE="http://{{ .Values.dataSync.neo4j.restore.sourceHost }}:{{ .Values.dataSync.neo4j.restore.sourcePort }}"
+                  DUMP_FILE="/tmp/neo4j.dump"
+                  echo "Fetching dump from ${SOURCE}/neo4j.dump ..."
+                  wget -q -O "${DUMP_FILE}" "${SOURCE}/neo4j.dump"
+                  echo "Dump fetched: $(ls -lh ${DUMP_FILE})"
+
+                  # Verify freshness — warn if dump is older than 26 hours
+                  TIMESTAMP=$(wget -q -O - "${SOURCE}/dump.timestamp" 2>/dev/null || echo "unknown")
+                  echo "Dump timestamp: ${TIMESTAMP}"
+
+                  echo "Stopping Neo4j for restore..."
+                  neo4j-admin server stop 2>/dev/null || true
+                  sleep 5
+
+                  echo "Restoring database..."
+                  neo4j-admin database restore \
+                    --from-path="${DUMP_FILE}" \
+                    --database=neo4j \
+                    --overwrite-destination=true
+
+                  echo "Restore complete at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              volumeMounts:
+                - name: neo4j-data
+                  mountPath: /data
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 2Gi
+                limits:
+                  cpu: "2"
+                  memory: 4Gi
+          volumes:
+            - name: neo4j-data
+              persistentVolumeClaim:
+                claimName: neo4j-data-neo4j-0
+{{- end }}

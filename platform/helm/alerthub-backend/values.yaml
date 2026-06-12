@@ -1,0 +1,125 @@
+# ============================================================
+# AlertHub Backend — Values
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Global
+# ---------------------------------------------------------------------------
+global:
+  imageRegistry: ghcr.io/aileron-platform/aileron-admins
+  imagePullSecret: jfrog-dockers-access
+  namespace: aileron
+  storageClass: example-cluster-netapp-sc
+
+# ---------------------------------------------------------------------------
+# Images
+# ---------------------------------------------------------------------------
+images:
+  backend:
+    repository: ghcr.io/aileron-platform/aileron-admins/sre-command-center-be
+    tag: v1.0.31-dev
+    pullPolicy: Always
+  redis:
+    repository: ghcr.io/aileron-platform/aileron-admins/redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+
+# ---------------------------------------------------------------------------
+# Backend
+# ---------------------------------------------------------------------------
+backend:
+  replicas: 2
+  port: 3000
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2000Mi
+    limits:
+      cpu: "1"
+      memory: 2000Mi
+  appBaseUrl: https://aileron.example.com
+  oauthClientId: "7jdvu5f1gxuuckpbdb5s7jw6tcwpf3"
+  oauthCallbackUrl: https://aileron.example.com/api/v1/auth
+  neo4jUrl: neo4j://neo4j:7687
+  neo4jHttpUrl: http://neo4j:7474
+  neo4jUsername: neo4j
+  neo4jPassword: neo4j-AIOps-Secure-2024
+  weaviateUrl: http://weaviate:8080
+  rcaOrchestratorUrl: http://rca-orchestrator:8006
+  oieUrl: http://oie.aileron.svc.cluster.local:8080
+  bertUrl: http://alerthub-bert-service:8765
+  ollamaUrl: http://ollama:11434
+  kafkaBrokers: alerthub-kafka-kafka-bootstrap:9092
+  netappUser: harvest-user
+  netappClusters: '[{"cluster":"100.67.87.8","name":"netapp-mdn-cluster001","region":"mdn"},{"cluster":"100.67.60.23","name":"netapp-rno-cluster001","region":"rno"}]'
+
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+config:
+  env: production
+  logLevel: info
+  port: "3000"
+  idmsEnabled: "true"
+  idmsAutoProvision: "true"
+  idmsDefaultRole: viewer
+  idmsStrictMode: "false"
+  internalTlsInsecure: "true"
+
+# ---------------------------------------------------------------------------
+# DS-LDAP
+# ---------------------------------------------------------------------------
+dsldap:
+  enabled: "true"
+  serverUrl: 
+  userSearchBase: "ou=people,o=apple"
+  cacheTtlMinutes: "5"
+  adminGroups: aileron-admins
+  operatorGroups: "aileron-operators,aileron-operators"
+  viewerGroups: aileron-viewers
+
+# ---------------------------------------------------------------------------
+# Secret reference names (actual values managed outside git)
+# ---------------------------------------------------------------------------
+secrets:
+  name: alerthub-secrets
+  dsldapName: alerthub-dsldap-credentials
+  hclName: alerthub-hcl-credentials
+  neo4jCredsName: neo4j-credentials
+  infraCredsName: infrastructure-credentials
+  whisperCertName: alerthub-whisper-cert
+
+build:
+  enabled: true
+
+whisper:
+  enabled: true
+
+# ---------------------------------------------------------------------------
+# Autoscaling
+# ---------------------------------------------------------------------------
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# ---------------------------------------------------------------------------
+# Pod Disruption Budget
+# ---------------------------------------------------------------------------
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# ---------------------------------------------------------------------------
+# Pod Anti-Affinity
+# ---------------------------------------------------------------------------
+podAntiAffinity:
+  enabled: true
+
+# ---------------------------------------------------------------------------
+# CMP plugin runtime values (set at deploy time; fallbacks below)
+# ---------------------------------------------------------------------------
+imageTag: ""
+Branch: ""

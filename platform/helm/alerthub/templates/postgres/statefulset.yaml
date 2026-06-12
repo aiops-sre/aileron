@@ -1,0 +1,218 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-primary
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=false
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+    app: postgres-primary
+spec:
+  serviceName: pg-hl
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-primary
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  template:
+    metadata:
+      labels:
+        app: postgres-primary
+        {{- include "alerthub.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: database
+    spec:
+      {{- include "alerthub.imagePullSecrets" . | nindent 6 }}
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        {{- if .Values.whisper.enabled }}
+        - name: init-whisperctl
+          image: ghcr.io/aileron-platform/crypto-services/whisperctl:1.1.3
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              ./whisperctl secret fetch \
+                --server  \
+                --client-certificate /etc/ssl/whisper/tls.crt \
+                --client-key /etc/ssl/whisper/tls.key \
+                --client-certificate-format PEM \
+                --namespace aileron-admins \
+                --secret-name alerthub-app-secrets \
+                --output-dir /tmp/secrets
+          volumeMounts:
+            - name: whisper-secrets
+              mountPath: /tmp/secrets
+            - name: whisper-cert
+              mountPath: /etc/ssl/whisper
+              readOnly: true
+        {{- else }}
+        - name: init-k8s-secrets
+          image: "{{ .Values.images.redis.repository }}:{{ .Values.images.redis.tag }}"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              printf '{"DB_PASSWORD":"%s"}' "$DB_PASSWORD" > /tmp/secrets/alerthub-app-secrets
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: DB_PASSWORD
+          volumeMounts:
+            - name: whisper-secrets
+              mountPath: /tmp/secrets
+        {{- end }}
+      containers:
+        - name: postgres
+          image: "{{ .Values.images.postgres.repository }}:{{ .Values.images.postgres.tag }}"
+          imagePullPolicy: {{ .Values.images.postgres.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              awk -F'"' '{for(i=2;i<NF;i+=4) if($i~/^[A-Z_][A-Z0-9_]*$/ && $(i+2)!="") print "export "$i"="$(i+2)}' \
+                /tmp/secrets/alerthub-app-secrets > /tmp/secrets/env.sh
+              . /tmp/secrets/env.sh
+              export POSTGRES_PASSWORD="${DB_PASSWORD}"
+              {{- if .Values.dataSync.postgres.standby.enabled }}
+              PGDATA=/var/lib/postgresql/data/pgdata
+              if [ ! -f "${PGDATA}/standby.signal" ]; then
+                echo "standby.signal missing — bootstrapping from primary via pg_basebackup..."
+                rm -rf "${PGDATA:?}"/*
+                export PGPASSWORD="${DB_PASSWORD}"
+                PRIMARY_CONNECTED=""
+                for RNO_HOST in {{ range splitList "," .Values.dataSync.postgres.standby.primaryHosts }}{{ trim . }} {{ end }}; do
+                  echo "Trying primary host ${RNO_HOST}:{{ .Values.dataSync.postgres.standby.primaryPort }}..."
+                  if pg_basebackup \
+                      -h "${RNO_HOST}" \
+                      -p {{ .Values.dataSync.postgres.standby.primaryPort }} \
+                      -U {{ .Values.dataSync.postgres.standby.replicatorUser }} \
+                      -D "${PGDATA}" \
+                      -Fp -Xs -P -R \
+                      --checkpoint=fast \
+                      -l 'mdn-standby-bootstrap'; then
+                    PRIMARY_CONNECTED="${RNO_HOST}"
+                    break
+                  fi
+                  echo "Could not connect to ${RNO_HOST}, trying next..."
+                  rm -rf "${PGDATA:?}"/*
+                done
+                if [ -z "${PRIMARY_CONNECTED}" ]; then
+                  echo "ERROR: pg_basebackup failed on all primary hosts — cannot start as standby"
+                  exit 1
+                fi
+                grep -v "^primary_conninfo" "${PGDATA}/postgresql.auto.conf" > /tmp/auto.conf.tmp \
+                  && mv /tmp/auto.conf.tmp "${PGDATA}/postgresql.auto.conf" || true
+                printf "primary_conninfo = 'host={{ .Values.dataSync.postgres.standby.primaryHosts }} port={{ .Values.dataSync.postgres.standby.primaryPort }} user={{ .Values.dataSync.postgres.standby.replicatorUser }} password=%s sslmode=disable'\nrecovery_target_timeline = 'latest'\n" "${DB_PASSWORD}" >> "${PGDATA}/postgresql.auto.conf"
+                echo "Standby bootstrap complete from ${PRIMARY_CONNECTED}."
+              else
+                echo "standby.signal present — starting as streaming standby."
+              fi
+              {{- end }}
+              exec docker-entrypoint.sh postgres \
+                -c config_file=/etc/postgresql/postgresql.conf \
+                -c hba_file=/etc/postgresql/pg_hba.conf
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.database | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.user | quote }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    until pg_isready -U {{ .Values.postgres.user }} -d {{ .Values.postgres.database }}; do sleep 2; done
+                    psql -U {{ .Values.postgres.user }} -d {{ .Values.postgres.database }} -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS btree_gin;" || true
+                    {{- if .Values.dataSync.postgres.primary.enabled }}
+                    psql -U {{ .Values.postgres.user }} -d {{ .Values.postgres.database }} -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{ .Values.dataSync.postgres.standby.replicatorUser }}') THEN CREATE ROLE {{ .Values.dataSync.postgres.standby.replicatorUser }} WITH REPLICATION LOGIN PASSWORD '$(cat /tmp/secrets/env.sh | grep DB_PASSWORD | cut -d= -f2-)'; END IF; END \$\$;" || true
+                    {{- end }}
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-config
+              mountPath: /etc/postgresql
+              readOnly: true
+            - name: whisper-secrets
+              mountPath: /tmp/secrets
+          resources:
+            {{- toYaml .Values.postgres.resources | nindent 12 }}
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.postgres.user }}
+                - -d
+                - {{ .Values.postgres.database }}
+            {{- if .Values.dataSync.postgres.standby.enabled }}
+            initialDelaySeconds: 120
+            {{- else }}
+            initialDelaySeconds: 30
+            {{- end }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.postgres.user }}
+                - -d
+                - {{ .Values.postgres.database }}
+            {{- if .Values.dataSync.postgres.standby.enabled }}
+            initialDelaySeconds: 30
+            {{- else }}
+            initialDelaySeconds: 10
+            {{- end }}
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: postgres-config
+          configMap:
+            name: postgres-config
+        - name: whisper-secrets
+          emptyDir: {}
+        {{- if .Values.whisper.enabled }}
+        - name: whisper-cert
+          csi:
+            driver: cmcs.crypto-services.example.com
+            readOnly: true
+            volumeAttributes:
+              cmcs.crypto-services.example.com/duration: "24h"
+              cmcs.crypto-services.example.com/fs-group: "1000"
+              cmcs.crypto-services.example.com/issuer-kind: AppleCertificateManagerCorpCA
+              cmcs.crypto-services.example.com/issuer-name: applecm-whisper-corpca-7915896-7915893
+              cmcs.crypto-services.example.com/key-usages: "client auth,digital signature,key encipherment"
+        {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+        labels:
+          app: postgres-primary
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.postgres.storage }}

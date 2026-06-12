@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kubesense-agent
+description: Kubernetes Intelligence Platform — in-cluster agent
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

@@ -1,0 +1,84 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubesense-ui
+  namespace: aileron-agent
+  labels:
+    app: kubesense-ui
+    component: ide
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kubesense-ui
+  template:
+    metadata:
+      labels:
+        app: kubesense-ui
+        component: ide
+    spec:
+      containers:
+        - name: ui
+          image: kubesense-ui:latest
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            - name: VITE_API_URL
+              value: ""   # empty = same origin (nginx proxies /api to kubesense-api)
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false   # nginx needs to write temp files
+            runAsNonRoot: true
+            runAsUser: 101
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubesense-ui
+  namespace: aileron-agent
+  labels:
+    app: kubesense-ui
+spec:
+  selector:
+    app: kubesense-ui
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+# Optional: expose via Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubesense-ui
+  namespace: aileron-agent
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: kubesense.aileron-agent.svc.cluster.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kubesense-ui
+                port:
+                  number: 80

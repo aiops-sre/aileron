@@ -1,0 +1,490 @@
+{{- if .Values.kubesense.enabled }}
+# KubeSense Strimzi KafkaTopic CRDs
+# Creates all kubesense.* topics on the shared Strimzi Kafka cluster.
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.topology
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "10737418240"
+    segment.bytes: "1073741824"
+    cleanup.policy: "delete"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.health
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "5368709120"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.workloads
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "10737418240"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "5368709120"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.network
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.investigations.requests
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.investigations.results
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.forecasts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.config.violations
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.apm.golden-signals
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "259200000"
+    retention.bytes: "5368709120"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.apm.regressions
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+# ── New SRE intelligence topics ───────────────────────────────────────────────
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.chaos.scores
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.drift.detected
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.postmortems
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "7776000000"
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.toil.events
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.noisebudget.suppressions
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.anomalies
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+{{- end }}
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.topology
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "10737418240"
+    segment.bytes: "1073741824"
+    cleanup.policy: "delete"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.health
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "5368709120"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.workloads
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "10737418240"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "5368709120"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.events.network
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.investigations.requests
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.investigations.results
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "2147483648"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.forecasts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.config.violations
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "2592000000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.apm.golden-signals
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: "259200000"
+    retention.bytes: "5368709120"
+    min.insync.replicas: "2"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kubesense.apm.regressions
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: alerthub-kafka
+    {{- include "alerthub.labels" . | nindent 4 }}
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: "604800000"
+    retention.bytes: "1073741824"
+    min.insync.replicas: "2"
+{{- end }}

@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alerthub-infra
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aileron-platform/aileron.git
+    targetRevision: master
+    path: helm/alerthub
+    plugin:
+      name: helm-revision-v1.0
+      env:
+        - name: ENV
+          value: mps-tooling-mdn
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: alert-engine
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      managedFieldsManagers:
+        - helm
+      jsonPointers:
+        - /spec/volumeClaimTemplates
+        - /spec/persistentVolumeClaimRetentionPolicy
+    - group: ""
+      kind: PersistentVolumeClaim
+      jsonPointers:
+        - /spec/storageClassName
+        - /spec/volumeName
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true

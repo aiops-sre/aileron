@@ -1,0 +1,25 @@
+{
+  "name": "kubesense-headlamp-plugin",
+  "version": "1.0.0",
+  "description": "KubeSense intelligence overlays for Headlamp — chaos scores, drift detection, RCA investigations",
+  "keywords": ["headlamp", "kubernetes", "kubesense", "observability", "sre"],
+  "main": "dist/index.js",
+  "scripts": {
+    "build":   "headlamp-plugin build",
+    "dev":     "headlamp-plugin start",
+    "package": "headlamp-plugin package"
+  },
+  "headlamp-plugin": {
+    "headline": "KubeSense Intelligence",
+    "homepage": "https://github.com/aileron-platform/aileron",
+    "changelog":  "CHANGELOG.md",
+    "screenshots": []
+  },
+  "dependencies": {
+    "@kinvolk/headlamp-plugin": "^0.8.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "@types/react": "^18.3.5"
+  }
+}

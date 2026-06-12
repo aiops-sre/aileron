@@ -1,0 +1,318 @@
+# ============================================================
+# AlertHub Enterprise — Base Values
+# All cluster-specific overrides live in values-<cluster>.yaml
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Global
+# ---------------------------------------------------------------------------
+global:
+  imageRegistry: ghcr.io/aileron-platform/aileron-admins
+  imagePullSecret: jfrog-dockers-access
+  namespace: aileron
+  storageClass: example-cluster-netapp-sc
+
+# ---------------------------------------------------------------------------
+# Images
+# ---------------------------------------------------------------------------
+images:
+  backend:
+    repository: ghcr.io/aileron-platform/aileron-admins/sre-command-center-be
+    tag: v1.0.31-dev
+    pullPolicy: Always
+  frontend:
+    repository: ghcr.io/aileron-platform/aileron-admins/sre-command-center-fe
+    tag: v1.0.13-dev
+    pullPolicy: Always
+  postgres:
+    repository: ghcr.io/aileron-platform/aileron-admins/postgres
+    tag: "15-pgvector"
+    pullPolicy: IfNotPresent
+  neo4j:
+    repository: ghcr.io/aileron-platform/aileron-admins/neo4j
+    tag: "5.15-community"
+    pullPolicy: IfNotPresent
+  redis:
+    repository: ghcr.io/aileron-platform/aileron-admins/redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+  weaviate:
+    repository: ghcr.io/aileron-platform/aileron-admins/weaviate
+    tag: "1.24.4-amd64"
+    pullPolicy: IfNotPresent
+  ollama:
+    repository: ghcr.io/aileron-platform/aileron-admins/ollama
+    tag: v1.0.0
+    pullPolicy: Always
+  bert:
+    repository: ghcr.io/aileron-platform/aileron-admins/alerthub-bert-service
+    tag: v4.0.0
+    pullPolicy: IfNotPresent
+  strimzi:
+    repository: ghcr.io/aileron-platform/aileron-admins/strimzi-operator
+    tag: "0.38.0"
+    pullPolicy: IfNotPresent
+
+# ---------------------------------------------------------------------------
+# Ingress
+# ---------------------------------------------------------------------------
+ingress:
+  host: aileron.example.com
+  tlsSecret: k-miao-tls-cert
+  ingressClass: nginx
+  dnsTarget: example-cluster.example.com
+  # idmsIngressSecret: set this to the same value as IDMS_INGRESS_SECRET in alerthub-secrets
+  # When set, NGINX injects X-Internal-Auth header so the backend can validate that
+  # identity headers (X-Forwarded-User etc.) came through the trusted ingress.
+  idmsIngressSecret: ""
+
+# ---------------------------------------------------------------------------
+# Backend
+# ---------------------------------------------------------------------------
+backend:
+  replicas: 2
+  port: 3000
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2000Mi
+    limits:
+      cpu: "1"
+      memory: 2000Mi
+  appBaseUrl: https://aileron.example.com
+  oauthClientId: "7jdvu5f1gxuuckpbdb5s7jw6tcwpf3"
+  oauthCallbackUrl: https://aileron.example.com/api/v1/auth
+  neo4jUrl: neo4j://neo4j:7687
+  neo4jHttpUrl: http://neo4j:7474
+  neo4jUsername: neo4j
+  neo4jPassword: neo4j-AIOps-Secure-2024
+  weaviateUrl: http://weaviate:8080
+  rcaOrchestratorUrl: http://rca-orchestrator:8006
+  bertUrl: http://alerthub-bert-service:8765
+  ollamaUrl: http://ollama:11434
+  kafkaBrokers: alerthub-kafka-kafka-bootstrap:9092
+  netappUser: harvest-user
+  netappClusters: '[{"cluster":"100.67.87.8","name":"netapp-mdn-cluster001","region":"mdn"},{"cluster":"100.67.60.23","name":"netapp-rno-cluster001","region":"rno"}]'
+
+# ---------------------------------------------------------------------------
+# Frontend
+# ---------------------------------------------------------------------------
+frontend:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# ---------------------------------------------------------------------------
+# PostgreSQL
+# ---------------------------------------------------------------------------
+postgres:
+  database: alerthub
+  user: alerthub
+  storage: 500Gi
+  resources:
+    requests:
+      cpu: "1"
+      memory: 4Gi
+    limits:
+      cpu: "2"
+      memory: 8Gi
+  config:
+    maxConnections: 200
+    sharedBuffers: 2GB
+    effectiveCacheSize: 6GB
+    maintenanceWorkMem: 512MB
+    workMem: 32MB
+
+# ---------------------------------------------------------------------------
+# Neo4j
+# ---------------------------------------------------------------------------
+neo4j:
+  storage: 200Gi
+  heapInitialSize: 1G
+  heapMaxSize: 3G
+  pagecacheSize: 2G
+  resources:
+    requests:
+      cpu: 500m
+      memory: 3Gi
+    limits:
+      cpu: "1"
+      memory: 6Gi
+
+# ---------------------------------------------------------------------------
+# Redis
+# ---------------------------------------------------------------------------
+redis:
+  replicas: 3
+  storage: 50Gi
+  maxmemory: 3gb
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "1"
+      memory: 4Gi
+
+# ---------------------------------------------------------------------------
+# Weaviate
+# ---------------------------------------------------------------------------
+weaviate:
+  storage: 100Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 3Gi
+    limits:
+      cpu: "1"
+      memory: 6Gi
+
+# ---------------------------------------------------------------------------
+# Ollama
+# ---------------------------------------------------------------------------
+ollama:
+  storage: 100Gi
+  model: qwen2.5:3b
+  embedModel: nomic-embed-text
+  resources:
+    requests:
+      cpu: "2"
+      memory: 4Gi
+    limits:
+      cpu: "4"
+      memory: 8Gi
+
+# ---------------------------------------------------------------------------
+# BERT Service
+# ---------------------------------------------------------------------------
+bert:
+  httpProxy: ""
+  httpsProxy: ""
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+# ---------------------------------------------------------------------------
+# Kafka (Strimzi)
+# ---------------------------------------------------------------------------
+kafka:
+  replicas: 3
+  storage: 200Gi
+  zookeeperReplicas: 1
+  zookeeperStorage: 50Gi
+
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+config:
+  env: production
+  logLevel: info
+  port: "3000"
+  cluster: example-cluster
+  idmsEnabled: "true"
+  idmsAutoProvision: "true"
+  idmsDefaultRole: viewer
+  idmsStrictMode: "false"
+  internalTlsInsecure: "true"
+
+# ---------------------------------------------------------------------------
+# DS-LDAP
+# ---------------------------------------------------------------------------
+dsldap:
+  enabled: "true"
+  serverUrl: 
+  userSearchBase: "ou=people,o=apple"
+  cacheTtlMinutes: "5"
+  adminGroups: aileron-admins
+  operatorGroups: "aileron-operators,aileron-operators"
+  viewerGroups: aileron-viewers
+
+# ---------------------------------------------------------------------------
+# Secret reference names (actual values managed outside git)
+# ---------------------------------------------------------------------------
+secrets:
+  name: alerthub-secrets
+  dsldapName: alerthub-dsldap-credentials
+  hclName: alerthub-hcl-credentials
+  neo4jCredsName: neo4j-credentials
+  infraCredsName: infrastructure-credentials
+  whisperCertName: alerthub-whisper-cert
+
+# ---------------------------------------------------------------------------
+# Build jobs (buildkit / cosign) — disable on DR clusters without buildkit
+# ---------------------------------------------------------------------------
+build:
+  enabled: true
+
+# ---------------------------------------------------------------------------
+# Whisper secret store — disable on clusters without AppleCertificateManager CR
+# ---------------------------------------------------------------------------
+whisper:
+  enabled: true
+
+# ---------------------------------------------------------------------------
+# Data Sync — RNO (primary) → MDN (DR)
+# Each sub-section is opt-in via cluster values-<env>.yaml overrides
+# ---------------------------------------------------------------------------
+dataSync:
+  postgres:
+    primary:
+      enabled: false
+      nodePort: 30532
+    standby:
+      enabled: false
+      primaryHosts: "10.127.204.36,10.127.202.32,10.127.200.39"
+      primaryPort: "30532"
+      replicatorUser: replicator
+  kafka:
+    bootstrap:
+      enabled: false
+      nodePort: 30092
+    mirrorMaker2:
+      enabled: false
+      sourceBootstrap: "10.127.204.36:30092,10.127.202.32:30092"
+      topics: "raw-alerts|normalized-alerts|processed-alerts|correlation-results|rca-events"
+      replicas: 1
+  neo4j:
+    dump:
+      enabled: false
+      schedule: "0 2 * * *"
+      serverNodePort: 30643
+    restore:
+      enabled: false
+      schedule: "0 3 * * *"
+      sourceHost: "10.127.204.36"
+      sourcePort: "30643"
+  weaviate:
+    backup:
+      enabled: false
+      schedule: "0 2 * * *"
+      serverNodePort: 30644
+    restore:
+      enabled: false
+      schedule: "0 3 * * *"
+      sourceHost: "10.127.204.36"
+      sourcePort: "30644"
+
+# ---------------------------------------------------------------------------
+# CMP plugin runtime values (set at deploy time; fallbacks below)
+# ---------------------------------------------------------------------------
+imageTag: ""
+Branch: ""
+
+# ---------------------------------------------------------------------------
+# KubeSense integration — Strimzi KafkaTopics for kubesense.* namespace
+# ---------------------------------------------------------------------------
+kubesense:
+  # enabled: true creates the 12 KafkaTopic CRDs on the shared Strimzi cluster.
+  # Set to false when KubeSense agents are not deployed in this environment.
+  enabled: true

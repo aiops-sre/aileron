@@ -1,0 +1,52 @@
+name: Commit Lint
+
+on:
+  pull_request:
+    branches: [master, develop]
+  workflow_dispatch: {}
+
+jobs:
+  commitlint:
+    name: Validate commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check conventional commits
+        run: |
+          # On workflow_dispatch there is no PR range — validate only HEAD commit.
+          if [ -z "${{ github.event.pull_request.base.sha }}" ]; then
+            BASE="HEAD~1"
+            HEAD="HEAD"
+          else
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          fi
+
+          PATTERN='^(feat|fix|docs|chore|refactor|test|perf|ci|build|style|revert)(\([a-z0-9_/-]+\))?: .{1,100}$'
+          FAILED=0
+
+          while IFS= read -r msg; do
+            # Skip merge commits
+            [[ "$msg" =~ ^Merge ]] && continue
+            if ! echo "$msg" | grep -qP "$PATTERN"; then
+              echo "FAIL: \"$msg\""
+              FAILED=1
+            fi
+          done < <(git log --format=%s "$BASE..$HEAD")
+
+          if [ $FAILED -ne 0 ]; then
+            echo ""
+            echo "Commit messages must follow Conventional Commits:"
+            echo "  feat(scope): add new thing"
+            echo "  fix(pipeline): correct alert dedup logic"
+            echo "  chore(deps): bump go.mod"
+            echo ""
+            echo "Valid types: feat fix docs chore refactor test perf ci build style revert"
+            echo "Valid scopes (optional): pipeline correlation topology api frontend auth infra deps alerts incidents"
+            exit 1
+          fi
+
+          echo "All commit messages are valid."

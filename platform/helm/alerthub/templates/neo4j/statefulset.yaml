@@ -1,0 +1,171 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: neo4j
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=false
+  labels:
+    {{- include "alerthub.labels" . | nindent 4 }}
+    app.kubernetes.io/component: graph-database
+    app: neo4j
+spec:
+  serviceName: neo4j-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: neo4j
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  template:
+    metadata:
+      labels:
+        app: neo4j
+        {{- include "alerthub.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: graph-database
+    spec:
+      {{- include "alerthub.imagePullSecrets" . | nindent 6 }}
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 7474
+        fsGroup: 7474
+      initContainers:
+        {{- if .Values.whisper.enabled }}
+        - name: init-whisperctl
+          image: ghcr.io/aileron-platform/crypto-services/whisperctl:1.1.3
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              ./whisperctl secret fetch \
+                --server  \
+                --client-certificate /etc/ssl/whisper/tls.crt \
+                --client-key /etc/ssl/whisper/tls.key \
+                --client-certificate-format PEM \
+                --secret-name alerthub-neo4j \
+                --output-dir /tmp/secrets \
+                --namespace aileron-admins
+          volumeMounts:
+            - name: whisper-secrets
+              mountPath: /tmp/secrets
+            - name: whisper-cert
+              mountPath: /etc/ssl/whisper
+              readOnly: true
+        {{- else }}
+        - name: init-k8s-secrets
+          image: "{{ .Values.images.redis.repository }}:{{ .Values.images.redis.tag }}"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              printf '{"NEO4J_AUTH":"%s"}' "$NEO4J_AUTH" > /tmp/secrets/alerthub-neo4j
+          env:
+            - name: NEO4J_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.neo4jCredsName }}
+                  key: NEO4J_AUTH
+          volumeMounts:
+            - name: whisper-secrets
+              mountPath: /tmp/secrets
+        {{- end }}
+      containers:
+        - name: neo4j
+          image: "{{ .Values.images.neo4j.repository }}:{{ .Values.images.neo4j.tag }}"
+          imagePullPolicy: {{ .Values.images.neo4j.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              awk -F'"' '{for(i=2;i<NF;i+=4) if($i~/^[A-Z_][A-Z0-9_]*$/ && $(i+2)!="") print "export "$i"="$(i+2)}' \
+                /tmp/secrets/alerthub-neo4j > /tmp/secrets/env.sh
+              . /tmp/secrets/env.sh
+              case "${NEO4J_AUTH:-}" in
+                none|neo4j/*|"") ;;
+                *) export NEO4J_AUTH="neo4j/${NEO4J_AUTH}" ;;
+              esac
+              exec /startup/docker-entrypoint.sh neo4j
+          ports:
+            - name: http
+              containerPort: 7474
+              protocol: TCP
+            - name: bolt
+              containerPort: 7687
+              protocol: TCP
+          env:
+            - name: NEO4J_server_memory_heap_initial__size
+              value: {{ .Values.neo4j.heapInitialSize | quote }}
+            - name: NEO4J_server_memory_heap_max__size
+              value: {{ .Values.neo4j.heapMaxSize | quote }}
+            - name: NEO4J_server_memory_pagecache_size
+              value: {{ .Values.neo4j.pagecacheSize | quote }}
+            - name: NEO4J_dbms_security_auth__enabled
+              value: "true"
+            - name: NEO4J_dbms_connector_bolt_listen__address
+              value: "0.0.0.0:7687"
+            - name: NEO4J_dbms_connector_http_listen__address
+              value: "0.0.0.0:7474"
+            - name: NEO4J_dbms_logs_query_enabled
+              value: "INFO"
+            - name: NEO4J_PLUGINS
+              value: '["apoc"]'
+            - name: NEO4J_server_config_strict__validation_enabled
+              value: "false"
+          volumeMounts:
+            - name: neo4j-data
+              mountPath: /data
+            - name: neo4j-logs
+              mountPath: /logs
+            - name: whisper-secrets
+              mountPath: /tmp/secrets
+          resources:
+            {{- toYaml .Values.neo4j.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 7474
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 7474
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 5
+      volumes:
+        - name: neo4j-logs
+          emptyDir: {}
+        - name: whisper-secrets
+          emptyDir: {}
+        {{- if .Values.whisper.enabled }}
+        - name: whisper-cert
+          csi:
+            driver: cmcs.crypto-services.example.com
+            readOnly: true
+            volumeAttributes:
+              cmcs.crypto-services.example.com/duration: "24h"
+              cmcs.crypto-services.example.com/fs-group: "7474"
+              cmcs.crypto-services.example.com/issuer-kind: AppleCertificateManagerCorpCA
+              cmcs.crypto-services.example.com/issuer-name: applecm-whisper-corpca-7915896-7915893
+              cmcs.crypto-services.example.com/key-usages: "client auth,digital signature,key encipherment"
+        {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: neo4j-data
+        labels:
+          app: neo4j
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.neo4j.storage }}

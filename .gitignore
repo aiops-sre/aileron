@@ -1,0 +1,11 @@
+node_modules/
+vendor/
+*.env
+.env
+*.local
+dist/
+*.png
+*.key
+*.pptx
+*.html
+go.work.sum

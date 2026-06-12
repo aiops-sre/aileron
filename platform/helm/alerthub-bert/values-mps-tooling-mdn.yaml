@@ -1,0 +1,14 @@
+# ============================================================
+# alerthub-bert — mps-tooling-mdn overrides (DR / Warm-Standby)
+# ============================================================
+
+global:
+  storageClass: tooling-mdn-netapp-default
+  namespace: alert-engine
+
+bert:
+  httpProxy: "http://:443"
+  httpsProxy: "http://:443"
+
+build:
+  enabled: false

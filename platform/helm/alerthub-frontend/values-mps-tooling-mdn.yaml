@@ -1,0 +1,13 @@
+# ============================================================
+# alerthub-frontend — mps-tooling-mdn overrides (DR / Warm-Standby)
+# ============================================================
+
+global:
+  storageClass: tooling-mdn-netapp-default
+  namespace: alert-engine
+
+frontend:
+  replicas: 1
+
+build:
+  enabled: false

@@ -1,0 +1,28 @@
+# ============================================================
+# KubeSense Hub — example-cluster environment values
+# ============================================================
+global:
+  namespace: aileron-agent
+  storageClass: example-cluster-netapp-sc
+
+build:
+  # Enables Buildkit PreSync jobs — ArgoCD will rebuild images on every sync
+  enabled: true
+
+agent:
+  clusterID: "example-cluster"
+  kafkaBrokers: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+
+collector:
+  kafkaBrokers: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+
+core:
+  kafkaBrokers: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+
+llm:
+  ollamaURL: "http://ollama.aileron.svc.cluster.local:11434"
+  ollamaModel: "qwen2.5:7b"
+  # CLAUDE_API_KEY: set via kubesense-llm-secret if using Claude API
+
+whisper:
+  enabled: true

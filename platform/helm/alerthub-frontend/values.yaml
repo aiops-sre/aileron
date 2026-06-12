@@ -1,0 +1,66 @@
+# ============================================================
+# AlertHub Frontend — Values
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Global
+# ---------------------------------------------------------------------------
+global:
+  imageRegistry: ghcr.io/aileron-platform/aileron-admins
+  imagePullSecret: jfrog-dockers-access
+  namespace: aileron
+  storageClass: example-cluster-netapp-sc
+
+# ---------------------------------------------------------------------------
+# Images
+# ---------------------------------------------------------------------------
+images:
+  frontend:
+    repository: ghcr.io/aileron-platform/aileron-admins/sre-command-center-fe
+    tag: v1.0.13-dev
+    pullPolicy: Always
+
+# ---------------------------------------------------------------------------
+# Frontend
+# ---------------------------------------------------------------------------
+frontend:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# ---------------------------------------------------------------------------
+# Backend (port needed for BACKEND_URL env var in frontend deployment)
+# ---------------------------------------------------------------------------
+backend:
+  port: 3000
+
+build:
+  enabled: true
+
+# ---------------------------------------------------------------------------
+# Autoscaling
+# ---------------------------------------------------------------------------
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# ---------------------------------------------------------------------------
+# Pod Disruption Budget
+# ---------------------------------------------------------------------------
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# ---------------------------------------------------------------------------
+# CMP plugin runtime values (set at deploy time; fallbacks below)
+# ---------------------------------------------------------------------------
+imageTag: ""
+Branch: ""

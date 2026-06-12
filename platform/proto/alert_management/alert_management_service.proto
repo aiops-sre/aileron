@@ -1,0 +1,433 @@
+syntax = "proto3";
+
+package alert_management;
+
+option go_package = "github.com/alerthub-enterprise/proto/alert_management";
+
+import "google/protobuf/timestamp.proto";
+
+// Alert Management Service Definition
+service AlertManagementService {
+    // Alert operations
+    rpc CreateAlert(CreateAlertRequest) returns (CreateAlertResponse);
+    rpc GetAlert(GetAlertRequest) returns (GetAlertResponse);
+    rpc UpdateAlert(UpdateAlertRequest) returns (UpdateAlertResponse);
+    rpc DeleteAlert(DeleteAlertRequest) returns (DeleteAlertResponse);
+    rpc ListAlerts(ListAlertsRequest) returns (ListAlertsResponse);
+    rpc SearchAlerts(SearchAlertsRequest) returns (SearchAlertsResponse);
+    
+    // Alert correlation
+    rpc CorrelateAlert(CorrelateAlertRequest) returns (CorrelateAlertResponse);
+    rpc GetCorrelatedAlerts(GetCorrelatedAlertsRequest) returns (GetCorrelatedAlertsResponse);
+    
+    // Alert enrichment
+    rpc EnrichAlert(EnrichAlertRequest) returns (EnrichAlertResponse);
+    rpc GetAlertContext(GetAlertContextRequest) returns (GetAlertContextResponse);
+    
+    // Burst detection
+    rpc DetectBurst(DetectBurstRequest) returns (DetectBurstResponse);
+    rpc GetBurstMetrics(GetBurstMetricsRequest) returns (GetBurstMetricsResponse);
+    
+    // Alert lifecycle management
+    rpc AcknowledgeAlert(AcknowledgeAlertRequest) returns (AcknowledgeAlertResponse);
+    rpc ResolveAlert(ResolveAlertRequest) returns (ResolveAlertResponse);
+    rpc EscalateAlert(EscalateAlertRequest) returns (EscalateAlertResponse);
+    
+    // Floodgate and suppression
+    rpc ApplyFloodgate(ApplyFloodgateRequest) returns (ApplyFloodgateResponse);
+    rpc GetSuppressionRules(GetSuppressionRulesRequest) returns (GetSuppressionRulesResponse);
+    
+    // Metrics and analytics
+    rpc GetAlertMetrics(GetAlertMetricsRequest) returns (GetAlertMetricsResponse);
+    rpc GetAlertTrends(GetAlertTrendsRequest) returns (GetAlertTrendsResponse);
+}
+
+// Alert CRUD Messages
+message CreateAlertRequest {
+    Alert alert = 1;
+    bool auto_correlate = 2;
+    bool auto_enrich = 3;
+    string source_service = 4;
+}
+
+message CreateAlertResponse {
+    bool success = 1;
+    Alert alert = 2;
+    string alert_id = 3;
+    string correlation_id = 4;
+    string error_message = 5;
+}
+
+message GetAlertRequest {
+    string alert_id = 1;
+    bool include_history = 2;
+    bool include_correlation = 3;
+}
+
+message GetAlertResponse {
+    bool found = 1;
+    Alert alert = 2;
+    repeated AlertHistory history = 3;
+    AlertCorrelation correlation = 4;
+    string error_message = 5;
+}
+
+message UpdateAlertRequest {
+    string alert_id = 1;
+    Alert alert = 2;
+    string updated_by = 3;
+    string update_reason = 4;
+}
+
+message UpdateAlertResponse {
+    bool success = 1;
+    Alert alert = 2;
+    string error_message = 3;
+}
+
+message DeleteAlertRequest {
+    string alert_id = 1;
+    string deleted_by = 2;
+    string delete_reason = 3;
+}
+
+message DeleteAlertResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ListAlertsRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string status_filter = 3;
+    string severity_filter = 4;
+    google.protobuf.Timestamp from_time = 5;
+    google.protobuf.Timestamp to_time = 6;
+    repeated string tag_filters = 7;
+}
+
+message ListAlertsResponse {
+    repeated Alert alerts = 1;
+    int32 total_count = 2;
+    int32 page = 3;
+    int32 page_size = 4;
+}
+
+message SearchAlertsRequest {
+    string query = 1;
+    SearchOptions options = 2;
+    int32 limit = 3;
+}
+
+message SearchAlertsResponse {
+    repeated Alert alerts = 1;
+    int32 total_matches = 2;
+    float search_time_ms = 3;
+}
+
+// Correlation Messages
+message CorrelateAlertRequest {
+    string alert_id = 1;
+    CorrelationOptions options = 2;
+}
+
+message CorrelateAlertResponse {
+    bool success = 1;
+    string correlation_id = 2;
+    repeated string correlated_alert_ids = 3;
+    float correlation_score = 4;
+    string correlation_reason = 5;
+    string error_message = 6;
+}
+
+message GetCorrelatedAlertsRequest {
+    string alert_id = 1;
+    string correlation_id = 2;
+}
+
+message GetCorrelatedAlertsResponse {
+    repeated Alert alerts = 1;
+    AlertCorrelation correlation = 2;
+}
+
+// Enrichment Messages
+message EnrichAlertRequest {
+    string alert_id = 1;
+    EnrichmentOptions options = 2;
+}
+
+message EnrichAlertResponse {
+    bool success = 1;
+    Alert enriched_alert = 2;
+    map<string, string> enrichment_data = 3;
+    string error_message = 4;
+}
+
+message GetAlertContextRequest {
+    string alert_id = 1;
+    repeated string context_types = 2;
+}
+
+message GetAlertContextResponse {
+    map<string, AlertContext> contexts = 1;
+}
+
+// Burst Detection Messages
+message DetectBurstRequest {
+    string source = 1;
+    google.protobuf.Timestamp time_window_start = 2;
+    google.protobuf.Timestamp time_window_end = 3;
+    BurstDetectionOptions options = 4;
+}
+
+message DetectBurstResponse {
+    bool burst_detected = 1;
+    BurstMetrics metrics = 2;
+    repeated string affected_alert_ids = 3;
+    string burst_id = 4;
+}
+
+message GetBurstMetricsRequest {
+    string burst_id = 1;
+    google.protobuf.Timestamp from_time = 2;
+    google.protobuf.Timestamp to_time = 3;
+}
+
+message GetBurstMetricsResponse {
+    BurstMetrics metrics = 1;
+    repeated BurstMetrics historical_metrics = 2;
+}
+
+// Lifecycle Messages
+message AcknowledgeAlertRequest {
+    string alert_id = 1;
+    string acknowledged_by = 2;
+    string acknowledgment_note = 3;
+}
+
+message AcknowledgeAlertResponse {
+    bool success = 1;
+    Alert alert = 2;
+    string error_message = 3;
+}
+
+message ResolveAlertRequest {
+    string alert_id = 1;
+    string resolved_by = 2;
+    string resolution_note = 3;
+    string resolution_method = 4;
+}
+
+message ResolveAlertResponse {
+    bool success = 1;
+    Alert alert = 2;
+    string error_message = 3;
+}
+
+message EscalateAlertRequest {
+    string alert_id = 1;
+    string escalated_by = 2;
+    string escalation_reason = 3;
+    string escalation_target = 4;
+}
+
+message EscalateAlertResponse {
+    bool success = 1;
+    Alert alert = 2;
+    string escalation_id = 3;
+    string error_message = 4;
+}
+
+// Floodgate Messages
+message ApplyFloodgateRequest {
+    repeated string alert_ids = 1;
+    FloodgateRule rule = 2;
+    string applied_by = 3;
+}
+
+message ApplyFloodgateResponse {
+    bool success = 1;
+    int32 suppressed_count = 2;
+    repeated string suppressed_alert_ids = 3;
+    string floodgate_session_id = 4;
+    string error_message = 5;
+}
+
+message GetSuppressionRulesRequest {
+    string rule_type = 1;
+    bool active_only = 2;
+}
+
+message GetSuppressionRulesResponse {
+    repeated SuppressionRule rules = 1;
+}
+
+// Metrics Messages
+message GetAlertMetricsRequest {
+    google.protobuf.Timestamp from_time = 1;
+    google.protobuf.Timestamp to_time = 2;
+    string group_by = 3;
+    repeated string metric_types = 4;
+}
+
+message GetAlertMetricsResponse {
+    repeated AlertMetric metrics = 1;
+    AlertSummary summary = 2;
+}
+
+message GetAlertTrendsRequest {
+    google.protobuf.Timestamp from_time = 1;
+    google.protobuf.Timestamp to_time = 2;
+    string time_bucket = 3;
+    repeated string trend_types = 4;
+}
+
+message GetAlertTrendsResponse {
+    repeated AlertTrend trends = 1;
+}
+
+// Data Models
+message Alert {
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    string severity = 4; // "critical", "high", "medium", "low", "info"
+    string status = 5; // "open", "acknowledged", "resolved", "suppressed"
+    string source = 6;
+    string source_type = 7;
+    map<string, string> labels = 8;
+    map<string, string> annotations = 9;
+    google.protobuf.Timestamp created_at = 10;
+    google.protobuf.Timestamp updated_at = 11;
+    google.protobuf.Timestamp acknowledged_at = 12;
+    google.protobuf.Timestamp resolved_at = 13;
+    string acknowledged_by = 14;
+    string resolved_by = 15;
+    string correlation_id = 16;
+    repeated string tags = 17;
+    AlertMetadata metadata = 18;
+}
+
+message AlertHistory {
+    string id = 1;
+    string alert_id = 2;
+    string action = 3;
+    string performed_by = 4;
+    google.protobuf.Timestamp timestamp = 5;
+    map<string, string> changes = 6;
+    string notes = 7;
+}
+
+message AlertCorrelation {
+    string id = 1;
+    string primary_alert_id = 2;
+    repeated string correlated_alert_ids = 3;
+    string correlation_method = 4;
+    float correlation_score = 5;
+    string correlation_reason = 6;
+    google.protobuf.Timestamp created_at = 7;
+    map<string, string> correlation_metadata = 8;
+}
+
+message AlertContext {
+    string context_type = 1;
+    map<string, string> data = 2;
+    google.protobuf.Timestamp retrieved_at = 3;
+}
+
+message AlertMetadata {
+    string fingerprint = 1;
+    int32 occurrence_count = 2;
+    google.protobuf.Timestamp first_seen = 3;
+    google.protobuf.Timestamp last_seen = 4;
+    map<string, string> enrichment_data = 5;
+}
+
+message BurstMetrics {
+    string burst_id = 1;
+    int32 alert_count = 2;
+    float alerts_per_minute = 3;
+    google.protobuf.Timestamp burst_start = 4;
+    google.protobuf.Timestamp burst_end = 5;
+    string burst_source = 6;
+    map<string, int32> severity_distribution = 7;
+}
+
+message FloodgateRule {
+    string id = 1;
+    string name = 2;
+    string rule_type = 3;
+    map<string, string> conditions = 4;
+    int32 threshold = 5;
+    int32 time_window_minutes = 6;
+    string action = 7;
+    bool enabled = 8;
+}
+
+message SuppressionRule {
+    string id = 1;
+    string name = 2;
+    map<string, string> filters = 3;
+    google.protobuf.Timestamp start_time = 4;
+    google.protobuf.Timestamp end_time = 5;
+    string reason = 6;
+    bool active = 7;
+}
+
+message AlertMetric {
+    string metric_name = 1;
+    string metric_type = 2;
+    double value = 3;
+    google.protobuf.Timestamp timestamp = 4;
+    map<string, string> dimensions = 5;
+}
+
+message AlertTrend {
+    string trend_type = 1;
+    google.protobuf.Timestamp time_bucket = 2;
+    repeated TrendDataPoint data_points = 3;
+}
+
+message TrendDataPoint {
+    google.protobuf.Timestamp timestamp = 1;
+    double value = 2;
+    map<string, string> labels = 3;
+}
+
+message AlertSummary {
+    int32 total_alerts = 1;
+    int32 open_alerts = 2;
+    int32 acknowledged_alerts = 3;
+    int32 resolved_alerts = 4;
+    map<string, int32> severity_counts = 5;
+    map<string, int32> source_counts = 6;
+}
+
+// Options Messages
+message SearchOptions {
+    repeated string fields = 1;
+    bool fuzzy_search = 2;
+    map<string, string> filters = 3;
+}
+
+message CorrelationOptions {
+    repeated string correlation_methods = 1;
+    float min_correlation_score = 2;
+    int32 max_correlated_alerts = 3;
+    google.protobuf.Timestamp time_window_start = 4;
+    google.protobuf.Timestamp time_window_end = 5;
+}
+
+message EnrichmentOptions {
+    repeated string enrichment_sources = 1;
+    bool include_topology = 2;
+    bool include_metrics = 3;
+    bool include_logs = 4;
+}
+
+message BurstDetectionOptions {
+    int32 threshold = 1;
+    int32 time_window_minutes = 2;
+    repeated string severity_filters = 3;
+    repeated string source_filters = 4;
+}

@@ -1,0 +1,337 @@
+{{- if index .Values "build" "enabled" | default false }}
+# ── Agent Buildkit PreSync ────────────────────────────────────────────────────
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: buildkit-kubesense-agent
+  namespace: buildkit
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  ttlSecondsAfterFinished: 172800
+  activeDeadlineSeconds: 1800
+  backoffLimit: 1
+  template:
+    spec:
+      serviceAccountName: buildkit-sa
+      imagePullSecrets:
+        - name: jfrog-dockers-access
+      securityContext:
+        sysctls:
+          - { name: kernel.shm_rmid_forced, value: "0" }
+          - { name: net.ipv4.ip_unprivileged_port_start, value: "0" }
+      containers:
+        - name: buildkit
+          image: "moby/buildkit:v0.15.0-rootless"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            seccompProfile: { type: Unconfined }
+            capabilities:
+              add: [SYS_ADMIN, SYS_PTRACE, NET_ADMIN, SETFCAP, SETUID, SETGID]
+              drop: [ALL]
+          command: ["buildctl-daemonless.sh"]
+          args:
+            - build
+            - --frontend=dockerfile.v0
+            - --opt=filename=Dockerfile.agent
+            - "--opt=context=https://$(GIT_TOKEN)@github.com/aileron-platform/aileron.git#{{ .Values.Branch | default "main" }}"
+            - "--output=type=image,name={{ .Values.images.agent.repository }}:{{ .Values.imageTag }},push=true,registry.insecure=true"
+            - "--export-cache=type=registry,ref={{ .Values.images.agent.repository }}:buildcache,mode=max"
+            - "--import-cache=type=registry,ref={{ .Values.images.agent.repository }}:buildcache"
+            - "--opt=build-arg:HTTP_PROXY=http://:80"
+            - "--opt=build-arg:HTTPS_PROXY=http://:443"
+            - "--opt=build-arg:NO_PROXY=*.example.com,ghcr.io/aileron-platform,github.com/aileron-platform"
+            - "--opt=build-arg:GOPROXY=https://proxy.golang.org,direct"
+            - "--opt=build-arg:GONOSUMDB=*"
+            - "--opt=build-arg:VERSION={{ .Values.imageTag }}"
+          env:
+            - { name: HTTP_PROXY,  value: "http://:80" }
+            - { name: HTTPS_PROXY, value: "http://:443" }
+            - { name: NO_PROXY,    value: "*.example.com,ghcr.io/aileron-platform,github.com/aileron-platform" }
+            - { name: DOCKER_CONFIG, value: /home/user/.docker/ }
+            - { name: BUILDKITD_FLAGS, value: "--oci-worker-no-process-sandbox" }
+            - name: GIT_TOKEN
+              valueFrom:
+                secretKeyRef: { name: interactive-git-token, key: token }
+          volumeMounts:
+            - { name: docker-config, mountPath: /home/user/.docker }
+      restartPolicy: Never
+      volumes:
+        - name: docker-config
+          secret:
+            secretName: jfrog-dockers-access
+            items: [{ key: .dockerconfigjson, path: config.json }]
+# ── Collector Buildkit PreSync ────────────────────────────────────────────────
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: buildkit-kubesense-collector
+  namespace: buildkit
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  ttlSecondsAfterFinished: 172800
+  activeDeadlineSeconds: 1800
+  backoffLimit: 1
+  template:
+    spec:
+      serviceAccountName: buildkit-sa
+      imagePullSecrets: [{ name: jfrog-dockers-access }]
+      securityContext:
+        sysctls:
+          - { name: kernel.shm_rmid_forced, value: "0" }
+          - { name: net.ipv4.ip_unprivileged_port_start, value: "0" }
+      containers:
+        - name: buildkit
+          image: "moby/buildkit:v0.15.0-rootless"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            seccompProfile: { type: Unconfined }
+            capabilities:
+              add: [SYS_ADMIN, SYS_PTRACE, NET_ADMIN, SETFCAP, SETUID, SETGID]
+              drop: [ALL]
+          command: ["buildctl-daemonless.sh"]
+          args:
+            - build
+            - --frontend=dockerfile.v0
+            - --opt=filename=Dockerfile.collector
+            - "--opt=context=https://$(GIT_TOKEN)@github.com/aileron-platform/aileron.git#{{ .Values.Branch | default "main" }}"
+            - "--output=type=image,name={{ .Values.images.collector.repository }}:{{ .Values.imageTag }},push=true,registry.insecure=true"
+            - "--export-cache=type=registry,ref={{ .Values.images.collector.repository }}:buildcache,mode=max"
+            - "--import-cache=type=registry,ref={{ .Values.images.collector.repository }}:buildcache"
+            - "--opt=build-arg:HTTP_PROXY=http://:80"
+            - "--opt=build-arg:HTTPS_PROXY=http://:443"
+            - "--opt=build-arg:NO_PROXY=*.example.com,ghcr.io/aileron-platform,github.com/aileron-platform"
+            - "--opt=build-arg:GOPROXY=https://proxy.golang.org,direct"
+            - "--opt=build-arg:GONOSUMDB=*"
+            - "--opt=build-arg:VERSION={{ .Values.imageTag }}"
+          env:
+            - { name: HTTP_PROXY,  value: "http://:80" }
+            - { name: HTTPS_PROXY, value: "http://:443" }
+            - { name: NO_PROXY,    value: "*.example.com,ghcr.io/aileron-platform,github.com/aileron-platform" }
+            - { name: DOCKER_CONFIG, value: /home/user/.docker/ }
+            - { name: BUILDKITD_FLAGS, value: "--oci-worker-no-process-sandbox" }
+            - name: GIT_TOKEN
+              valueFrom:
+                secretKeyRef: { name: interactive-git-token, key: token }
+          volumeMounts:
+            - { name: docker-config, mountPath: /home/user/.docker }
+      restartPolicy: Never
+      volumes:
+        - name: docker-config
+          secret:
+            secretName: jfrog-dockers-access
+            items: [{ key: .dockerconfigjson, path: config.json }]
+# ── Core Buildkit PreSync ─────────────────────────────────────────────────────
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: buildkit-kubesense-core
+  namespace: buildkit
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  ttlSecondsAfterFinished: 172800
+  activeDeadlineSeconds: 1800
+  backoffLimit: 1
+  template:
+    spec:
+      serviceAccountName: buildkit-sa
+      imagePullSecrets: [{ name: jfrog-dockers-access }]
+      securityContext:
+        sysctls:
+          - { name: kernel.shm_rmid_forced, value: "0" }
+          - { name: net.ipv4.ip_unprivileged_port_start, value: "0" }
+      containers:
+        - name: buildkit
+          image: "moby/buildkit:v0.15.0-rootless"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            seccompProfile: { type: Unconfined }
+            capabilities:
+              add: [SYS_ADMIN, SYS_PTRACE, NET_ADMIN, SETFCAP, SETUID, SETGID]
+              drop: [ALL]
+          command: ["buildctl-daemonless.sh"]
+          args:
+            - build
+            - --frontend=dockerfile.v0
+            - --opt=filename=Dockerfile.core
+            - "--opt=context=https://$(GIT_TOKEN)@github.com/aileron-platform/aileron.git#{{ .Values.Branch | default "main" }}"
+            - "--output=type=image,name={{ .Values.images.core.repository }}:{{ .Values.imageTag }},push=true,registry.insecure=true"
+            - "--export-cache=type=registry,ref={{ .Values.images.core.repository }}:buildcache,mode=max"
+            - "--import-cache=type=registry,ref={{ .Values.images.core.repository }}:buildcache"
+            - "--opt=build-arg:HTTP_PROXY=http://:80"
+            - "--opt=build-arg:HTTPS_PROXY=http://:443"
+            - "--opt=build-arg:NO_PROXY=*.example.com,ghcr.io/aileron-platform,github.com/aileron-platform"
+            - "--opt=build-arg:GOPROXY=https://proxy.golang.org,direct"
+            - "--opt=build-arg:GONOSUMDB=*"
+            - "--opt=build-arg:VERSION={{ .Values.imageTag }}"
+          env:
+            - { name: HTTP_PROXY,  value: "http://:80" }
+            - { name: HTTPS_PROXY, value: "http://:443" }
+            - { name: NO_PROXY,    value: "*.example.com,ghcr.io/aileron-platform,github.com/aileron-platform" }
+            - { name: DOCKER_CONFIG, value: /home/user/.docker/ }
+            - { name: BUILDKITD_FLAGS, value: "--oci-worker-no-process-sandbox" }
+            - name: GIT_TOKEN
+              valueFrom:
+                secretKeyRef: { name: interactive-git-token, key: token }
+          volumeMounts:
+            - { name: docker-config, mountPath: /home/user/.docker }
+      restartPolicy: Never
+      volumes:
+        - name: docker-config
+          secret:
+            secretName: jfrog-dockers-access
+            items: [{ key: .dockerconfigjson, path: config.json }]
+{{- end }}
+{{- if index .Values "build" "enabled" | default false }}
+# ── API Service Buildkit PreSync ─────────────────────────────────────────────
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: buildkit-kubesense-api
+  namespace: buildkit
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  ttlSecondsAfterFinished: 172800
+  activeDeadlineSeconds: 1800
+  backoffLimit: 1
+  template:
+    spec:
+      serviceAccountName: buildkit-sa
+      imagePullSecrets: [{ name: jfrog-dockers-access }]
+      securityContext:
+        sysctls:
+          - { name: kernel.shm_rmid_forced, value: "0" }
+          - { name: net.ipv4.ip_unprivileged_port_start, value: "0" }
+      containers:
+        - name: buildkit
+          image: "moby/buildkit:v0.15.0-rootless"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            seccompProfile: { type: Unconfined }
+            capabilities:
+              add: [SYS_ADMIN, SYS_PTRACE, NET_ADMIN, SETFCAP, SETUID, SETGID]
+              drop: [ALL]
+          command: ["buildctl-daemonless.sh"]
+          args:
+            - build
+            - --frontend=dockerfile.v0
+            - --opt=filename=Dockerfile.api
+            - "--opt=context=https://$(GIT_TOKEN)@github.com/aileron-platform/aileron.git#{{ .Values.Branch | default "main" }}"
+            - "--output=type=image,name={{ .Values.images.api.repository }}:{{ .Values.imageTag }},push=true,registry.insecure=true"
+            - "--export-cache=type=registry,ref={{ .Values.images.api.repository }}:buildcache,mode=max"
+            - "--import-cache=type=registry,ref={{ .Values.images.api.repository }}:buildcache"
+            - "--opt=build-arg:PKG_PROXY=http://:80"
+            - "--opt=build-arg:PKG_PROXY_SSL=http://:443"
+            - "--opt=build-arg:NO_PROXY=*.example.com,ghcr.io/aileron-platform,github.com/aileron-platform"
+            - "--opt=build-arg:GOPROXY=https://proxy.golang.org,direct"
+            - "--opt=build-arg:GONOSUMDB=*"
+            - "--opt=build-arg:VERSION={{ .Values.imageTag }}"
+            - "--opt=build-arg:CACHE_BUST=6"
+          env:
+            - { name: DOCKER_CONFIG, value: /home/user/.docker/ }
+            - { name: BUILDKITD_FLAGS, value: "--oci-worker-no-process-sandbox" }
+            - name: GIT_TOKEN
+              valueFrom:
+                secretKeyRef: { name: interactive-git-token, key: token }
+          volumeMounts:
+            - { name: docker-config, mountPath: /home/user/.docker }
+      restartPolicy: Never
+      volumes:
+        - name: docker-config
+          secret:
+            secretName: jfrog-dockers-access
+            items: [{ key: .dockerconfigjson, path: config.json }]
+{{- end }}
+{{- if index .Values "build" "enabled" | default false }}
+# ── LLM Narrator Buildkit PreSync ─────────────────────────────────────────────
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: buildkit-kubesense-llm
+  namespace: buildkit
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  ttlSecondsAfterFinished: 172800
+  activeDeadlineSeconds: 1800
+  backoffLimit: 1
+  template:
+    spec:
+      serviceAccountName: buildkit-sa
+      imagePullSecrets: [{ name: jfrog-dockers-access }]
+      securityContext:
+        sysctls:
+          - { name: kernel.shm_rmid_forced, value: "0" }
+          - { name: net.ipv4.ip_unprivileged_port_start, value: "0" }
+      containers:
+        - name: buildkit
+          image: "moby/buildkit:v0.15.0-rootless"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            seccompProfile: { type: Unconfined }
+            capabilities:
+              add: [SYS_ADMIN, SYS_PTRACE, NET_ADMIN, SETFCAP, SETUID, SETGID]
+              drop: [ALL]
+          command: ["buildctl-daemonless.sh"]
+          args:
+            - build
+            - --frontend=dockerfile.v0
+            - --opt=filename=Dockerfile.llm
+            - "--opt=context=https://$(GIT_TOKEN)@github.com/aileron-platform/aileron.git#main"
+            - "--output=type=image,name={{ .Values.images.llm.repository }}:{{ .Values.imageTag }},push=true,registry.insecure=true"
+            - "--export-cache=type=registry,ref={{ .Values.images.llm.repository }}:buildcache,mode=max"
+            - "--import-cache=type=registry,ref={{ .Values.images.llm.repository }}:buildcache"
+            - "--opt=build-arg:HTTP_PROXY=http://:80"
+            - "--opt=build-arg:HTTPS_PROXY=http://:443"
+            - "--opt=build-arg:NO_PROXY=*.example.com,ghcr.io/aileron-platform,github.com/aileron-platform"
+            - "--opt=build-arg:GOPROXY=https://proxy.golang.org,direct"
+            - "--opt=build-arg:GONOSUMDB=*"
+            - "--opt=build-arg:VERSION={{ .Values.imageTag }}"
+          env:
+            - { name: DOCKER_CONFIG, value: /home/user/.docker/ }
+            - { name: BUILDKITD_FLAGS, value: "--oci-worker-no-process-sandbox" }
+            - name: GIT_TOKEN
+              valueFrom:
+                secretKeyRef: { name: interactive-git-token, key: token }
+          volumeMounts:
+            - { name: docker-config, mountPath: /home/user/.docker }
+      restartPolicy: Never
+      volumes:
+        - name: docker-config
+          secret:
+            secretName: jfrog-dockers-access
+            items: [{ key: .dockerconfigjson, path: config.json }]
+{{- end }}

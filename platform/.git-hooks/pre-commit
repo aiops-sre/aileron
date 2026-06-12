@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# pre-commit hook — runs before every `git commit`
+# Blocks: hardcoded secrets, large binaries, leftover debug code
+
+set -euo pipefail
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+FAILED=0
+
+# ── 1. Block files over 5 MB ────────────────────────────────────────────────
+for f in $STAGED; do
+  [ -f "$f" ] || continue
+  size=$(du -k "$f" | cut -f1)
+  if [ "$size" -gt 5120 ]; then
+    echo "BLOCK: $f is ${size}KB — binaries must not be committed (limit 5MB)"
+    echo "       Use the build pipeline; see docs/deployment/DEPLOYMENT_VALIDATION_GUIDE.md"
+    FAILED=1
+  fi
+done
+
+# ── 2. Block known binary executables ───────────────────────────────────────
+for f in $STAGED; do
+  case "$f" in
+    alerthub_linux_amd64|*.exe|*.dll|*.so|*.dylib)
+      echo "BLOCK: $f — compiled binaries must not be committed"
+      FAILED=1
+      ;;
+  esac
+done
+
+# ── 3. Block .env files (real secrets, not examples) ────────────────────────
+for f in $STAGED; do
+  case "$f" in
+    .env|.env.local|.env.production|.env.staging)
+      echo "BLOCK: $f — never commit real .env files; use .env.example"
+      FAILED=1
+      ;;
+  esac
+done
+
+# ── 4. Scan staged Go/TS files for secret patterns ──────────────────────────
+TEXT_FILES=$(echo "$STAGED" | grep -E '\.(go|ts|tsx|js|sh|yaml|yml)$' || true)
+if [ -n "$TEXT_FILES" ]; then
+  # AWS key
+  if git diff --cached -- $TEXT_FILES | grep -qP 'AKIA[0-9A-Z]{16}'; then
+    echo "BLOCK: AWS access key detected in staged changes"
+    FAILED=1
+  fi
+  # Private key PEM
+  if git diff --cached -- $TEXT_FILES | grep -qP '-----BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY-----'; then
+    echo "BLOCK: Private key PEM detected in staged changes"
+    FAILED=1
+  fi
+  # Hardcoded password (not a variable reference)
+  if git diff --cached -- $TEXT_FILES | grep -qP 'password\s*[:=]\s*["'"'"'][^$\{][^"'"'"']{8,}'; then
+    echo "WARN:  Possible hardcoded password — review before committing"
+    # Warn only, don't block — may be a test fixture
+  fi
+fi
+
+# ── 5. Block leftover debug markers ─────────────────────────────────────────
+for f in $STAGED; do
+  [ -f "$f" ] || continue
+  case "$f" in *.go|*.ts|*.tsx)
+    if git diff --cached -- "$f" | grep -qP '^\+.*(console\.log\(|fmt\.Println\(|debugger;|TODO: remove|FIXME: remove)'; then
+      echo "WARN:  $f has debug statements or remove-me TODOs — review before merging"
+    fi
+    ;;
+  esac
+done
+
+if [ $FAILED -ne 0 ]; then
+  echo ""
+  echo "Commit blocked. Fix the issues above and retry."
+  exit 1
+fi

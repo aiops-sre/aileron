@@ -1,0 +1,84 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kubesense-agent.fullname" . }}
+  labels:
+    {{- include "kubesense-agent.labels" . | nindent 4 }}
+rules:
+  # Core resources — read only
+  - apiGroups: [""]
+    resources:
+      - pods
+      - nodes
+      - namespaces
+      - services
+      - endpoints
+      - persistentvolumeclaims
+      - persistentvolumes
+      - configmaps
+      - events
+      - serviceaccounts
+    verbs: ["list", "watch", "get"]
+
+  # Secrets: metadata only — data field is stripped by informer transform
+  # The agent NEVER reads or transmits secret values
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["list", "watch"]
+
+  # Workloads
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - statefulsets
+      - daemonsets
+      - replicasets
+    verbs: ["list", "watch", "get"]
+
+  # Batch
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["list", "watch", "get"]
+
+  # Networking
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses", "networkpolicies"]
+    verbs: ["list", "watch", "get"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["list", "watch", "get"]
+
+  # Storage
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses", "volumeattachments"]
+    verbs: ["list", "watch", "get"]
+
+  # RBAC — read only so agent can detect overprivilege
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources:
+      - roles
+      - rolebindings
+      - clusterroles
+      - clusterrolebindings
+    verbs: ["list", "watch", "get"]
+
+  # Autoscaling
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["list", "watch", "get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "kubesense-agent.fullname" . }}
+  labels:
+    {{- include "kubesense-agent.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "kubesense-agent.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount.name }}
+    namespace: {{ .Release.Namespace }}

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# commit-msg hook — validates Conventional Commits format
+# Called with the path to the commit message file as $1
+
+MSG_FILE="$1"
+MSG=$(cat "$MSG_FILE")
+
+# Skip merge commits, fixup commits, and WIP squash markers
+if echo "$MSG" | grep -qP '^(Merge|Revert|fixup!|squash!|WIP)'; then
+  exit 0
+fi
+
+PATTERN='^(feat|fix|docs|chore|refactor|test|perf|ci|build|style|revert)(\([a-z0-9_/\-]+\))?(\!)?: .{1,100}$'
+
+if ! echo "$MSG" | head -1 | grep -qP "$PATTERN"; then
+  echo ""
+  echo "Invalid commit message format."
+  echo ""
+  echo "Expected: type(scope): short description  (max 100 chars)"
+  echo ""
+  echo "Examples:"
+  echo "  feat(pipeline): add temporal burst grouping"
+  echo "  fix(correlation): correct topology authority threshold"
+  echo "  chore(deps): bump github.com/lib/pq to v1.10.9"
+  echo "  docs: update correlation engine README"
+  echo "  ci(build): fix BuildKit context URL after repo migration"
+  echo ""
+  echo "Valid types:  feat  fix  docs  chore  refactor  test  perf  ci  build  style  revert"
+  echo "Valid scopes: pipeline  correlation  topology  api  frontend  auth  infra  deps  alerts  incidents  db"
+  echo ""
+  echo "Breaking change: add ! after type/scope — e.g. feat(api)!: change alert schema"
+  echo ""
+  echo "Your message: \"$MSG\""
+  exit 1
+fi
