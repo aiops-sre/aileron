@@ -9,3 +9,6 @@ dist/
 *.pptx
 *.html
 go.work.sum
+platform/scripts/cmd
+platform/alerthub_linux_amd64
+platform/main
