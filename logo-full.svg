@@ -64,7 +64,7 @@
         stroke="white" stroke-opacity="0.08" stroke-width="1"/>
 
   <!-- Wordmark block -->
-  <g transform="translate(504 76)">
+  <g transform="translate(504 126)">
     <text x="0" y="0"
           font-family="'Inter', 'DM Sans', 'Helvetica Neue', Arial, sans-serif"
           font-size="96" font-weight="800" letter-spacing="-3"

@@ -47,7 +47,7 @@
         stroke="white" stroke-opacity="0.10" stroke-width="1"/>
 
   <!-- Wordmark -->
-  <g transform="translate(504 88)">
+  <g transform="translate(504 150)">
     <!-- Primary name -->
     <text x="0" y="0"
           font-family="'Inter', 'DM Sans', 'Helvetica Neue', Arial, sans-serif"
