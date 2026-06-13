@@ -33,7 +33,10 @@ Aileron is a **self-hosted, open-source AIOps platform** comparable to Dynatrace
 - [Configuration](#configuration)
 - [Services](#services)
 - [API Reference](#api-reference)
+- [CNCF Ecosystem Integrations](#cncf-ecosystem--end-to-end-integration)
+- [Cloud Platform Integrations](#cloud-platform-integrations)
 - [Contributing](#contributing)
+- [Roadmap](#roadmap)
 - [License](#license)
 
 ---
