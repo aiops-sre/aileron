@@ -184,6 +184,21 @@ type Evidence struct {
 	// Prevents double-scoring on crash recovery / late evidence re-injection.
 	AppliedToScoring bool
 
+	// EvidenceTag is the epistemic classification of this evidence item.
+	// Set by the evidence-tagging system after collection.
+	// See domain/evidence/tags.go for the full set of tag constants.
+	EvidenceTag EvidenceTag
+
+	// ClaimValidated is set true when this evidence item has been
+	// independently cross-checked against a second source.
+	// Used by the EvidenceStrength axis of the confidence formula.
+	ClaimValidated bool
+
+	// MetricName is the specific metric name that triggered or relates to
+	// this evidence (e.g. "container_memory_working_set_bytes").
+	// Used by InvestigationGate Q1.
+	MetricName string
+
 	CreatedAt time.Time
 }
 

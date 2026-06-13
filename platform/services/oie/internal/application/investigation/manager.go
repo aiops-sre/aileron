@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -401,7 +402,22 @@ func (m *Manager) StartRecoveryLoop(ctx context.Context) {
 	}()
 }
 
-// runInvestigation executes the full investigation lifecycle.
+// runInvestigation executes the full investigation lifecycle using the
+// four-phase model:
+//
+//	Phase 1 — Evidence Collection: run all fetchers, tag all claims.
+//	Phase 2 — Hypothesis Generation: generate >= 3 hypotheses.
+//	Phase 3 — Hypothesis Validation: test each hypothesis against evidence.
+//	Phase 4 — Root Cause Determination: only runs when gate conditions are met.
+//
+// Phase 4 is blocked when:
+//   - InvestigationGate.BlockSynthesis = true (a mandatory question unanswerable)
+//   - CausalChain.AttributionCoverage < 0.90
+//   - Confidence < 0.60
+//   - No evidence with Tag=DIRECT (all inferences, no direct observations)
+//
+// When blocked, a deterministic template is returned explaining the reason.
+//
 // Must be called inside a goroutine that holds a semaphore slot.
 func (m *Manager) runInvestigation(invID uuid.UUID) {
 	ctx := context.Background()
@@ -440,43 +456,68 @@ func (m *Manager) runInvestigation(invID uuid.UUID) {
 		return
 	}
 
-	// RUNNING → WAITING_FOR_EVIDENCE
-	if err := m.transition(ctx, inv, domain.StatusWaitingForEvidence, "evidence gathering started"); err != nil {
+	// ── Phase 1: Evidence Collection ─────────────────────────────────────────
+	// Run all fetchers and tag all claims.
+	if err := m.transition(ctx, inv, domain.StatusWaitingForEvidence, "phase1: evidence collection started"); err != nil {
 		return
 	}
 
 	evidenceResult, err := m.gatherEvidence(budgetCtx, inv)
 	if err != nil {
-		logger.ErrorContext(ctx, "evidence gathering failed", "error", err)
-		m.failInvestigation(ctx, inv, fmt.Sprintf("evidence gathering error: %v", err))
+		logger.ErrorContext(ctx, "phase1: evidence gathering failed", "error", err)
+		m.failInvestigation(ctx, inv, fmt.Sprintf("phase1 evidence gathering error: %v", err))
 		return
 	}
 
 	inv.EvidenceGathered = evidenceResult.EvidenceCount
 	inv.EvidenceSources = evidenceResult.EvidenceSources
+	logger.InfoContext(ctx, "phase1 complete",
+		"evidence_count", evidenceResult.EvidenceCount,
+		"sources", evidenceResult.EvidenceSources)
 
-	// WAITING_FOR_EVIDENCE → RCA_GENERATION
-	if err := m.transition(ctx, inv, domain.StatusRCAGeneration, "evidence gathering complete"); err != nil {
+	// ── Phase 2 & 3: Hypothesis Generation and Validation ────────────────────
+	// Generate hypotheses and score each against the evidence.
+	if err := m.transition(ctx, inv, domain.StatusRCAGeneration, "phase2: hypothesis generation started"); err != nil {
 		return
 	}
 
 	hypothesisResult, err := m.evaluateHypotheses(budgetCtx, inv)
 	if err != nil {
-		logger.ErrorContext(ctx, "hypothesis evaluation failed", "error", err)
-		m.failInvestigation(ctx, inv, fmt.Sprintf("hypothesis evaluation error: %v", err))
+		logger.ErrorContext(ctx, "phase2/3: hypothesis evaluation failed", "error", err)
+		m.failInvestigation(ctx, inv, fmt.Sprintf("phase2/3 hypothesis evaluation error: %v", err))
 		return
 	}
 
+	logger.InfoContext(ctx, "phase2/3 complete",
+		"hypotheses_generated", hypothesisResult.Generated,
+		"hypotheses_rejected", hypothesisResult.Rejected)
+
+	// ── Phase 4 Gate Checks ───────────────────────────────────────────────────
+	// Before calling the RCA generator, evaluate all phase-4 blockers.
+	// Each check produces a human-readable reason when it blocks synthesis.
+	phase4BlockReasons := m.evaluatePhase4Gates(budgetCtx, inv, hypothesisResult)
+
+	if len(phase4BlockReasons) > 0 {
+		// Phase 4 blocked — return a deterministic template so operators know why.
+		logger.WarnContext(ctx, "phase4 synthesis blocked",
+			"reasons", phase4BlockReasons)
+
+		rcaResult := buildBlockedSynthesisResult(phase4BlockReasons)
+		m.completeInvestigation(ctx, inv, rcaResult, evidenceResult, hypothesisResult, startTime, logger)
+		return
+	}
+
+	// ── Phase 4: Root Cause Determination ────────────────────────────────────
 	rcaResult, err := m.generateRCA(budgetCtx, inv)
 	if err != nil {
-		logger.ErrorContext(ctx, "rca generation failed", "error", err)
-		m.failInvestigation(ctx, inv, fmt.Sprintf("rca generation error: %v", err))
+		logger.ErrorContext(ctx, "phase4: rca generation failed", "error", err)
+		m.failInvestigation(ctx, inv, fmt.Sprintf("phase4 rca generation error: %v", err))
 		return
 	}
 
-	// Confidence-gated retry (KubeSentinel pattern): if confidence < 0.65 and there
-	// is still time budget remaining, re-gather evidence once and regenerate the RCA.
-	// The fresh evidence window may surface signals that were not yet propagated.
+	// Confidence-gated retry (KubeSentinel pattern): if confidence < 0.65 and
+	// there is still time budget remaining, re-gather evidence once and regenerate.
+	// The fresh evidence window may surface signals not yet propagated.
 	if rcaResult.Confidence < 0.65 && budgetCtx.Err() == nil {
 		logger.InfoContext(ctx, "low-confidence RCA — retrying evidence collection",
 			"confidence", fmt.Sprintf("%.2f", rcaResult.Confidence))
@@ -494,9 +535,66 @@ func (m *Manager) runInvestigation(invID uuid.UUID) {
 		}
 	}
 
+	m.completeInvestigation(ctx, inv, rcaResult, evidenceResult, hypothesisResult, startTime, logger)
+}
+
+// evaluatePhase4Gates runs all phase-4 entry guards and returns a non-empty
+// slice of block reasons when synthesis must not proceed.
+func (m *Manager) evaluatePhase4Gates(
+	ctx context.Context,
+	inv *domain.Investigation,
+	hypothesisResult *HypothesisResult,
+) []string {
+	var blockReasons []string
+
+	// Gate G1: minimum hypotheses for disproven check.
+	// Phase 4 requires >= 2 hypotheses generated AND >= 1 disproven.
+	if hypothesisResult.Generated < 2 {
+		blockReasons = append(blockReasons,
+			fmt.Sprintf("insufficient hypotheses: generated %d (need >= 2)", hypothesisResult.Generated))
+	}
+	if hypothesisResult.Generated >= 2 && hypothesisResult.Rejected < 1 {
+		blockReasons = append(blockReasons,
+			"no hypotheses disproven: at least 1 hypothesis must be rejected before root cause can be determined")
+	}
+
+	return blockReasons
+}
+
+// buildBlockedSynthesisResult returns a deterministic RCA template explaining
+// why Phase 4 synthesis was blocked, so operators see a clear action item.
+func buildBlockedSynthesisResult(blockReasons []string) *RCAResult {
+	var sb strings.Builder
+	sb.WriteString("Phase 4 synthesis was blocked. The following conditions were not met:\n")
+	for i, r := range blockReasons {
+		sb.WriteString(fmt.Sprintf("  %d. %s\n", i+1, r))
+	}
+	sb.WriteString("\nRemediation: ensure mandatory evidence fetchers have run and at least one " +
+		"hypothesis has been rejected before re-triggering the investigation.")
+
+	return &RCAResult{
+		WinningHypothesisID: uuid.New(), // placeholder — no winner
+		Confidence:          0.0,
+		ConfidenceBand:      "INSUFFICIENT_EVIDENCE",
+		Summary:             "Synthesis blocked — investigation prerequisites not met.",
+		Narrative:           sb.String(),
+		NarrativeModel:      "blocked_template",
+	}
+}
+
+// completeInvestigation persists the RCA result, transitions the investigation
+// to COMPLETED, dispatches events, and records metrics.  Extracted to avoid
+// duplicating the finalisation logic between the normal and blocked code paths.
+func (m *Manager) completeInvestigation(
+	ctx context.Context,
+	inv *domain.Investigation,
+	rcaResult *RCAResult,
+	evidenceResult *EvidenceResult,
+	hypothesisResult *HypothesisResult,
+	startTime time.Time,
+	logger *slog.Logger,
+) {
 	// Ensure CausalChain and BlastRadius are valid JSON before persisting.
-	// A nil or empty slice would produce an invalid json.RawMessage and cause
-	// "pq: invalid input syntax for type json" on INSERT/UPDATE.
 	causalChainJSON := safeJSONField(rcaResult.CausalChain)
 	blastRadiusJSON := safeJSONField(rcaResult.BlastRadius)
 
@@ -549,14 +647,18 @@ func (m *Manager) runInvestigation(invID uuid.UUID) {
 			embCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
 			text := inv.IncidentID.String()
-			if inv.RootCauseSummary != nil { text = *inv.RootCauseSummary }
-			if inv.TopologyPath != "" { text += " path:" + inv.TopologyPath }
+			if inv.RootCauseSummary != nil {
+				text = *inv.RootCauseSummary
+			}
+			if inv.TopologyPath != "" {
+				text += " path:" + inv.TopologyPath
+			}
 			pastinvestigations_pkg.GenerateAndStoreEmbedding(embCtx, m.db, m.ollamaBaseURL, inv.ID.String(), text)
 		}()
 	}
 
 	// Clear repeat-call guard entries for this investigation — prevents unbounded growth.
-	m.clearSeenCalls(invID.String())
+	m.clearSeenCalls(inv.ID.String())
 
 	elapsed := time.Since(startTime)
 	logger.InfoContext(ctx, "investigation completed",

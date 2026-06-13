@@ -83,12 +83,50 @@ func (n *Narrator) GenerateWithCitations(
 	)
 
 	supportingCount := winner.SupportingEvidenceCount
-	// Re-count ACTUAL facts that will appear in the LLM prompt after filtering.
-	// winner.SupportingEvidenceCount is set at hypothesis-scoring time; by the time
-	// the narrator runs, evidence may have been deduped or filtered (empty descriptions,
-	// wrong role, FetchError status). Using the stale count could call the LLM with
-	// zero grounding facts — the primary cause of hallucinated RCA narratives.
 	actualFacts := countGroundingFacts(evidence)
+
+	// ── SaveGate: block narrative if evidence quality fails the 9-principle check ──
+	causalChain := BuildCausalChain(winner, evidence)
+
+	disproven := 0
+	for _, h := range allHypotheses {
+		if h.Status == domain_hyp.StatusRejected || h.Status == domain_hyp.StatusInsufficientEvidence {
+			disproven++
+		}
+	}
+	saveGate := EvaluateSaveGate(SaveGateInput{
+		Evidence:            evidence,
+		HypothesesGenerated: len(allHypotheses),
+		HypothesesDisproven: disproven,
+		CausalChain:         causalChain,
+		MandatoryFetcherAttempted: map[string]bool{
+			"kubernetes": actualFacts > 0,
+			"topology":   winner.Confidence > 0,
+		},
+		PrimaryEntityName: winner.Title,
+	})
+	if !saveGate.Approved {
+		n.logger.WarnContext(ctx, "narrator: SaveGate blocked — insufficient evidence depth",
+			"score", saveGate.Score,
+			"reasons", saveGate.FailReasons)
+		metrics.LLMNarrativeCalls.WithLabelValues("save_gate_blocked").Inc()
+		return n.saveGateBlockedTemplate(winner, allHypotheses, saveGate), "template_save_gate", nil
+	}
+
+	// ── MetricGuards: flag evidence quality issues before LLM prompt ──
+	guardResults := RunAllGuards(evidence)
+	var guardWarnings []string
+	for _, g := range guardResults {
+		if g.Severity == "block" {
+			n.logger.WarnContext(ctx, "narrator: MetricGuard hard block",
+				"guard", g.Guard, "message", g.Message)
+			metrics.LLMNarrativeCalls.WithLabelValues("metric_guard_blocked").Inc()
+			return n.metricGuardBlockedTemplate(winner, g), "template_metric_guard", nil
+		}
+		if g.Severity == "warning" {
+			guardWarnings = append(guardWarnings, "["+g.Guard+"] "+g.Message)
+		}
+	}
 
 	if winner.Confidence < llmConfidenceThreshold || supportingCount < llmMinSupportingEvidence || actualFacts == 0 {
 		if actualFacts == 0 {
@@ -108,6 +146,16 @@ func (n *Narrator) GenerateWithCitations(
 
 	citations = buildCitations(evidence)
 	prompt := n.buildGroundedPrompt(winner, allHypotheses, evidence, incidentTitle)
+	// Enrich prompt with causal chain and guard warnings
+	if causalChain != nil && len(causalChain.Layers) > 0 {
+		prompt = appendCausalChainContext(prompt, causalChain)
+	}
+	if len(guardWarnings) > 0 {
+		prompt += "\n\nEVIDENCE QUALITY WARNINGS (note in narrative):\n"
+		for _, w := range guardWarnings {
+			prompt += "• " + sanitizeForPrompt(w) + "\n"
+		}
+	}
 
 	// ── Ensemble voting (k8s-ai-debugger pattern) ───────────────────────────
 	// When a second model is configured and differs from primary, run both in
@@ -270,15 +318,18 @@ func (n *Narrator) buildGroundedPrompt(
 		}
 	}
 	var sb strings.Builder
-	// Tightened system prompt: explicit "refuse if no facts", "no invented names",
-	// and a "Five Whys" chain to prevent surface-level wrong conclusions.
+	// Production-grade system prompt incorporating evidence-tagging, 4-phase model,
+	// and anti-confusion guards derived from proven high-accuracy RCA patterns.
 	sb.WriteString("You are a senior SRE writing a factual incident root cause summary.\n")
 	sb.WriteString("STRICT RULES:\n")
 	sb.WriteString("1. Use ONLY the numbered facts listed below. Do not add any other information.\n")
 	sb.WriteString("2. Do NOT invent workload names, pod names, node names, IPs, or resource names.\n")
 	sb.WriteString("3. Do NOT use the incident title or hypothesis title as a source of facts.\n")
-	sb.WriteString("4. If the facts do not explain the root cause clearly, write: 'Insufficient evidence to determine root cause — operator investigation required.'\n")
-	sb.WriteString("5. Write exactly 3 sentences. No more, no less.\n\n")
+	sb.WriteString("4. Tag every claim: [EVIDENCE] for direct observation, [INFERENCE] for deduction, [HYPOTHESIS] for unvalidated assumption.\n")
+	sb.WriteString("5. If the facts do not clearly explain root cause, write: 'Insufficient evidence — operator investigation required.'\n")
+	sb.WriteString("6. Write exactly 3 sentences covering: (a) what broke, (b) why it broke (causal chain), (c) immediate remediation.\n")
+	sb.WriteString("7. NEVER write 'likely', 'probably', 'appears to be' without tagging it [HYPOTHESIS].\n")
+	sb.WriteString("8. The root cause must have 100%% evidence backing — if alternatives exist and are not disproven, mention them.\n\n")
 
 	sb.WriteString(fmt.Sprintf("Hypothesis: %s\n", sanitizeForPrompt(winner.Title)))
 	sb.WriteString(fmt.Sprintf("Confidence: %.0f%% (%s)\n\n", winner.Confidence*100, winner.Band))
@@ -330,6 +381,46 @@ func (n *Narrator) uncertaintyTemplate(winner *domain_hyp.Hypothesis, allHypothe
 	return sb.String()
 }
 
+// saveGateBlockedTemplate returns a structured message when SaveGate blocks synthesis.
+// This ensures operators know exactly WHY the narrative was not generated and what
+// additional evidence is needed — instead of a hallucinated confident-sounding narrative.
+func (n *Narrator) saveGateBlockedTemplate(
+	winner *domain_hyp.Hypothesis,
+	allHypotheses []*domain_hyp.Hypothesis,
+	gate SaveGateResult,
+) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("RCA investigation incomplete (depth score %.0f/9). ", gate.Score))
+	sb.WriteString("Narrative generation blocked to prevent inaccurate root cause attribution. ")
+	if len(gate.FailReasons) > 0 {
+		sb.WriteString("Missing evidence: ")
+		sb.WriteString(strings.Join(gate.FailReasons, "; "))
+		sb.WriteString(". ")
+	}
+	sb.WriteString(fmt.Sprintf("Best available hypothesis: %s (confidence %.0f%%). ",
+		sanitizeForPrompt(winner.Title), winner.Confidence*100))
+	sb.WriteString("Operator investigation required before root cause can be confirmed.")
+	return sb.String()
+}
+
+// metricGuardBlockedTemplate returns a message when a MetricGuard hard-blocks synthesis
+// due to incorrect evidence being used (e.g., config requests used as consumption basis).
+func (n *Narrator) metricGuardBlockedTemplate(
+	winner *domain_hyp.Hypothesis,
+	guard MetricGuardResult,
+) string {
+	recommendation := "Review evidence quality and retry investigation."
+	return fmt.Sprintf(
+		"RCA blocked by evidence quality check [%s]: %s "+
+			"Hypothesis '%s' cannot be validated without correct metric data. "+
+			"Operator action required: %s",
+		guard.Guard,
+		sanitizeForPrompt(guard.Message),
+		sanitizeForPrompt(winner.Title),
+		sanitizeForPrompt(recommendation),
+	)
+}
+
 // sanitizeForPrompt strips characters that could be used for prompt injection:
 // newlines would let an attacker in evidence descriptions inject new instructions
 // into the structured prompt block. We replace them with spaces and limit length.
@@ -342,6 +433,34 @@ func sanitizeForPrompt(s string) string {
 		s = s[:300] + "…"
 	}
 	return s
+}
+
+// appendCausalChainContext adds multi-hop causality context to the LLM prompt.
+// This guides the model to explain WHY the root cause propagated through the system,
+// not just WHAT broke — producing more accurate and actionable RCA narratives.
+func appendCausalChainContext(prompt string, chain *CausalChainResult) string {
+	if chain == nil || len(chain.Layers) == 0 {
+		return prompt
+	}
+	var sb strings.Builder
+	sb.WriteString(prompt)
+	sb.WriteString("\n\nCAUSAL CHAIN (use this to explain propagation in the narrative):\n")
+	for _, layer := range chain.Layers {
+		if layer.Answer == "" {
+			continue
+		}
+		sb.WriteString(fmt.Sprintf("[Layer %d — %s] Q: %s\nA: [%s] %s\n",
+			layer.Layer, layer.Category,
+			sanitizeForPrompt(layer.Question),
+			string(layer.EvidenceTag),
+			sanitizeForPrompt(layer.Answer),
+		))
+	}
+	if chain.AttributionCoverage > 0 {
+		sb.WriteString(fmt.Sprintf("\nAttribution coverage: %.0f%% of the problem explained by identified contributors.\n",
+			chain.AttributionCoverage*100))
+	}
+	return sb.String()
 }
 
 // countGroundingFacts returns the number of evidence items that will actually appear
