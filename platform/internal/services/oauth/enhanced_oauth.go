@@ -107,7 +107,7 @@ func (c *OAuthClient) GetAuthorizationURL(redirectURI, state string) (string, er
 		return "", fmt.Errorf("failed to parse auth URL: %w", err)
 	}
 
-	// Required scopes for OIDC Provider access (space-separated per RFC 6749 §3.3)
+	// Required scopes for OIDCProvider access (space-separated per RFC 6749 §3.3)
 	// "profile" added to get picture/name claims from userinfo endpoint
 	scopes := []string{"openid", "api", "dsid", "accountname", "email", "groups", "profile", "offline_access"}
 
@@ -117,8 +117,8 @@ func (c *OAuthClient) GetAuthorizationURL(redirectURI, state string) (string, er
 	params.Set("response_type", "code")
 	params.Set("scope", strings.Join(scopes, " "))
 	params.Set("state", state)
-	// Include OIDC Provider OIDC client as audience so the refresh token carries OIDC Provider
-	// consent. SEAR-OIDC Provider approved this client, so OIDC will honour the audience.
+	// Include OIDCProvider OIDC client as audience so the refresh token carries OIDCProvider
+	// consent. SEAR-OIDCProvider approved this client, so OIDC will honour the audience.
 	params.Set("audience", "hvys3fcwcteqrvw3qzkvtk86viuoqv")
 
 	authURL.RawQuery = params.Encode()
@@ -136,8 +136,8 @@ func (c *OAuthClient) ExchangeCodeForTokens(ctx context.Context, code, redirectU
 	data.Set("grant_type", "authorization_code")
 	data.Set("code", code)
 	data.Set("redirect_uri", redirectURI)
-	// Request OIDC Provider audience in the code exchange so the returned id_token is
-	// valid for OIDC Provider without a separate token exchange round-trip.
+	// Request OIDCProvider audience in the code exchange so the returned id_token is
+	// valid for OIDCProvider without a separate token exchange round-trip.
 	data.Set("audience", "hvys3fcwcteqrvw3qzkvtk86viuoqv")
 
 	req, err := http.NewRequestWithContext(ctx, "POST", tokenURL, strings.NewReader(data.Encode()))
@@ -451,19 +451,19 @@ func (c *OAuthClient) GetRBACConfig() *RBAC {
 // FLOODGATE INTEGRATION (Enhanced)
 // ============================================================================
 
-// OIDC ProviderTokenRequest requests OIDC Provider-specific token
-type OIDC ProviderTokenRequest struct {
+// OIDCProviderTokenRequest requests OIDCProvider-specific token
+type OIDCProviderTokenRequest struct {
 	UserToken string `json:"user_token"`
 	UserIP    string `json:"user_ip"`
 	UserAgent string `json:"user_agent"`
 }
 
-// GetOIDC ProviderToken gets or exchanges token for OIDC Provider API access
-func (c *OAuthClient) GetOIDC ProviderToken(ctx context.Context, userID, userIP string) (*TokenResponse, error) {
+// GetOIDCProviderToken gets or exchanges token for OIDCProvider API access
+func (c *OAuthClient) GetOIDCProviderToken(ctx context.Context, userID, userIP string) (*TokenResponse, error) {
 	// Check if we have a cached multi-audience token
 	if cached := c.getCachedToken(userID); cached != nil {
-		// Validate token has OIDC Provider audience
-		if c.hasOIDC ProviderAudience(cached.Token.AccessToken) {
+		// Validate token has OIDCProvider audience
+		if c.hasOIDCProviderAudience(cached.Token.AccessToken) {
 			return cached.Token, nil
 		}
 	}
@@ -474,17 +474,17 @@ func (c *OAuthClient) GetOIDC ProviderToken(ctx context.Context, userID, userIP 
 		return nil, fmt.Errorf("user not authenticated")
 	}
 
-	// Exchange for OIDC Provider token
-	oidcToken, err := c.ExchangeTokenForOIDC Provider(ctx, userToken.Token.AccessToken, userID)
+	// Exchange for OIDCProvider token
+	oidcToken, err := c.ExchangeTokenForOIDCProvider(ctx, userToken.Token.AccessToken, userID)
 	if err != nil {
-		return nil, fmt.Errorf("OIDC Provider token exchange failed: %w", err)
+		return nil, fmt.Errorf("OIDCProvider token exchange failed: %w", err)
 	}
 
 	return oidcToken, nil
 }
 
-// hasOIDC ProviderAudience checks if token has OIDC Provider audience
-func (c *OAuthClient) hasOIDC ProviderAudience(accessToken string) bool {
+// hasOIDCProviderAudience checks if token has OIDCProvider audience
+func (c *OAuthClient) hasOIDCProviderAudience(accessToken string) bool {
 	// Parse JWT to check audience claim
 	parser := jwt.NewParser()
 	claims := jwt.MapClaims{}
@@ -713,7 +713,7 @@ func (c *OAuthClient) HealthCheck(ctx context.Context) map[string]interface{} {
 	health := map[string]interface{}{
 		"oauth_configured":     c.config.ClientID != "",
 		"oidc_base_url":        c.config.OIDCBaseURL,
-		"oidc_configured": c.config.OIDC ProviderAppID != "",
+		"oidc_configured": c.config.OIDCProviderAppID != "",
 		"cache_enabled":        true,
 		"multi_audience":       len(c.config.Audiences) > 1,
 		"required_groups":      c.config.RequiredGroups,

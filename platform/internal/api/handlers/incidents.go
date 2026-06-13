@@ -624,10 +624,10 @@ func (h *IncidentHandler) GetIncidentAlerts(c *gin.Context) {
 	})
 }
 
-// OIDC ProviderRCA runs an RCA investigation using a OIDC Provider-proxied Claude model.
+// OIDCProviderRCA runs an RCA investigation using a OIDCProvider-proxied Claude model.
 // POST /api/v1/incidents/:id/rca/oidc
 // Body: { "model": "claude-sonnet-4-6" | "claude-opus-4-7", "token": "<oauth-id-token>" }
-func (h *IncidentHandler) OIDC ProviderRCA(c *gin.Context) {
+func (h *IncidentHandler) OIDCProviderRCA(c *gin.Context) {
 	incidentID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Invalid incident ID"})
@@ -686,10 +686,10 @@ func (h *IncidentHandler) OIDC ProviderRCA(c *gin.Context) {
 	}
 	promptBuf.WriteString("\nProvide:\n1. Root cause (2-3 sentences)\n2. Contributing factors (1-2 sentences)\n3. Immediate remediation steps (numbered list)")
 
-	// Call OIDC Provider with the user-provided token
-	result, err := callOIDC ProviderClaude(c.Request.Context(), req.Token, claudeModel, promptBuf.String())
+	// Call OIDCProvider with the user-provided token
+	result, err := callOIDCProviderClaude(c.Request.Context(), req.Token, claudeModel, promptBuf.String())
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "message": fmt.Sprintf("OIDC Provider error: %v", err)})
+		c.JSON(http.StatusBadGateway, gin.H{"success": false, "message": fmt.Sprintf("OIDCProvider error: %v", err)})
 		return
 	}
 
@@ -714,8 +714,8 @@ func (h *IncidentHandler) OIDC ProviderRCA(c *gin.Context) {
 	})
 }
 
-// callOIDC ProviderClaude sends a prompt to Claude via the OIDC Provider proxy using the given user token.
-func callOIDC ProviderClaude(ctx context.Context, token, model, prompt string) (string, error) {
+// callOIDCProviderClaude sends a prompt to Claude via the OIDCProvider proxy using the given user token.
+func callOIDCProviderClaude(ctx context.Context, token, model, prompt string) (string, error) {
 	type claudeContent struct {
 		Type string `json:"type"`
 		Text string `json:"text"`
@@ -774,12 +774,12 @@ func callOIDC ProviderClaude(ctx context.Context, token, model, prompt string) (
 
 	raw, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("OIDC Provider returned %d: %s", resp.StatusCode, string(raw))
+		return "", fmt.Errorf("OIDCProvider returned %d: %s", resp.StatusCode, string(raw))
 	}
 
 	var cr claudeResp
 	if err := json.Unmarshal(raw, &cr); err != nil {
-		return "", fmt.Errorf("failed to parse OIDC Provider response: %w", err)
+		return "", fmt.Errorf("failed to parse OIDCProvider response: %w", err)
 	}
 
 	var text string
@@ -791,10 +791,10 @@ func callOIDC ProviderClaude(ctx context.Context, token, model, prompt string) (
 	return strings.TrimSpace(text), nil
 }
 
-// OIDC ProviderTestToken validates a OIDC Provider OAuth token with a minimal Claude API call.
+// OIDCProviderTestToken validates a OIDCProvider OAuth token with a minimal Claude API call.
 // POST /api/v1/incidents/oidc-token-test
 // Body: { "token": "<oauth-id-token>" }
-func (h *IncidentHandler) OIDC ProviderTestToken(c *gin.Context) {
+func (h *IncidentHandler) OIDCProviderTestToken(c *gin.Context) {
 	var req struct {
 		Token string `json:"token" binding:"required"`
 	}
@@ -806,7 +806,7 @@ func (h *IncidentHandler) OIDC ProviderTestToken(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
 	defer cancel()
 
-	_, err := callOIDC ProviderClaude(ctx, req.Token, "claude-sonnet-4-6-20250514", "Reply with exactly: ok")
+	_, err := callOIDCProviderClaude(ctx, req.Token, "claude-sonnet-4-6-20250514", "Reply with exactly: ok")
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
@@ -819,7 +819,7 @@ func (h *IncidentHandler) OIDC ProviderTestToken(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"valid":   true,
-		"message": "Token is valid — OIDC Provider Claude is reachable",
+		"message": "Token is valid — OIDCProvider Claude is reachable",
 	})
 }
 
@@ -1193,7 +1193,7 @@ func (h *IncidentHandler) RegisterRoutes(router *gin.RouterGroup) {
 		incidents.GET("", h.ListIncidents)
 		incidents.POST("", h.CreateIncident)
 		incidents.GET("/stats", h.GetIncidentStats)
-		incidents.POST("/oidc-token-test", h.OIDC ProviderTestToken)
+		incidents.POST("/oidc-token-test", h.OIDCProviderTestToken)
 		incidents.POST("/auto-close", h.AutoCloseResolved)
 		incidents.GET("/:id", h.GetIncident)
 		incidents.PUT("/:id", h.UpdateIncident)
@@ -1202,7 +1202,7 @@ func (h *IncidentHandler) RegisterRoutes(router *gin.RouterGroup) {
 		incidents.GET("/:id/timeline", h.GetIncidentTimeline)
 		incidents.POST("/:id/timeline", h.AddTimelineEvent)
 		incidents.POST("/:id/rca", h.PerformRCA)
-		incidents.POST("/:id/rca/oidc", h.OIDC ProviderRCA)
+		incidents.POST("/:id/rca/oidc", h.OIDCProviderRCA)
 		incidents.GET("/:id/alerts", h.GetIncidentAlerts)
 		incidents.GET("/:id/investigation", h.GetInvestigationDAG)
 		incidents.PATCH("/:id/investigation/steps/:step_id", h.UpdateInvestigationStep)

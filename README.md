@@ -664,6 +664,125 @@ aileron/
 
 ---
 
+## Cloud Platform Integrations
+
+Aileron natively ingests alerts and topology from every major cloud platform. Enable providers via environment variables — no code changes needed.
+
+### Supported Alert Sources
+
+| Platform | Webhook Endpoint | Events |
+|---|---|---|
+| **AWS CloudWatch** | `POST /api/v1/webhooks/cloud/aws/cloudwatch` | Metric alarms, composite alarms |
+| **AWS GuardDuty** | `POST /api/v1/webhooks/cloud/aws/guardduty` | Threat detections, findings |
+| **AWS EventBridge** | `POST /api/v1/webhooks/cloud/aws` | Any EventBridge event rule |
+| **GCP Cloud Monitoring** | `POST /api/v1/webhooks/cloud/gcp/monitoring` | Metric / log-based alerts |
+| **GCP Security Command Center** | `POST /api/v1/webhooks/cloud/gcp/scc` | Security findings |
+| **Azure Monitor** | `POST /api/v1/webhooks/cloud/azure/monitor` | Metric + log alerts |
+| **Microsoft Sentinel** | `POST /api/v1/webhooks/cloud/azure/sentinel` | Security incidents |
+| **Azure Service Health** | `POST /api/v1/webhooks/cloud/azure` | Platform health events |
+| **Alibaba Cloud CMS** | `POST /api/v1/webhooks/cloud/alicloud` | ECS, RDS, SLB alarms |
+| **OpsGenie** | `POST /api/v1/webhooks/cloud/opsgenie` | On-call alerts |
+
+### Topology Discovery
+
+When enabled, Aileron discovers your cloud infrastructure and builds a topology graph in Neo4j. This powers accurate RCA (blast radius, dependency chains, change attribution):
+
+| Provider | Resources Discovered | Enable Var |
+|---|---|---|
+| **AWS** | EC2, EKS, RDS, Lambda, ELB, VPC, S3 | `AILERON_AWS_ENABLED=true` |
+| **GCP** | GCE, GKE, Cloud SQL, GCS, Cloud Functions, Pub/Sub | `AILERON_GCP_ENABLED=true` |
+| **Azure** | VMs, VMSS, AKS, SQL, Functions, Storage, Cosmos DB | `AILERON_AZURE_ENABLED=true` |
+| **Alibaba Cloud** | ECS, ACK, RDS, OSS, SLB, Function Compute | `AILERON_ALICLOUD_ENABLED=true` |
+| **Kubernetes** | All clusters (EKS/GKE/AKS/ACK/on-prem) | Always on |
+| **OpenStack/CloudStack** | VMs, hypervisors, volumes | Via CloudStack API |
+
+### Kubernetes Deployment
+
+Deploy Aileron on any managed Kubernetes service with provider-specific values:
+
+```bash
+# AWS EKS
+helm upgrade --install aileron ./platform/helm \
+  -f platform/helm/alerthub/values-aws-eks.yaml \
+  --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=arn:aws:iam::ACCOUNT:role/aileron
+
+# Google GKE
+helm upgrade --install aileron ./platform/helm \
+  -f platform/helm/alerthub/values-gcp-gke.yaml \
+  --set serviceAccount.annotations."iam\.gke\.io/gcp-service-account"=aileron@PROJECT.iam.gserviceaccount.com
+
+# Azure AKS
+helm upgrade --install aileron ./platform/helm \
+  -f platform/helm/alerthub/values-azure-aks.yaml \
+  --set serviceAccount.annotations."azure\.workload\.identity/client-id"=CLIENT_ID
+```
+
+### Cloud Credential Setup
+
+<details>
+<summary><b>AWS — IAM Role (recommended for EKS)</b></summary>
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "cloudwatch:DescribeAlarms",
+      "ec2:DescribeInstances", "ec2:DescribeVpcs",
+      "eks:ListClusters", "eks:DescribeCluster",
+      "rds:DescribeDBInstances",
+      "lambda:ListFunctions",
+      "elasticloadbalancing:DescribeLoadBalancers",
+      "guardduty:ListFindings", "guardduty:GetFindings"
+    ],
+    "Resource": "*"
+  }]
+}
+```
+
+Set `AILERON_AWS_ENABLED=true` and `AWS_DEFAULT_REGION`.
+</details>
+
+<details>
+<summary><b>GCP — Service Account (Workload Identity recommended for GKE)</b></summary>
+
+Required roles: `roles/monitoring.viewer`, `roles/compute.viewer`, `roles/container.viewer`, `roles/cloudsql.viewer`
+
+```bash
+gcloud iam service-accounts create aileron-sa
+gcloud projects add-iam-policy-binding PROJECT_ID \
+  --member="serviceAccount:aileron-sa@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/monitoring.viewer"
+# ... repeat for other roles
+```
+
+Set `AILERON_GCP_ENABLED=true` and `GCP_PROJECT_IDS`.
+</details>
+
+<details>
+<summary><b>Azure — Workload Identity (recommended for AKS)</b></summary>
+
+Required roles: `Monitoring Reader`, `Reader` on subscriptions
+
+```bash
+az ad sp create-for-rbac --name aileron --role "Monitoring Reader" \
+  --scopes /subscriptions/SUBSCRIPTION_ID
+```
+
+Set `AILERON_AZURE_ENABLED=true`, `AZURE_SUBSCRIPTION_IDS`, `AZURE_TENANT_ID`.
+</details>
+
+<details>
+<summary><b>Alibaba Cloud — RAM User</b></summary>
+
+Required permissions: `AliyunCloudMonitorReadOnlyAccess`, `AliyunECSReadOnlyAccess`
+
+Set `AILERON_ALICLOUD_ENABLED=true`, `ALICLOUD_ACCESS_KEY_ID`, `ALICLOUD_ACCESS_KEY_SECRET`.
+</details>
+
+---
+
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, style, and PR guidelines.

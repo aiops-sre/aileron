@@ -16,7 +16,7 @@ import (
 	jwtpkg "github.com/aileron-platform/aileron/platform/internal/services/jwt"
 	"github.com/aileron-platform/aileron/platform/internal/services/oauth"
 	"github.com/aileron-platform/aileron/platform/internal/services/rbac"
-	ldap "github.com/aileron-platform/aileron/platform/internal/services/ldap"
+	dsldap "github.com/aileron-platform/aileron/platform/internal/services/dsldap"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -77,7 +77,7 @@ func (s *oauth2MemStore) cleanup() {
 	}
 }
 
-// OIDCHandler handles OIDC OAuth2 authorization code flow and OIDC Provider token exchange.
+// OIDCHandler handles OIDC OAuth2 authorization code flow and OIDCProvider token exchange.
 type OIDCHandler struct {
 	config      *oidc.Config
 	provisioner *oidc.UserProvisioner
@@ -90,11 +90,11 @@ type OIDCHandler struct {
 	redis       *cache.RedisCache
 	stateStore  *oauth2MemStore // in-memory fallback when Redis unavailable
 	codeStore   *oauth2MemStore
-	ldapSvc     *ldap.Service // optional; used to fetch groups when OIDC token omits them
+	ldapSvc     *dsldap.Service // optional; used to fetch groups when OIDC token omits them
 }
 
 // SetLDAPService wires in the LDAP group-lookup client.
-func (h *OIDCHandler) SetLDAPService(svc *ldap.Service) { h.ldapSvc = svc }
+func (h *OIDCHandler) SetLDAPService(svc *dsldap.Service) { h.ldapSvc = svc }
 
 // NewOIDCHandler creates a new OIDC OAuth2 handler.
 // callbackURL is the redirect URI registered in OIDC (e.g. https://host/api/v1/auth).
@@ -383,8 +383,8 @@ func (h *OIDCHandler) OIDCCallback(c *gin.Context) {
 				log.Printf("Failed to cache OIDC token for user %s: %v", userID, err)
 			}
 		}
-		// Store OIDC refresh token for OIDC Provider exchange — consent for audience=sear-oidc
-		// is carried by the refresh token and produces a valid OIDC Provider id_token.
+		// Store OIDC refresh token for OIDCProvider exchange — consent for audience=sear-oidc
+		// is carried by the refresh token and produces a valid OIDCProvider id_token.
 		if oidcRefreshToken != "" {
 			if err := h.redis.Set("oidc:refresh:"+userID.String(), oidcRefreshToken, 7*24*time.Hour); err != nil {
 				log.Printf("Failed to cache OIDC refresh token for user %s: %v", userID, err)
@@ -399,26 +399,27 @@ func (h *OIDCHandler) OIDCCallback(c *gin.Context) {
 		}
 	}
 
-	// Exchange OIDC refresh token (or access token) for a OIDC Provider id_token.
+	// Exchange OIDC refresh token (or access token) for a OIDCProvider id_token.
 	// The id_token from the initial code exchange is scoped to the alerthub client only;
 	// a separate exchange targeting audience=sear-oidc is required.
-	oidcToken := ""
+	var oidcToken2 = ""
+	oidcToken = oidcToken2
 	oidcExpiresIn := 0
 	if h.oauthClient != nil {
 		var fgTok *oauth.TokenResponse
 		var fgErr error
 
 		if oidcRefreshToken != "" {
-			fgTok, fgErr = h.oauthClient.ExchangeRefreshForOIDC Provider(c.Request.Context(), oidcRefreshToken)
+			fgTok, fgErr = h.oauthClient.ExchangeRefreshForOIDCProvider(c.Request.Context(), oidcRefreshToken)
 			if fgErr != nil {
-				log.Printf("OIDC Provider refresh exchange failed for %s: %v — trying access token exchange", oidcUser.Username, fgErr)
+				log.Printf("OIDCProvider refresh exchange failed for %s: %v — trying access token exchange", oidcUser.Username, fgErr)
 			}
 		}
 
 		if fgTok == nil && oidcToken != "" {
-			fgTok, fgErr = h.oauthClient.ExchangeTokenForOIDC Provider(c.Request.Context(), oidcToken, userID.String())
+			fgTok, fgErr = h.oauthClient.ExchangeTokenForOIDCProvider(c.Request.Context(), oidcToken, userID.String())
 			if fgErr != nil {
-				log.Printf("OIDC Provider token exchange failed for %s (non-fatal): %v", oidcUser.Username, fgErr)
+				log.Printf("OIDCProvider token exchange failed for %s (non-fatal): %v", oidcUser.Username, fgErr)
 			}
 		}
 
@@ -428,7 +429,7 @@ func (h *OIDCHandler) OIDCCallback(c *gin.Context) {
 				oidcToken = fgTok.AccessToken
 			}
 			oidcExpiresIn = fgTok.ExpiresIn
-			log.Printf("OIDC Provider token obtained for %s (expires_in=%ds, has_id_token=%v)", oidcUser.Username, fgTok.ExpiresIn, fgTok.IdToken != "")
+			log.Printf("OIDCProvider token obtained for %s (expires_in=%ds, has_id_token=%v)", oidcUser.Username, fgTok.ExpiresIn, fgTok.IdToken != "")
 		}
 
 		if oidcToken != "" && h.redis != nil {
@@ -450,7 +451,6 @@ func (h *OIDCHandler) OIDCCallback(c *gin.Context) {
 		"role_name":            roleName,
 		"redirect":             redirectTo,
 		"oidc_token":           oidcToken,
-		"oidc_token":      oidcToken,
 		"oidc_expires_in": strconv.Itoa(oidcExpiresIn),
 	}
 	h.storeOAuthCode(exchangeCode, codeData, 2*time.Minute)
@@ -462,10 +462,10 @@ func (h *OIDCHandler) OIDCCallback(c *gin.Context) {
 	c.Redirect(http.StatusFound, callbackURL)
 }
 
-// RefreshOIDC ProviderToken silently exchanges the stored OIDC token for a fresh OIDC Provider token.
-// Called by the frontend when the OIDC Provider token is about to expire.
+// RefreshOIDCProviderToken silently exchanges the stored OIDC token for a fresh OIDCProvider token.
+// Called by the frontend when the OIDCProvider token is about to expire.
 // GET /api/v1/auth/oidc/oidc-refresh
-func (h *OIDCHandler) RefreshOIDC ProviderToken(c *gin.Context) {
+func (h *OIDCHandler) RefreshOIDCProviderToken(c *gin.Context) {
 	userIDRaw, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": "Not authenticated"})
@@ -508,19 +508,19 @@ func (h *OIDCHandler) RefreshOIDC ProviderToken(c *gin.Context) {
 	var err error
 
 	if oidcRefresh != "" {
-		fgTok, err = h.oauthClient.ExchangeRefreshForOIDC Provider(c.Request.Context(), oidcRefresh)
+		fgTok, err = h.oauthClient.ExchangeRefreshForOIDCProvider(c.Request.Context(), oidcRefresh)
 		if err != nil {
-			log.Printf("OIDC Provider refresh exchange failed for user %s: %v — trying access token", userIDStr, err)
+			log.Printf("OIDCProvider refresh exchange failed for user %s: %v — trying access token", userIDStr, err)
 		}
 	}
 	if fgTok == nil && oidcToken != "" {
-		fgTok, err = h.oauthClient.ExchangeTokenForOIDC Provider(c.Request.Context(), oidcToken, userIDStr)
+		fgTok, err = h.oauthClient.ExchangeTokenForOIDCProvider(c.Request.Context(), oidcToken, userIDStr)
 	}
 	if err != nil || fgTok == nil {
-		log.Printf("OIDC Provider refresh failed for user %s: %v", userIDStr, err)
+		log.Printf("OIDCProvider refresh failed for user %s: %v", userIDStr, err)
 		c.JSON(http.StatusForbidden, gin.H{
 			"success": false,
-			"message": "OIDC Provider token exchange failed — user may not have OIDC Provider access",
+			"message": "OIDCProvider token exchange failed — user may not have OIDCProvider access",
 		})
 		return
 	}
@@ -534,10 +534,10 @@ func (h *OIDCHandler) RefreshOIDC ProviderToken(c *gin.Context) {
 		fgCredential = fgTok.AccessToken
 	}
 	if err := h.redis.Set("oidc:token:"+userIDStr, fgCredential, fgTTL); err != nil {
-		log.Printf("Failed to cache refreshed OIDC Provider token for user %s: %v", userIDStr, err)
+		log.Printf("Failed to cache refreshed OIDCProvider token for user %s: %v", userIDStr, err)
 	}
 
-	log.Printf("OIDC Provider token refreshed for user %s (expires_in=%ds, has_id_token=%v)", userIDStr, fgTok.ExpiresIn, fgTok.IdToken != "")
+	log.Printf("OIDCProvider token refreshed for user %s (expires_in=%ds, has_id_token=%v)", userIDStr, fgTok.ExpiresIn, fgTok.IdToken != "")
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
@@ -579,7 +579,6 @@ func (h *OIDCHandler) OIDCExchange(c *gin.Context) {
 			},
 			"redirect":             data["redirect"],
 			"oidc_token":           data["oidc_token"],
-			"oidc_token":      data["oidc_token"],
 			"oidc_expires_in": func() int {
 				if v, err := strconv.Atoi(data["oidc_expires_in"]); err == nil && v > 0 {
 					return v

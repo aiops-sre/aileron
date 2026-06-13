@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/aileron-platform/aileron/platform/internal/services/ldap"
+	dsldap "github.com/aileron-platform/aileron/platform/internal/services/dsldap"
 	"github.com/aileron-platform/aileron/platform/internal/services/rbac"
 )
 
@@ -18,7 +18,7 @@ import (
 type RoleHandler struct {
 	rbacService *rbac.RBACService
 	db          *sql.DB
-	ldapSvc     *ldap.Service // optional; triggers mapping reload after changes
+	ldapSvc     *dsldap.Service // optional; triggers mapping reload after changes
 }
 
 // NewRoleHandler creates a new role handler
@@ -30,7 +30,7 @@ func NewRoleHandler(rbacService *rbac.RBACService, db *sql.DB) *RoleHandler {
 }
 
 // SetLDAPService attaches the LDAP service so mapping changes trigger live reloads.
-func (h *RoleHandler) SetLDAPService(svc *ldap.Service) {
+func (h *RoleHandler) SetLDAPService(svc *dsldap.Service) {
 	h.ldapSvc = svc
 }
 

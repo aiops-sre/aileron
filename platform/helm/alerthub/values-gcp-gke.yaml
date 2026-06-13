@@ -1,0 +1,125 @@
+# ============================================================
+# AlertHub Enterprise — GCP GKE Overrides
+#
+# Usage:
+#   helm upgrade --install alerthub ./platform/helm/alerthub \
+#     -f values.yaml \
+#     -f values-gcp-gke.yaml \
+#     --namespace aileron
+#
+# Prerequisites:
+#   - GKE cluster with Workload Identity enabled
+#   - Google-managed certificates or cert-manager for TLS
+#   - GCP BackendConfig CRD available (comes with GKE by default)
+#   - pd-ssd StorageClass available (default on GKE)
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Global — GKE image registry
+# ---------------------------------------------------------------------------
+global:
+  imageRegistry: ghcr.io/aiops-sre
+
+# ---------------------------------------------------------------------------
+# Ingress — GCP Global Cloud Load Balancer (GCLB)
+#
+# GKE's built-in ingress controller provisions a GCLB when the ingress class
+# is "gce".  The BackendConfig annotation wires health checks, session
+# affinity, and Cloud Armor policies to the backend service.
+#
+# For regional (internal) load balancing use class "gce-internal".
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: true
+  class: "gce"
+  annotations:
+    # Use GKE's built-in ingress controller backed by GCLB
+    kubernetes.io/ingress.class: "gce"
+    # Reference a BackendConfig CR to configure health checks, CDN, Cloud Armor
+    # Replace "alerthub-backend-config" with the actual BackendConfig name
+    cloud.google.com/backend-config: '{"default":"alerthub-backend-config"}'
+    # For Google-managed TLS certificate (replace domain as needed):
+    # kubernetes.io/ingress.global-static-ip-name: "alerthub-static-ip"
+    # networking.gke.io/managed-certificates: "alerthub-managed-cert"
+
+# ---------------------------------------------------------------------------
+# Service Account — Workload Identity
+#
+# GKE Workload Identity maps a Kubernetes ServiceAccount to a GCP service
+# account, eliminating the need for downloaded key files.
+#
+# Steps to enable:
+#   1. Enable Workload Identity on the GKE cluster/node pool
+#   2. Create a GCP service account with required roles (e.g., secretmanager.secretAccessor)
+#   3. Bind the K8s SA to the GCP SA:
+#      gcloud iam service-accounts add-iam-policy-binding \
+#        GCP_SA_EMAIL \
+#        --role roles/iam.workloadIdentityUser \
+#        --member "serviceAccount:PROJECT_ID.svc.id.goog[aileron/alerthub]"
+#   4. Paste the GCP service account email below
+# ---------------------------------------------------------------------------
+serviceAccount:
+  annotations:
+    # GCP service account email for Workload Identity — leave empty to disable
+    iam.gke.io/gcp-service-account: ""
+
+# ---------------------------------------------------------------------------
+# Environment Variables — GCP cloud integration
+# ---------------------------------------------------------------------------
+backend:
+  extraEnv:
+    # Enable GCP-specific code paths in the AlertHub backend
+    - name: AILERON_GCP_ENABLED
+      value: "true"
+    # GCP project ID — used for Pub/Sub, Secrets Manager, and Cloud Monitoring
+    # - name: GOOGLE_CLOUD_PROJECT
+    #   value: "my-gcp-project-id"
+
+# ---------------------------------------------------------------------------
+# Persistence — GCP Persistent Disk SSD StorageClass
+#
+# pd-ssd provides SSD-backed Persistent Disks via the GCP CSI driver
+# (pre-installed on GKE clusters).  Use pd-balanced for lower-cost workloads
+# or pd-extreme for high-IOPS databases.
+# ---------------------------------------------------------------------------
+persistence:
+  storageClass: "pd-ssd"
+
+postgres:
+  storageClass: "pd-ssd"
+
+neo4j:
+  storageClass: "pd-ssd"
+
+redis:
+  storageClass: "pd-ssd"
+
+weaviate:
+  storageClass: "pd-ssd"
+
+ollama:
+  storageClass: "pd-ssd"
+
+kafka:
+  storageClass: "pd-ssd"
+
+# ---------------------------------------------------------------------------
+# Topology — cloud provider hint
+#
+# Enables GCP-specific node discovery: GKE node labels, zone topology, and
+# managed instance group metadata in the KubeSense topology engine.
+# ---------------------------------------------------------------------------
+topology:
+  cloudProvider: "gcp"
+
+# ---------------------------------------------------------------------------
+# Build jobs — disabled on GKE (CI handles image builds via Cloud Build)
+# ---------------------------------------------------------------------------
+build:
+  enabled: false
+
+# ---------------------------------------------------------------------------
+# SecretsManager — disabled; use GCP Secret Manager + External Secrets Operator
+# ---------------------------------------------------------------------------
+secrets_manager:
+  enabled: false

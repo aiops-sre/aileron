@@ -415,7 +415,7 @@ func (h *IntegrationHandler) SyncIntegration(c *gin.Context) {
 	})
 }
 
-// Auth Provider Handlers
+// AuthProvider Handlers
 
 // ListAuthProviders returns all auth providers
 func (h *IntegrationHandler) ListAuthProviders(c *gin.Context) {

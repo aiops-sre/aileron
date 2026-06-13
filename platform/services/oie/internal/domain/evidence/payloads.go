@@ -144,6 +144,24 @@ type NetAppSVMPayload struct {
 	Subtype     string `json:"subtype"` // default | dp_destination | sync_source
 }
 
+// ── Cloud Topology Payloads ───────────────────────────────────────────────────
+
+// CloudContextPayload carries cloud-resource metadata resolved from the Aileron
+// topology graph. Populated by the cloud topology evidence fetcher.
+type CloudContextPayload struct {
+	Provider     string `json:"provider"`      // "aws" | "gcp" | "azure" | "alicloud"
+	Region       string `json:"region"`
+	AccountID    string `json:"account_id,omitempty"`
+	ResourceType string `json:"resource_type"` // "ec2_instance" | "gce_instance" | "azure_vm" | …
+	ResourceID   string `json:"resource_id"`
+	Name         string `json:"name"`
+	Status       string `json:"status"`        // "running" | "stopped" | "terminated" | …
+	// K8sClusterRef is non-empty when the cloud VM is a Kubernetes node.
+	K8sClusterRef string `json:"k8s_cluster_ref,omitempty"`
+	// TopologyPath is the path used to resolve this context.
+	TopologyPath string `json:"topology_path"`
+}
+
 // ── EIRS Payloads ─────────────────────────────────────────────────────────────
 
 // EntityContextPayload carries the EIRS-resolved entity profile.

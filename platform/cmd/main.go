@@ -317,6 +317,22 @@ func main() {
 		log.Printf("K8s topology service initialized successfully")
 	}
 
+	// Cloud topology providers
+	cloudRegistry := topology.NewCloudTopologyRegistry()
+	if os.Getenv("AILERON_AWS_ENABLED") == "true" {
+		cloudRegistry.Register(topology.NewAWSTopologyProvider())
+	}
+	if os.Getenv("AILERON_GCP_ENABLED") == "true" {
+		cloudRegistry.Register(topology.NewGCPTopologyProvider())
+	}
+	if os.Getenv("AILERON_AZURE_ENABLED") == "true" {
+		cloudRegistry.Register(topology.NewAzureTopologyProvider())
+	}
+	if os.Getenv("AILERON_ALICLOUD_ENABLED") == "true" {
+		cloudRegistry.Register(topology.NewAliCloudTopologyProvider())
+	}
+	log.Printf("cloud topology: %d provider(s) configured", len(cloudRegistry.ConfiguredProviders()))
+
 	authHandler := handlers.NewAuthHandler(rbacService, jwtService, ssoManager, database)
 	userHandler := handlers.NewUserHandler(rbacService, database, redisCache)
 	roleHandler := handlers.NewRoleHandler(rbacService, database)
@@ -738,7 +754,7 @@ func main() {
 	log.Printf("AI Service: %s", config.AIServiceURL)
 	log.Printf("Redis: %s (enabled: %v)", config.RedisAddr, redisCache != nil)
 	log.Printf("OAuth: OIDC=%s, Client=%s", oauthConfig.OIDCBaseURL, oauthConfig.ClientID)
-	log.Printf("OIDC Provider: %s (App ID: %s)", oauthConfig.OIDC ProviderBaseURL, oauthConfig.OIDC ProviderAppID)
+	log.Printf("OIDCProvider: %s (App ID: %s)", oauthConfig.OIDC ProviderBaseURL, oauthConfig.OIDC ProviderAppID)
 	log.Printf("Topology: Infrastructure + Service mapping enabled")
 	log.Printf("Environment: %s", config.Environment)
 	log.Printf("Kafka: %s (always-on)", getEnv("KAFKA_BROKERS", "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"))
@@ -1626,6 +1642,11 @@ func setupRouter(
 		// Use regular webhook handler (enhanced routes cause conflicts)
 		webhookHandler.RegisterRoutes(v1)
 
+		// Cloud provider webhook handler (AWS EventBridge, GCP Pub/Sub, Azure Monitor, AliCloud CMS)
+		normalizationRegistry := registry.NewRegistry()
+		cloudWebhookHandler := handlers.NewCloudWebhookHandler(normalizationRegistry)
+		cloudWebhookHandler.RegisterRoutes(router)
+
 		// OKG Change Intelligence API — serves the OIE okg_changes fetcher.
 		// Queries Neo4j Change nodes near the incident's start time and returns
 		// them as causal change candidates with a simple proximity-based causality score.
@@ -1709,7 +1730,7 @@ func setupRouter(
 			workflowHandler.RegisterRoutes(protected)
 			hclIncidentHandler.RegisterRoutes(protected)
 			deduplicationHandler.RegisterRoutes(protected)
-			oauthHandler.RegisterRoutes(protected)                            // OAuth and OIDC Provider proxy
+			oauthHandler.RegisterRoutes(protected)                            // OAuth and OIDCProvider proxy
 
 			// Correlation feedback loop routes 
 			corrFeedback := protected.Group("/correlation/feedback")
@@ -2211,7 +2232,7 @@ func setupRouter(
 				}
 				c.JSON(200, gin.H{"success": true, "data": gin.H{"groups": groups}})
 			})
-			// Silent OIDC Provider token refresh (requires app JWT — uses stored OIDC token in Redis)
+			// Silent OIDCProvider token refresh (requires app JWT — uses stored OIDC token in Redis)
 			oidcAuth.GET("/oidc-refresh", authMiddleware.Authenticate(), oidcHandler.RefreshOIDC ProviderToken)
 		}
 

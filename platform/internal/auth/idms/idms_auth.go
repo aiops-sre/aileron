@@ -66,12 +66,6 @@ func DefaultConfig() *Config {
 				Priority:      50,
 				AutoProvision: true,
 			},
-			"aileron-operators": {
-				LDAPGroup:     "aileron-operators",
-				AlertHubRole:  "operator",
-				Priority:      50,
-				AutoProvision: true,
-			},
 			"aileron-viewers": {
 				LDAPGroup:     "aileron-viewers",
 				AlertHubRole:  "viewer",

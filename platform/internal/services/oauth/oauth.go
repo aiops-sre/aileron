@@ -47,9 +47,9 @@ type OAuthConfig struct {
 	RequiredScopes []string // ["dsid", "offline_access", "groups"]
 	RequiredGroups []string // ["aileron-operators", "oidc-google-models-access"]
 
-	// OIDC Provider Configuration
-	OIDC ProviderAppID   string // "928148"
-	OIDC ProviderBaseURL string // ""
+	// OIDCProvider Configuration
+	OIDCProviderAppID   string // "928148"
+	OIDCProviderBaseURL string // ""
 
 	// Token Configuration
 	TokenCacheTTL    time.Duration // How long to cache tokens
@@ -59,7 +59,7 @@ type OAuthConfig struct {
 // TokenResponse represents OAuth token response
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
-	IdToken      string `json:"id_token,omitempty"` // OIDC Provider uses the id_token as the Bearer credential
+	IdToken      string `json:"id_token,omitempty"` // OIDCProvider uses the id_token as the Bearer credential
 	RefreshToken string `json:"refresh_token,omitempty"`
 	TokenType    string `json:"token_type"`
 	ExpiresIn    int    `json:"expires_in"`
@@ -108,8 +108,8 @@ func GetDefaultConfig() *OAuthConfig {
 			"oidc-google-models-access",
 			"oidc-anthropic-access",
 		},
-		OIDC ProviderAppID:   "928148",
-		OIDC ProviderBaseURL: "",
+		OIDCProviderAppID:   "928148",
+		OIDCProviderBaseURL: "",
 		TokenCacheTTL:    50 * time.Minute,
 		RefreshThreshold: 5 * time.Minute,
 	}
@@ -144,7 +144,7 @@ func (c *OAuthClient) GenerateToken(ctx context.Context, assertion string, userI
 		"grant_type":    "urn:ietf:params:oauth:grant-type:jwt-bearer",
 		"assertion":     assertion,
 		"scope":         scopes,
-		"audience":      audiences, // Multi-audience: both app and OIDC Provider
+		"audience":      audiences, // Multi-audience: both app and OIDCProvider
 	}
 
 	jsonData, err := json.Marshal(payload)
@@ -235,9 +235,9 @@ func (c *OAuthClient) RefreshToken(ctx context.Context, refreshToken string, use
 // TOKEN EXCHANGE (Alternative approach)
 // ============================================================================
 
-// ExchangeTokenForOIDC Provider exchanges app token for OIDC Provider token using RFC 8693 token exchange.
+// ExchangeTokenForOIDCProvider exchanges app token for OIDCProvider token using RFC 8693 token exchange.
 // OIDC corporate OAuth token exchange API uses application/json (per Aileron OIDC docs).
-func (c *OAuthClient) ExchangeTokenForOIDC Provider(ctx context.Context, appToken string, userID string) (*TokenResponse, error) {
+func (c *OAuthClient) ExchangeTokenForOIDCProvider(ctx context.Context, appToken string, userID string) (*TokenResponse, error) {
 	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.OIDCBaseURL)
 
 	payload := map[string]string{
@@ -245,7 +245,7 @@ func (c *OAuthClient) ExchangeTokenForOIDC Provider(ctx context.Context, appToke
 		"client_secret":         c.config.ClientSecret,
 		"grant_type":            "urn:ietf:params:oauth:grant-type:token-exchange",
 		"scope":                 "dsid groups",
-		"resource":              c.config.OIDC ProviderBaseURL,
+		"resource":              c.config.OIDCProviderBaseURL,
 		"requested_token_type":  "urn:ietf:params:oauth:token-type:access_token",
 		"subject_token_type":    "urn:ietf:params:oauth:token-type:access_token",
 		"subject_token":         appToken,
@@ -286,12 +286,12 @@ func (c *OAuthClient) ExchangeTokenForOIDC Provider(ctx context.Context, appToke
 	return &tokenResp, nil
 }
 
-// ExchangeRefreshForOIDC Provider uses the OIDC refresh token (which carries the original
+// ExchangeRefreshForOIDCProvider uses the OIDC refresh token (which carries the original
 // authorization consent including audience=hvys3fcwcteqrvw3qzkvtk86viuoqv) to obtain
-// a OIDC Provider-scoped access token. The access_token from the initial code exchange has
-// aud:"OIDC" which OIDC Provider rejects; the refresh token is not audience-restricted and
-// can be used to get a token targeted at the OIDC Provider OIDC client.
-func (c *OAuthClient) ExchangeRefreshForOIDC Provider(ctx context.Context, refreshToken string) (*TokenResponse, error) {
+// a OIDCProvider-scoped access token. The access_token from the initial code exchange has
+// aud:"OIDC" which OIDCProvider rejects; the refresh token is not audience-restricted and
+// can be used to get a token targeted at the OIDCProvider OIDC client.
+func (c *OAuthClient) ExchangeRefreshForOIDCProvider(ctx context.Context, refreshToken string) (*TokenResponse, error) {
 	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.OIDCBaseURL)
 
 	data := url.Values{}
@@ -299,7 +299,7 @@ func (c *OAuthClient) ExchangeRefreshForOIDC Provider(ctx context.Context, refre
 	data.Set("client_secret", c.config.ClientSecret)
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", refreshToken)
-	data.Set("audience", "hvys3fcwcteqrvw3qzkvtk86viuoqv") // OIDC Provider OIDC client ID
+	data.Set("audience", "hvys3fcwcteqrvw3qzkvtk86viuoqv") // OIDCProvider OIDC client ID
 	data.Set("scope", "openid dsid accountname profile groups") // openid required for id_token in response
 
 	req, err := http.NewRequestWithContext(ctx, "POST", tokenURL, strings.NewReader(data.Encode()))
@@ -325,13 +325,13 @@ func (c *OAuthClient) ExchangeRefreshForOIDC Provider(ctx context.Context, refre
 		return nil, fmt.Errorf("failed to parse refresh response: %w", err)
 	}
 	tokenResp.IssuedAt = time.Now()
-	log.Printf("OIDC Provider exchange: has_access_token=%v has_id_token=%v expires_in=%d",
+	log.Printf("OIDCProvider exchange: has_access_token=%v has_id_token=%v expires_in=%d",
 		tokenResp.AccessToken != "", tokenResp.IdToken != "", tokenResp.ExpiresIn)
 	return &tokenResp, nil
 }
 
-// OIDC ProviderRequest represents a request to OIDC Provider
-type OIDC ProviderRequest struct {
+// OIDCProviderRequest represents a request to OIDCProvider
+type OIDCProviderRequest struct {
 	Method        string
 	Path          string // e.g., "/api/openai/v1/models"
 	Headers       map[string]string
@@ -341,10 +341,10 @@ type OIDC ProviderRequest struct {
 	MultiAudToken string // Optional: Pre-generated multi-audience token
 }
 
-// ProxyToOIDC Provider forwards a request to OIDC Provider with user identity
-func (c *OAuthClient) ProxyToOIDC Provider(ctx context.Context, req *OIDC ProviderRequest) (*http.Response, error) {
+// ProxyToOIDCProvider forwards a request to OIDCProvider with user identity
+func (c *OAuthClient) ProxyToOIDCProvider(ctx context.Context, req *OIDCProviderRequest) (*http.Response, error) {
 	if req.UserIP == "" {
-		return nil, fmt.Errorf("user IP is required for OIDC Provider requests")
+		return nil, fmt.Errorf("user IP is required for OIDCProvider requests")
 	}
 
 	// Get or use multi-audience token
@@ -360,8 +360,8 @@ func (c *OAuthClient) ProxyToOIDC Provider(ctx context.Context, req *OIDC Provid
 		token = cached.Token.AccessToken
 	}
 
-	// Build OIDC Provider URL
-	oidcURL := fmt.Sprintf("%s%s", c.config.OIDC ProviderBaseURL, req.Path)
+	// Build OIDCProvider URL
+	oidcURL := fmt.Sprintf("%s%s", c.config.OIDCProviderBaseURL, req.Path)
 
 	// Create HTTP request
 	var bodyReader io.Reader
@@ -371,7 +371,7 @@ func (c *OAuthClient) ProxyToOIDC Provider(ctx context.Context, req *OIDC Provid
 
 	httpReq, err := http.NewRequestWithContext(ctx, req.Method, oidcURL, bodyReader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create OIDC Provider request: %w", err)
+		return nil, fmt.Errorf("failed to create OIDCProvider request: %w", err)
 	}
 
 	// Set required headers
@@ -384,7 +384,7 @@ func (c *OAuthClient) ProxyToOIDC Provider(ctx context.Context, req *OIDC Provid
 		httpReq.Header.Set(key, value)
 	}
 
-	// Forward to OIDC Provider
+	// Forward to OIDCProvider
 	return c.httpClient.Do(httpReq)
 }
 

@@ -1,0 +1,144 @@
+# ============================================================
+# AlertHub Enterprise — Azure AKS Overrides
+#
+# Usage:
+#   helm upgrade --install alerthub ./platform/helm/alerthub \
+#     -f values.yaml \
+#     -f values-azure-aks.yaml \
+#     --namespace aileron
+#
+# Prerequisites:
+#   - AKS cluster with Azure Workload Identity add-on enabled
+#   - Application Gateway Ingress Controller (AGIC) or NGINX ingress installed
+#   - Azure Disk CSI Driver (pre-installed on AKS >= 1.21)
+#   - Federated identity credential configured for the managed identity
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Global — AKS image registry
+# ---------------------------------------------------------------------------
+global:
+  imageRegistry: ghcr.io/aiops-sre
+
+# ---------------------------------------------------------------------------
+# Ingress — Azure Application Gateway Ingress Controller (AGIC)
+#
+# AGIC provisions an Azure Application Gateway for each Ingress resource.
+# Alternatively, use class "nginx" with the NGINX ingress controller add-on
+# (enabled via: az aks enable-addons --addons ingress-appgw).
+#
+# To switch to NGINX instead of AGIC, change class to "nginx" and replace
+# the annotations block with standard nginx.ingress.kubernetes.io/* annotations.
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: true
+  # Use "azure/application-gateway" for AGIC or "nginx" for the NGINX add-on
+  class: "azure/application-gateway"
+  annotations:
+    # Instruct AGIC to manage this Ingress
+    kubernetes.io/ingress.class: "azure/application-gateway"
+    # Enable cookie-based session affinity at the Application Gateway
+    appgw.ingress.kubernetes.io/cookie-based-affinity: "true"
+    # Use HTTPS backend connections (set to "false" if backend speaks plain HTTP)
+    appgw.ingress.kubernetes.io/backend-protocol: "http"
+    # Optional: reference an Azure Key Vault certificate for TLS termination
+    # appgw.ingress.kubernetes.io/appgw-ssl-certificate: "alerthub-tls-cert"
+    # Optional: request routing rules priority (required when using path-based rules)
+    # appgw.ingress.kubernetes.io/rule-priority: "1"
+
+# ---------------------------------------------------------------------------
+# Service Account — Azure Workload Identity
+#
+# Azure Workload Identity binds a Kubernetes ServiceAccount to an Azure
+# Managed Identity (or App Registration), replacing pod-identity and AAD Pod
+# Identity approaches.
+#
+# Steps to enable:
+#   1. Create an Azure User-Assigned Managed Identity
+#   2. Create a federated identity credential:
+#      az identity federated-credential create \
+#        --name alerthub-federated-cred \
+#        --identity-name alerthub-identity \
+#        --resource-group MY_RG \
+#        --issuer $(az aks show -g MY_RG -n MY_CLUSTER --query oidcIssuerProfile.issuerUrl -o tsv) \
+#        --subject system:serviceaccount:aileron:alerthub
+#   3. Assign Azure roles to the managed identity (e.g., Key Vault Secrets User)
+#   4. Paste the client ID of the managed identity below
+# ---------------------------------------------------------------------------
+serviceAccount:
+  annotations:
+    # Client ID (not object ID) of the Azure User-Assigned Managed Identity
+    azure.workload.identity/client-id: ""
+
+# ---------------------------------------------------------------------------
+# Pod labels — required by Azure Workload Identity webhook
+# These labels cause the mutating webhook to inject the AZURE_* environment
+# variables and the projected service account token volume into the pod.
+# ---------------------------------------------------------------------------
+podLabels:
+  azure.workload.identity/use: "true"
+
+# ---------------------------------------------------------------------------
+# Environment Variables — Azure cloud integration
+# ---------------------------------------------------------------------------
+backend:
+  extraEnv:
+    # Enable Azure-specific code paths in the AlertHub backend
+    - name: AILERON_AZURE_ENABLED
+      value: "true"
+    # Azure tenant ID — used for Azure AD authentication flows
+    # - name: AZURE_TENANT_ID
+    #   value: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    # Azure subscription ID — used for resource management API calls
+    # - name: AZURE_SUBSCRIPTION_ID
+    #   value: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# ---------------------------------------------------------------------------
+# Persistence — Azure Premium Managed Disk StorageClass
+#
+# managed-premium provides SSD-backed Azure Disks via the Azure Disk CSI
+# driver (pre-installed on AKS).  Use managed-csi for standard HDD or
+# managed-csi-premium for ultra-disk performance.
+# ---------------------------------------------------------------------------
+persistence:
+  storageClass: "managed-premium"
+
+postgres:
+  storageClass: "managed-premium"
+
+neo4j:
+  storageClass: "managed-premium"
+
+redis:
+  storageClass: "managed-premium"
+
+weaviate:
+  storageClass: "managed-premium"
+
+ollama:
+  storageClass: "managed-premium"
+
+kafka:
+  storageClass: "managed-premium"
+
+# ---------------------------------------------------------------------------
+# Topology — cloud provider hint
+#
+# Enables Azure-specific node discovery: AKS node labels, availability zone
+# topology, and VMSS instance metadata in the KubeSense topology engine.
+# ---------------------------------------------------------------------------
+topology:
+  cloudProvider: "azure"
+
+# ---------------------------------------------------------------------------
+# Build jobs — disabled on AKS (CI handles image builds via Azure Pipelines)
+# ---------------------------------------------------------------------------
+build:
+  enabled: false
+
+# ---------------------------------------------------------------------------
+# SecretsManager — disabled; use Azure Key Vault + External Secrets Operator
+# or the Secrets Store CSI Driver with Azure provider
+# ---------------------------------------------------------------------------
+secrets_manager:
+  enabled: false

@@ -19,7 +19,7 @@ import (
 
 // AIHandler handles AI chat operations
 type AIHandler struct {
-	oidcService *oidc.OIDC ProviderService
+	oidcService *oidc.OIDCProviderService
 	db               *sql.DB
 	advancedAnalyzer *AIAdvancedAnalyzer
 	modelsCache      []oidc.ModelInfo
@@ -28,7 +28,7 @@ type AIHandler struct {
 }
 
 // NewAIHandler creates a new AI handler
-func NewAIHandler(oidcService *oidc.OIDC ProviderService, db *sql.DB) *AIHandler {
+func NewAIHandler(oidcService *oidc.OIDCProviderService, db *sql.DB) *AIHandler {
 	return &AIHandler{
 		oidcService: oidcService,
 		db:               db,
@@ -90,7 +90,7 @@ func (h *AIHandler) RegisterRoutes(router *gin.RouterGroup) {
 	}
 }
 
-// Chat handles chat requests to OIDC Provider AI
+// Chat handles chat requests to OIDCProvider AI
 // @Summary Chat with AI
 // @Description Send a chat message to the configured AI model
 // @Tags AI
@@ -145,8 +145,8 @@ func (h *AIHandler) Chat(c *gin.Context) {
 	// Enhance messages with AlertHub context
 	enhancedMessages := h.enhanceMessagesWithContext(req.Messages, userIDStr)
 
-	// Check for OIDC Provider token from browser
-	oidcToken := c.GetHeader("X-OIDC Provider-Token")
+	// Check for OIDCProvider token from browser
+	oidcToken := c.GetHeader("X-OIDCProvider-Token")
 	if oidcToken != "" {
 		// Use token provided by user's browser/device
 		h.oidcService.SetUserToken(oidcToken)
@@ -159,22 +159,22 @@ func (h *AIHandler) Chat(c *gin.Context) {
 		}
 	}
 
-	// Create OIDC Provider request
-	oidcReq := &oidc.ChatRequest{
+	// Create OIDCProvider request
+	oidcReq := oidc.ChatRequest{
 		Model:     req.Model,
 		Messages:  enhancedMessages,
 		MaxTokens: req.MaxTokens,
 	}
 
-	// Allow up to 3 minutes for LLM inference — OIDC Provider Claude/Gemini calls can take 30-90s
+	// Allow up to 3 minutes for LLM inference — OIDCProvider Claude/Gemini calls can take 30-90s
 	// for longer responses. The nginx ingress has proxy_read_timeout: 3600.
 	oidcCtx, cancelFG := context.WithTimeout(c.Request.Context(), 180*time.Second)
 	defer cancelFG()
 	response, err := h.oidcService.Chat(oidcCtx, oidcReq)
 	if err != nil {
 		// Log the error so it's visible in pod logs
-		log.Printf("OIDC Provider chat error (model=%s): %v", req.Model, err)
-		// Fall back to mock only when OIDC Provider is unavailable (not on timeout from user-selected model)
+		log.Printf("OIDCProvider chat error (model=%s): %v", req.Model, err)
+		// Fall back to mock only when OIDCProvider is unavailable (not on timeout from user-selected model)
 		response = h.getMockResponseWithContext(enhancedMessages, userIDStr)
 	}
 
@@ -194,15 +194,15 @@ func (h *AIHandler) Chat(c *gin.Context) {
 
 // ListModels lists available AI models with caching for fast loading
 // @Summary List AI models
-// @Description Get list of available AI models from OIDC Provider with caching
+// @Description Get list of available AI models from OIDCProvider with caching
 // @Tags AI
 // @Produce json
 // @Success 200 {object} ModelsResponse
 // @Failure 500 {object} ModelsResponse
 // @Router /api/v1/ai/models [get]
 func (h *AIHandler) ListModels(c *gin.Context) {
-	// Check for OIDC Provider token first — bypass cache when user provides their token
-	oidcToken := c.GetHeader("X-OIDC Provider-Token")
+	// Check for OIDCProvider token first — bypass cache when user provides their token
+	oidcToken := c.GetHeader("X-OIDCProvider-Token")
 	if oidcToken == "" {
 		// Try to get from OAuth Authorization header
 		authHeader := c.GetHeader("Authorization")
@@ -252,12 +252,12 @@ func (h *AIHandler) ListModels(c *gin.Context) {
 			}
 		}
 
-		// Try to get models from OIDC Provider
+		// Try to get models from OIDCProvider
 		oidcModels, err := h.oidcService.ListModels(c.Request.Context())
 		if err == nil {
 			models = oidcModels
 		} else {
-			log.Printf("OIDC Provider ListModels failed (token_prefix=%s...): %v", func() string {
+			log.Printf("OIDCProvider ListModels failed (token_prefix=%s...): %v", func() string {
 				if len(oidcToken) > 20 { return oidcToken[:20] }
 				return oidcToken
 			}(), err)
@@ -271,22 +271,22 @@ func (h *AIHandler) ListModels(c *gin.Context) {
 				ID:        "alerthub-intelligence",
 				Name:      "AlertHub Intelligence",
 				Provider:  "AlertHub AI",
-				CreatedAt: time.Now().Unix(),
+				CreatedAt: time.Now().Format(time.RFC3339),
 			},
 			{
 				ID:        "alerthub-correlation",
 				Name:      "AlertHub Correlation AI",
 				Provider:  "AlertHub AI",
-				CreatedAt: time.Now().Unix(),
+				CreatedAt: time.Now().Format(time.RFC3339),
 			},
 		}
 	} else {
-		// Add AlertHub models to OIDC Provider models
+		// Add AlertHub models to OIDCProvider models
 		models = append(models, oidc.ModelInfo{
 			ID:        "alerthub-intelligence",
 			Name:      "AlertHub Intelligence",
 			Provider:  "AlertHub AI",
-			CreatedAt: time.Now().Unix(),
+			CreatedAt: time.Now().Format(time.RFC3339),
 		})
 	}
 
@@ -304,15 +304,15 @@ func (h *AIHandler) ListModels(c *gin.Context) {
 
 // HealthCheck checks AI service health
 // @Summary Health check
-// @Description Check if OIDC Provider service is accessible
+// @Description Check if OIDCProvider service is accessible
 // @Tags AI
 // @Produce json
 // @Success 200 {object} map[string]interface{}
 // @Failure 503 {object} map[string]interface{}
 // @Router /api/v1/ai/health [get]
 func (h *AIHandler) HealthCheck(c *gin.Context) {
-	// Check for OIDC Provider token from browser (CRITICAL FIX)
-	oidcToken := c.GetHeader("X-OIDC Provider-Token")
+	// Check for OIDCProvider token from browser (CRITICAL FIX)
+	oidcToken := c.GetHeader("X-OIDCProvider-Token")
 	if oidcToken != "" {
 		// Use token provided by user's browser/device
 		h.oidcService.SetUserToken(oidcToken)
@@ -331,7 +331,7 @@ func (h *AIHandler) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"status":  "healthy",
-		"service": "OIDC Provider GenAI",
+		"service": "OIDCProvider GenAI",
 	})
 }
 
@@ -1258,8 +1258,7 @@ func (h *AIHandler) getMockResponseWithContext(messages []oidc.ChatMessage, user
 	return &oidc.ChatResponse{
 		ID:      uuid.New().String(),
 		Model:   "alerthub-ai",
-		Message: response,
-		Role:    "assistant",
+		Message: oidc.ChatMessage{Role: "assistant", Content: response},
 		Usage: oidc.TokenUsage{
 			PromptTokens:     150,
 			CompletionTokens: 200,

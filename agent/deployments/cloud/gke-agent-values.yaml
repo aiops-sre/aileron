@@ -1,0 +1,174 @@
+# ============================================================
+# KubeSense Agent — GCP GKE Deployment Values
+#
+# Usage:
+#   helm upgrade --install kubesense-agent ./agent/helm/kubesense-agent \
+#     -f gke-agent-values.yaml \
+#     --namespace aileron-agent
+#
+# Prerequisites:
+#   - GKE cluster with Workload Identity enabled on the node pool
+#   - GCP service account bound to the Kubernetes ServiceAccount via
+#     federated identity credential (see serviceAccount section below)
+#   - pd-ssd StorageClass available (default on GKE)
+#   - Kafka bootstrap endpoint reachable from this cluster
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Image
+# ---------------------------------------------------------------------------
+image:
+  repository: ghcr.io/aiops-sre/kubesense-agent
+  tag: v0.1.0
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: jfrog-dockers-access
+
+# ---------------------------------------------------------------------------
+# Replica count
+# ---------------------------------------------------------------------------
+replicaCount: 1
+
+# ---------------------------------------------------------------------------
+# Service Account — GKE Workload Identity
+#
+# Workload Identity maps this Kubernetes ServiceAccount to a GCP service
+# account, granting the agent access to GCP APIs (Container API, Compute API,
+# Cloud Monitoring) without key files.
+#
+# Steps:
+#   1. Create a GCP service account:
+#      gcloud iam service-accounts create kubesense-agent-sa \
+#        --display-name "KubeSense Agent"
+#   2. Grant required roles:
+#      gcloud projects add-iam-policy-binding PROJECT_ID \
+#        --member "serviceAccount:kubesense-agent-sa@PROJECT_ID.iam.gserviceaccount.com" \
+#        --role "roles/container.viewer"
+#   3. Bind the K8s SA to the GCP SA:
+#      gcloud iam service-accounts add-iam-policy-binding \
+#        kubesense-agent-sa@PROJECT_ID.iam.gserviceaccount.com \
+#        --role roles/iam.workloadIdentityUser \
+#        --member "serviceAccount:PROJECT_ID.svc.id.goog[aileron-agent/kubesense-agent-sa]"
+#   4. Paste the GCP service account email below
+# ---------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: "kubesense-agent-sa"
+  annotations:
+    # GCP service account email for Workload Identity — leave empty to disable
+    iam.gke.io/gcp-service-account: ""
+
+# ---------------------------------------------------------------------------
+# Pod security context
+# ---------------------------------------------------------------------------
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+# ---------------------------------------------------------------------------
+# Agent configuration
+# ---------------------------------------------------------------------------
+agent:
+  # Unique identifier for this cluster — shown in AlertHub topology view
+  clusterId: "gke-prod-us-central1"
+  # Kafka bootstrap — replace with the AlertHub Kafka service or Pub/Sub bridge
+  kafkaBrokers: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+  # Maximum events buffered in memory before backpressure is applied
+  bufferMax: 5000
+  # Cloud provider hint for topology enrichment
+  cloudProvider: "gcp"
+
+# ---------------------------------------------------------------------------
+# Environment variables
+# ---------------------------------------------------------------------------
+env:
+  - name: AILERON_GCP_ENABLED
+    value: "true"
+  - name: CLUSTER_ID
+    value: "gke-prod-us-central1"
+  - name: KAFKA_BROKERS
+    value: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+  # GCP project ID — used when calling Container/Compute APIs
+  # - name: GOOGLE_CLOUD_PROJECT
+  #   value: "my-gcp-project-id"
+  - name: AGENT_ID
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: POD_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: POD_NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# ---------------------------------------------------------------------------
+# Persistence — GCP pd-ssd Persistent Disk for agent state checkpoints
+# ---------------------------------------------------------------------------
+persistence:
+  enabled: true
+  storageClass: "pd-ssd"
+  size: 5Gi
+  accessMode: ReadWriteOnce
+
+# ---------------------------------------------------------------------------
+# Tolerations — allow scheduling on tainted GKE node pools (spot, GPU, etc.)
+# ---------------------------------------------------------------------------
+tolerations:
+  - operator: Exists
+
+# ---------------------------------------------------------------------------
+# Anti-affinity
+# ---------------------------------------------------------------------------
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: kubesense-agent
+          topologyKey: kubernetes.io/hostname
+
+# ---------------------------------------------------------------------------
+# Health probes
+# ---------------------------------------------------------------------------
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8081
+  initialDelaySeconds: 20
+  periodSeconds: 30
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: 8081
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  failureThreshold: 3

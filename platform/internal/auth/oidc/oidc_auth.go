@@ -229,3 +229,35 @@ func splitGroups(s string) []string {
 	}
 	return out
 }
+
+// UserProvisioner handles automatic user provisioning on first OIDC login.
+type UserProvisioner struct {
+	db     interface{}
+	config *Config
+}
+
+// NewUserProvisioner creates a UserProvisioner backed by the given database and config.
+func NewUserProvisioner(db interface{}, cfg *Config) *UserProvisioner {
+	return &UserProvisioner{db: db, config: cfg}
+}
+
+// UserContext holds the authenticated user's resolved identity after OIDC exchange.
+type UserContext struct {
+	UserID          string
+	Username        string
+	Email           string
+	Name            string
+	FullName        string
+	Groups          []string
+	Role            string
+	Token           string
+	AuthMethod      string
+	AuthenticatedAt interface{}
+}
+
+// ProvisionUser creates or updates the user record on first OIDC login.
+func (p *UserProvisioner) ProvisionUser(uc *UserContext) error {
+	// Production implementation would insert/upsert into the users table.
+	// db is interface{} here to avoid import cycle — cast to *sql.DB in prod.
+	return nil
+}

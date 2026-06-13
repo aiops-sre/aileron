@@ -1,0 +1,165 @@
+# ============================================================
+# KubeSense Agent — AWS EKS Deployment Values
+#
+# Usage:
+#   helm upgrade --install kubesense-agent ./agent/helm/kubesense-agent \
+#     -f eks-agent-values.yaml \
+#     --namespace aileron-agent
+#
+# Prerequisites:
+#   - EKS cluster with IRSA (IAM Roles for Service Accounts) enabled
+#   - EBS CSI Driver installed for gp3 PersistentVolumes
+#   - IAM role with read-only permissions to EKS describe APIs (optional)
+#   - Kafka bootstrap endpoint reachable from this cluster
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Image
+# ---------------------------------------------------------------------------
+image:
+  repository: ghcr.io/aiops-sre/kubesense-agent
+  tag: v0.1.0
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: jfrog-dockers-access
+
+# ---------------------------------------------------------------------------
+# Replica count — single agent per cluster is sufficient; the agent watches
+# cluster-wide resources via informers and is not latency-sensitive.
+# ---------------------------------------------------------------------------
+replicaCount: 1
+
+# ---------------------------------------------------------------------------
+# Service Account — IRSA annotation
+#
+# Bind an IAM role to this Kubernetes ServiceAccount so agent pods can call
+# AWS APIs (EC2 describe, EKS describe, CloudWatch metrics) without static
+# credentials.  Leave the ARN empty to disable AWS API access.
+#
+# Steps:
+#   1. Create an IAM role with policies: AmazonEC2ReadOnlyAccess (at minimum)
+#   2. Add OIDC trust policy for the EKS cluster OIDC provider
+#   3. Paste the role ARN below
+# ---------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: "kubesense-agent-sa"
+  annotations:
+    # IAM role ARN for IRSA — empty disables AWS API enrichment
+    eks.amazonaws.com/role-arn: ""
+
+# ---------------------------------------------------------------------------
+# Pod security context — run as non-root (matches distroless image defaults)
+# ---------------------------------------------------------------------------
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+# ---------------------------------------------------------------------------
+# Agent configuration
+# ---------------------------------------------------------------------------
+agent:
+  # Unique identifier for this cluster — shown in AlertHub topology view
+  clusterId: "eks-prod-us-east-1"
+  # Kafka bootstrap — replace with the AlertHub Kafka service or MSK endpoint
+  kafkaBrokers: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+  # Maximum events buffered in memory before backpressure is applied
+  bufferMax: 5000
+  # Cloud provider hint for topology enrichment
+  cloudProvider: "aws"
+  # AWS region — used when calling EC2/EKS APIs via IRSA
+  awsRegion: "us-east-1"
+
+# ---------------------------------------------------------------------------
+# Environment variables
+# ---------------------------------------------------------------------------
+env:
+  - name: AILERON_AWS_ENABLED
+    value: "true"
+  - name: AWS_DEFAULT_REGION
+    value: "us-east-1"
+  - name: CLUSTER_ID
+    value: "eks-prod-us-east-1"
+  - name: KAFKA_BROKERS
+    value: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+  - name: AGENT_ID
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: POD_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: POD_NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
+
+# ---------------------------------------------------------------------------
+# Resources — conservative defaults; scale up for large clusters (>500 nodes)
+# ---------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# ---------------------------------------------------------------------------
+# Persistence — gp3 EBS volume for agent state and event buffer checkpoints
+# ---------------------------------------------------------------------------
+persistence:
+  enabled: true
+  storageClass: "gp3"
+  size: 5Gi
+  accessMode: ReadWriteOnce
+
+# ---------------------------------------------------------------------------
+# Tolerations — allow scheduling on tainted nodes (spot, GPU, etc.)
+# ---------------------------------------------------------------------------
+tolerations:
+  - operator: Exists
+
+# ---------------------------------------------------------------------------
+# Anti-affinity — prefer spreading agent replicas across nodes
+# ---------------------------------------------------------------------------
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: kubesense-agent
+          topologyKey: kubernetes.io/hostname
+
+# ---------------------------------------------------------------------------
+# Health probes
+# ---------------------------------------------------------------------------
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8081
+  initialDelaySeconds: 20
+  periodSeconds: 30
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: 8081
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  failureThreshold: 3

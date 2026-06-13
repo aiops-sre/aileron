@@ -1,0 +1,187 @@
+# ============================================================
+# KubeSense Agent — Azure AKS Deployment Values
+#
+# Usage:
+#   helm upgrade --install kubesense-agent ./agent/helm/kubesense-agent \
+#     -f aks-agent-values.yaml \
+#     --namespace aileron-agent
+#
+# Prerequisites:
+#   - AKS cluster with Azure Workload Identity add-on enabled
+#   - Azure User-Assigned Managed Identity with federated credential configured
+#   - Azure Disk CSI Driver installed (pre-installed on AKS >= 1.21)
+#   - Kafka bootstrap endpoint reachable from this cluster
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Image
+# ---------------------------------------------------------------------------
+image:
+  repository: ghcr.io/aiops-sre/kubesense-agent
+  tag: v0.1.0
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: jfrog-dockers-access
+
+# ---------------------------------------------------------------------------
+# Replica count
+# ---------------------------------------------------------------------------
+replicaCount: 1
+
+# ---------------------------------------------------------------------------
+# Service Account — Azure Workload Identity
+#
+# Azure Workload Identity injects AZURE_CLIENT_ID, AZURE_TENANT_ID, and a
+# projected service account token into pods whose ServiceAccount carries the
+# azure.workload.identity/client-id annotation.
+#
+# Steps:
+#   1. Create a User-Assigned Managed Identity:
+#      az identity create --name kubesense-agent-identity --resource-group MY_RG
+#   2. Create a federated identity credential:
+#      az identity federated-credential create \
+#        --name kubesense-agent-fedcred \
+#        --identity-name kubesense-agent-identity \
+#        --resource-group MY_RG \
+#        --issuer $(az aks show -g MY_RG -n MY_CLUSTER \
+#                     --query oidcIssuerProfile.issuerUrl -o tsv) \
+#        --subject system:serviceaccount:aileron-agent:kubesense-agent-sa
+#   3. Assign roles to the managed identity (e.g., Reader on the AKS resource):
+#      az role assignment create \
+#        --assignee CLIENT_ID \
+#        --role "Reader" \
+#        --scope /subscriptions/SUB_ID/resourceGroups/MY_RG
+#   4. Paste the client ID of the managed identity below
+# ---------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: "kubesense-agent-sa"
+  annotations:
+    # Client ID (not object ID) of the Azure User-Assigned Managed Identity
+    azure.workload.identity/client-id: ""
+
+# ---------------------------------------------------------------------------
+# Pod labels — required by the Azure Workload Identity mutating webhook.
+# The webhook only injects federated tokens into pods that carry this label.
+# ---------------------------------------------------------------------------
+podLabels:
+  azure.workload.identity/use: "true"
+
+# ---------------------------------------------------------------------------
+# Pod security context
+# ---------------------------------------------------------------------------
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+# ---------------------------------------------------------------------------
+# Agent configuration
+# ---------------------------------------------------------------------------
+agent:
+  # Unique identifier for this cluster — shown in AlertHub topology view
+  clusterId: "aks-prod-eastus"
+  # Kafka bootstrap — replace with the AlertHub Kafka service or Event Hubs endpoint
+  kafkaBrokers: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+  # Maximum events buffered in memory before backpressure is applied
+  bufferMax: 5000
+  # Cloud provider hint for topology enrichment
+  cloudProvider: "azure"
+
+# ---------------------------------------------------------------------------
+# Environment variables
+# ---------------------------------------------------------------------------
+env:
+  - name: AILERON_AZURE_ENABLED
+    value: "true"
+  - name: CLUSTER_ID
+    value: "aks-prod-eastus"
+  - name: KAFKA_BROKERS
+    value: "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"
+  # Azure tenant ID — injected automatically by Workload Identity webhook,
+  # but can be set explicitly for clarity
+  # - name: AZURE_TENANT_ID
+  #   value: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  # Azure subscription ID — used for ARM API resource discovery
+  # - name: AZURE_SUBSCRIPTION_ID
+  #   value: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  - name: AGENT_ID
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: POD_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: POD_NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# ---------------------------------------------------------------------------
+# Persistence — Azure Premium Managed Disk for agent state checkpoints
+# ---------------------------------------------------------------------------
+persistence:
+  enabled: true
+  storageClass: "managed-premium"
+  size: 5Gi
+  accessMode: ReadWriteOnce
+
+# ---------------------------------------------------------------------------
+# Tolerations — allow scheduling on tainted node pools (spot, system, GPU)
+# ---------------------------------------------------------------------------
+tolerations:
+  - operator: Exists
+
+# ---------------------------------------------------------------------------
+# Anti-affinity
+# ---------------------------------------------------------------------------
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: kubesense-agent
+          topologyKey: kubernetes.io/hostname
+
+# ---------------------------------------------------------------------------
+# Health probes
+# ---------------------------------------------------------------------------
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8081
+  initialDelaySeconds: 20
+  periodSeconds: 30
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: 8081
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  failureThreshold: 3

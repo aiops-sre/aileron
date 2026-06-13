@@ -141,9 +141,9 @@ func (h *OAuthHandler) RefreshToken(c *gin.Context) {
 // FLOODGATE PROXY ENDPOINTS
 // ============================================================================
 
-// ProxyToOIDC Provider forwards requests to OIDC Provider with user identity
+// ProxyToOIDCProvider forwards requests to OIDCProvider with user identity
 // ALL /api/v1/oidc/*
-func (h *OAuthHandler) ProxyToOIDC Provider(c *gin.Context) {
+func (h *OAuthHandler) ProxyToOIDCProvider(c *gin.Context) {
 	// Extract user information from context (set by MAS middleware)
 	userID := ""
 	userIP := ""
@@ -169,12 +169,12 @@ func (h *OAuthHandler) ProxyToOIDC Provider(c *gin.Context) {
 	if userIP == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "User IP required for OIDC Provider requests",
+			"message": "User IP required for OIDCProvider requests",
 		})
 		return
 	}
 
-	// Get OIDC Provider path from URL
+	// Get OIDCProvider path from URL
 	oidcPath := strings.TrimPrefix(c.Request.URL.Path, "/api/v1/oidc")
 	if oidcPath == "" {
 		oidcPath = "/"
@@ -201,8 +201,8 @@ func (h *OAuthHandler) ProxyToOIDC Provider(c *gin.Context) {
 		return
 	}
 
-	// Create OIDC Provider request
-	oidcReq := &oauth.OIDC ProviderRequest{
+	// Create OIDCProvider request
+	oidcReq := &oauth.OIDCProviderRequest{
 		Method:        c.Request.Method,
 		Path:          oidcPath,
 		Headers:       make(map[string]string),
@@ -219,12 +219,12 @@ func (h *OAuthHandler) ProxyToOIDC Provider(c *gin.Context) {
 		}
 	}
 
-	// Proxy to OIDC Provider
-	resp, err := h.oauthClient.ProxyToOIDC Provider(c.Request.Context(), oidcReq)
+	// Proxy to OIDCProvider
+	resp, err := h.oauthClient.ProxyToOIDCProvider(c.Request.Context(), oidcReq)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{
 			"success": false,
-			"message": "OIDC Provider request failed: " + err.Error(),
+			"message": "OIDCProvider request failed: " + err.Error(),
 		})
 		return
 	}
@@ -292,9 +292,9 @@ func (h *OAuthHandler) RegisterRoutes(protected *gin.RouterGroup) {
 		oauth.DELETE("/cache/:user_id", h.ClearUserToken)
 	}
 
-	// OIDC Provider proxy - all methods
+	// OIDCProvider proxy - all methods
 	oidc := protected.Group("/oidc")
 	{
-		oidc.Any("/*path", h.ProxyToOIDC Provider)
+		oidc.Any("/*path", h.ProxyToOIDCProvider)
 	}
 }

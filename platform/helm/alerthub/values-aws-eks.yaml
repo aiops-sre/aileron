@@ -1,0 +1,139 @@
+# ============================================================
+# AlertHub Enterprise — AWS EKS Overrides
+#
+# Usage:
+#   helm upgrade --install alerthub ./platform/helm/alerthub \
+#     -f values.yaml \
+#     -f values-aws-eks.yaml \
+#     --namespace aileron
+#
+# Prerequisites:
+#   - AWS Load Balancer Controller installed in the cluster
+#   - EBS CSI Driver installed (for gp3 PersistentVolumes)
+#   - IRSA (IAM Roles for Service Accounts) configured via EKS OIDC provider
+#   - ACM certificate ARN set in ingress.annotations if TLS termination at ALB
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Global — EKS image registry
+# ---------------------------------------------------------------------------
+global:
+  # Override the base registry to pull images from the aiops-sre GHCR org.
+  # All image.repository fields in values.yaml are relative to this registry
+  # when templates use {{ .Values.global.imageRegistry }}.
+  imageRegistry: ghcr.io/aiops-sre
+
+# ---------------------------------------------------------------------------
+# Ingress — AWS Application Load Balancer (ALB Ingress Controller)
+#
+# The AWS Load Balancer Controller watches for Ingress resources annotated
+# with kubernetes.io/ingress.class: alb and provisions an ALB automatically.
+# internet-facing scheme exposes the ALB to the public internet.
+# target-type: ip routes traffic directly to pod IPs (no NodePort hop).
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: true
+  class: "alb"
+  annotations:
+    # Tell the AWS Load Balancer Controller to handle this Ingress
+    kubernetes.io/ingress.class: "alb"
+    # Provision a public-facing ALB (use 'internal' for private/VPC-only)
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    # Route traffic directly to pod IPs instead of node ports
+    alb.ingress.kubernetes.io/target-type: "ip"
+    # Listener protocol — HTTPS requires an ACM certificate ARN below
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    # Redirect HTTP → HTTPS
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # Replace with your ACM certificate ARN for TLS termination at the ALB:
+    # alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERT_ID"
+    # Health check path used by the ALB target group
+    alb.ingress.kubernetes.io/healthcheck-path: "/healthz"
+
+# ---------------------------------------------------------------------------
+# Service Account — IRSA (IAM Roles for Service Accounts)
+#
+# EKS binds an IAM role to a Kubernetes ServiceAccount via an OIDC annotation.
+# This allows AlertHub pods to call AWS APIs (S3, Secrets Manager, etc.)
+# without static credentials.
+#
+# Steps to enable:
+#   1. Create an IAM role with the required policies (e.g., SecretsManagerReadWrite)
+#   2. Add a trust policy allowing the EKS OIDC provider to assume the role
+#   3. Paste the role ARN below
+# ---------------------------------------------------------------------------
+serviceAccount:
+  annotations:
+    # IAM role ARN for IRSA — leave empty to disable AWS API access
+    eks.amazonaws.com/role-arn: ""
+
+# ---------------------------------------------------------------------------
+# Environment Variables — AWS cloud integration
+# ---------------------------------------------------------------------------
+config:
+  # Signal to the backend that it is running in an AWS environment
+  env: production
+
+backend:
+  extraEnv:
+    # Enable AWS-specific code paths in the AlertHub backend
+    - name: AILERON_AWS_ENABLED
+      value: "true"
+    # Default AWS region — must match where EKS cluster and resources reside
+    - name: AWS_DEFAULT_REGION
+      value: "us-east-1"
+    # Optional: override the AWS SDK endpoint for LocalStack testing
+    # - name: AWS_ENDPOINT_URL
+    #   value: "http://localstack:4566"
+
+# ---------------------------------------------------------------------------
+# Persistence — EBS CSI gp3 StorageClass
+#
+# gp3 is the recommended EBS volume type for EKS workloads:
+#   - Up to 16,000 IOPS and 1,000 MB/s throughput
+#   - Lower cost than gp2 for most workloads
+#   - Requires the EBS CSI Driver add-on to be enabled on the EKS cluster
+# ---------------------------------------------------------------------------
+persistence:
+  storageClass: "gp3"
+
+# Propagate the storage class override to individual stateful components
+postgres:
+  storageClass: "gp3"
+
+neo4j:
+  storageClass: "gp3"
+
+redis:
+  storageClass: "gp3"
+
+weaviate:
+  storageClass: "gp3"
+
+ollama:
+  storageClass: "gp3"
+
+kafka:
+  storageClass: "gp3"
+
+# ---------------------------------------------------------------------------
+# Topology — cloud provider hint
+#
+# Used by the KubeSense topology engine to label nodes with the correct
+# cloud provider and enable cloud-specific resource discovery (e.g., EC2
+# instance metadata, EKS managed node group labels).
+# ---------------------------------------------------------------------------
+topology:
+  cloudProvider: "aws"
+
+# ---------------------------------------------------------------------------
+# Build jobs — disabled on EKS (BuildKit runs in separate CI pipeline)
+# ---------------------------------------------------------------------------
+build:
+  enabled: false
+
+# ---------------------------------------------------------------------------
+# SecretsManager — disabled; use AWS Secrets Manager + External Secrets Operator
+# ---------------------------------------------------------------------------
+secrets_manager:
+  enabled: false

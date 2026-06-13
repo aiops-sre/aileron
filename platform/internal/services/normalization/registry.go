@@ -31,6 +31,16 @@ func NewRegistry() *Registry {
 	r.Register(DatadogNormalizer{})
 	r.Register(NewRelicNormalizer{})
 	r.Register(CloudWatchNormalizer{})
+	r.Register(AWSCloudWatchNormalizer{})
+	r.Register(AWSGuardDutyNormalizer{})
+	r.Register(AWSEventBridgeNormalizer{})
+	r.Register(GCPMonitoringNormalizer{})
+	r.Register(GCPSecurityCommandCenterNormalizer{})
+	r.Register(AzureMonitorNormalizer{})
+	r.Register(AzureSentinelNormalizer{})
+	r.Register(AzureServiceHealthNormalizer{})
+	r.Register(AliCloudCMSNormalizer{})
+	r.Register(OpsGenieNormalizer{})
 	return r
 }
 

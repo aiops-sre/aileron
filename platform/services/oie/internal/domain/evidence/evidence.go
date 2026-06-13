@@ -85,6 +85,13 @@ const (
 	TypeK8sOwnerChain                EvidenceType = "k8s_owner_chain"                   // Pod→ReplicaSet→Deployment traversal result
 	TypeK8sServiceEndpointNotReady   EvidenceType = "k8s_service_endpoint_not_ready"    // Service has NotReadyAddresses (pods not ready)
 
+	// ── Cloud topology context ────────────────────────────────────────────────────
+	// TypeCloudContext is produced by the cloud topology fetcher when a topology
+	// resolve call returns cloud-provider fields (provider, region, resource_type).
+	// Covers AWS EC2, GCP GCE, Azure VM, AliCloud ECS, and any other provider that
+	// registers nodes in the Aileron topology graph.
+	TypeCloudContext EvidenceType = "cloud_context"
+
 	// ── Circuit / source state ────────────────────────────────────────────────────
 	TypeSourceCircuitOpen EvidenceType = "source_circuit_open"
 	TypeSourceUnavailable EvidenceType = "source_unavailable"

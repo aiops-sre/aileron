@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/aileron-platform/aileron/platform/internal/services/ldap"
+	dsldap "github.com/aileron-platform/aileron/platform/internal/services/dsldap"
 	"github.com/aileron-platform/aileron/platform/internal/services/jwt"
 	"github.com/aileron-platform/aileron/platform/internal/services/rbac"
 )
@@ -21,7 +21,7 @@ import (
 type AuthMiddleware struct {
 	jwtService  *jwt.JWTService
 	rbacService *rbac.RBACService
-	ldapService *ldap.Service // optional; nil when LDAP is disabled
+	ldapService *dsldap.Service // optional; nil when LDAP is disabled
 }
 
 // NewAuthMiddleware creates a new auth middleware
@@ -34,7 +34,7 @@ func NewAuthMiddleware(jwtService *jwt.JWTService, rbacService *rbac.RBACService
 
 // SetLDAPService attaches an optional LDAP service for group-based role enrichment.
 // Call this after NewAuthMiddleware if LDAP is enabled.
-func (m *AuthMiddleware) SetLDAPService(svc *ldap.Service) {
+func (m *AuthMiddleware) SetLDAPService(svc *dsldap.Service) {
 	m.ldapService = svc
 }
 
@@ -122,8 +122,8 @@ func (m *AuthMiddleware) Authenticate() gin.HandlerFunc {
 				if ldapRole != "" {
 					c.Set("ldap_role", ldapRole)
 					// Inject into request context so rbac.CheckPermission can read it
-					enriched := ldap.WithRole(c.Request.Context(), ldapRole)
-					enriched = ldap.WithGroups(enriched, groups)
+					enriched := dsldap.WithRole(c.Request.Context(), ldapRole)
+					enriched = dsldap.WithGroups(enriched, groups)
 					c.Request = c.Request.WithContext(enriched)
 				}
 			}

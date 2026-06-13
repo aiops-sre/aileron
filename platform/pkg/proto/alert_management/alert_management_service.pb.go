@@ -1915,7 +1915,7 @@ func (x *EscalateAlertResponse) GetErrorMessage() string {
 	return ""
 }
 
-// OIDC Provider Messages
+// OIDCProvider Messages
 type ApplyOIDC ProviderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AlertIds      []string               `protobuf:"bytes,1,rep,name=alert_ids,json=alertIds,proto3" json:"alert_ids,omitempty"`
@@ -4102,7 +4102,7 @@ const file_proto_alert_management_alert_management_service_proto_rawDesc = "" +
 	"\x10AcknowledgeAlert\x12).alert_management.AcknowledgeAlertRequest\x1a*.alert_management.AcknowledgeAlertResponse\x12]\n" +
 	"\fResolveAlert\x12%.alert_management.ResolveAlertRequest\x1a&.alert_management.ResolveAlertResponse\x12`\n" +
 	"\rEscalateAlert\x12&.alert_management.EscalateAlertRequest\x1a'.alert_management.EscalateAlertResponse\x12c\n" +
-	"\x0eApplyOIDC Provider\x12'.alert_management.ApplyOIDC ProviderRequest\x1a(.alert_management.ApplyOIDC ProviderResponse\x12r\n" +
+	"\x0eApplyOIDCProvider\x12'.alert_management.ApplyOIDC ProviderRequest\x1a(.alert_management.ApplyOIDC ProviderResponse\x12r\n" +
 	"\x13GetSuppressionRules\x12,.alert_management.GetSuppressionRulesRequest\x1a-.alert_management.GetSuppressionRulesResponse\x12f\n" +
 	"\x0fGetAlertMetrics\x12(.alert_management.GetAlertMetricsRequest\x1a).alert_management.GetAlertMetricsResponse\x12c\n" +
 	"\x0eGetAlertTrends\x12'.alert_management.GetAlertTrendsRequest\x1a(.alert_management.GetAlertTrendsResponseB7Z5github.com/alerthub-enterprise/proto/alert_managementb\x06proto3"
@@ -4283,7 +4283,7 @@ var file_proto_alert_management_alert_management_service_proto_depIdxs = []int32
 	24, // 86: alert_management.AlertManagementService.AcknowledgeAlert:input_type -> alert_management.AcknowledgeAlertRequest
 	26, // 87: alert_management.AlertManagementService.ResolveAlert:input_type -> alert_management.ResolveAlertRequest
 	28, // 88: alert_management.AlertManagementService.EscalateAlert:input_type -> alert_management.EscalateAlertRequest
-	30, // 89: alert_management.AlertManagementService.ApplyOIDC Provider:input_type -> alert_management.ApplyOIDC ProviderRequest
+	30, // 89: alert_management.AlertManagementService.ApplyOIDCProvider:input_type -> alert_management.ApplyOIDC ProviderRequest
 	32, // 90: alert_management.AlertManagementService.GetSuppressionRules:input_type -> alert_management.GetSuppressionRulesRequest
 	34, // 91: alert_management.AlertManagementService.GetAlertMetrics:input_type -> alert_management.GetAlertMetricsRequest
 	36, // 92: alert_management.AlertManagementService.GetAlertTrends:input_type -> alert_management.GetAlertTrendsRequest
@@ -4302,7 +4302,7 @@ var file_proto_alert_management_alert_management_service_proto_depIdxs = []int32
 	25, // 105: alert_management.AlertManagementService.AcknowledgeAlert:output_type -> alert_management.AcknowledgeAlertResponse
 	27, // 106: alert_management.AlertManagementService.ResolveAlert:output_type -> alert_management.ResolveAlertResponse
 	29, // 107: alert_management.AlertManagementService.EscalateAlert:output_type -> alert_management.EscalateAlertResponse
-	31, // 108: alert_management.AlertManagementService.ApplyOIDC Provider:output_type -> alert_management.ApplyOIDC ProviderResponse
+	31, // 108: alert_management.AlertManagementService.ApplyOIDCProvider:output_type -> alert_management.ApplyOIDC ProviderResponse
 	33, // 109: alert_management.AlertManagementService.GetSuppressionRules:output_type -> alert_management.GetSuppressionRulesResponse
 	35, // 110: alert_management.AlertManagementService.GetAlertMetrics:output_type -> alert_management.GetAlertMetricsResponse
 	37, // 111: alert_management.AlertManagementService.GetAlertTrends:output_type -> alert_management.GetAlertTrendsResponse

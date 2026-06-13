@@ -1,4 +1,4 @@
-package oidc
+package ai_provider
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	OIDC ProviderBaseURL      = ""
+	OIDCProviderBaseURL      = ""
 	ClaudeAPIPath         = "/api/anthropic/v1/messages"
 	GeminiAPIPathTemplate = "/api/gemini/v1/publishers/google/models/%s:generateContent"
 	ModelsAPIPath         = "/api/openai/v1/models"
@@ -25,7 +25,7 @@ const (
 )
 
 // OIDCService handles interactions with the configured OIDC provider
-type OIDC ProviderService struct {
+type Service struct {
 	httpClient *http.Client
 	tokenCache *tokenCache
 	userToken  string
@@ -40,8 +40,8 @@ type tokenCache struct {
 	expiresAt time.Time
 }
 
-// NewOIDC ProviderService creates a new OIDC Provider service instance
-func NewOIDC ProviderService() *OIDC ProviderService {
+// NewService creates a new OIDCProvider service instance
+func NewService() *Service {
 	// Check for mTLS certificates (K8s production mode like Interlinked)
 	certPath := "/narrative/kube-actor/cert.pem"
 	keyPath := "/narrative/kube-actor/private.pem"
@@ -53,12 +53,12 @@ func NewOIDC ProviderService() *OIDC ProviderService {
 	// INTERNAL_TLS_INSECURE must not bypass a properly-signed mTLS connection.
 	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
 	if err == nil {
-		log.Printf("OIDC Provider: Using mTLS certificates from K8s (like Interlinked)")
+		log.Printf("OIDCProvider: Using mTLS certificates from K8s (like Interlinked)")
 		transport.TLSClientConfig = &tls.Config{
 			Certificates: []tls.Certificate{cert},
 		}
 	} else {
-		log.Printf("OIDC Provider: mTLS certificates not found, will use user OAuth tokens")
+		log.Printf("OIDCProvider: mTLS certificates not found, will use user OAuth tokens")
 		// No mTLS — allow opt-in TLS bypass for dev/non-prod environments only.
 		//nolint:gosec
 		transport.TLSClientConfig = &tls.Config{
@@ -66,7 +66,7 @@ func NewOIDC ProviderService() *OIDC ProviderService {
 		}
 	}
 
-	return &OIDC ProviderService{
+	return &Service{
 		httpClient: &http.Client{
 			Timeout:   180 * time.Second,
 			Transport: transport,
@@ -78,7 +78,7 @@ func NewOIDC ProviderService() *OIDC ProviderService {
 }
 
 // SetUserToken sets a token provided by the user's browser/device
-func (s *OIDC ProviderService) SetUserToken(token string) {
+func (s *Service) SetUserToken(token string) {
 	s.userToken = token
 	// Cache the token
 	s.tokenCache.token = token
@@ -86,13 +86,13 @@ func (s *OIDC ProviderService) SetUserToken(token string) {
 }
 
 // SetUserVPNIP sets the user's VPN IP for proxy requests
-// This is required by OIDC Provider when using multi-audience tokens
-func (s *OIDC ProviderService) SetUserVPNIP(ip string) {
+// This is required by OIDCProvider when using multi-audience tokens
+func (s *Service) SetUserVPNIP(ip string) {
 	s.userVPNIP = ip
 }
 
 // getToken retrieves OAuth token from oidc-helper or user-provided token
-func (s *OIDC ProviderService) getToken() (string, error) {
+func (s *Service) getToken() (string, error) {
 	// First check if user provided token
 	if s.userToken != "" {
 		return s.userToken, nil
@@ -145,13 +145,13 @@ func (s *OIDC ProviderService) getToken() (string, error) {
 // GetTokenDirect retrieves OAuth token directly via oidc-helper command
 // This is used during MAS login to automatically capture the token
 // It includes retry logic similar to kubot for better reliability
-func (s *OIDC ProviderService) GetTokenDirect() (string, error) {
+func (s *Service) GetTokenDirect() (string, error) {
 	return s.getTokenWithRetry()
 }
 
 // getTokenWithRetry implements retry logic similar to kubot
 // Retries up to 3 times with exponential backoff (2, 4, 8 seconds)
-func (s *OIDC ProviderService) getTokenWithRetry() (string, error) {
+func (s *Service) getTokenWithRetry() (string, error) {
 	maxRetries := 3
 
 	for retry := 0; retry <= maxRetries; retry++ {
@@ -176,7 +176,7 @@ func (s *OIDC ProviderService) getTokenWithRetry() (string, error) {
 }
 
 // executeAppleConnect runs the oidc-helper command once
-func (s *OIDC ProviderService) executeAppleConnect() (string, error) {
+func (s *Service) executeAppleConnect() (string, error) {
 	// Check if oidc-helper exists
 	if _, err := exec.LookPath(OIDCHelperPath); err != nil {
 		return "", fmt.Errorf("oidc-helper not available: %w", err)
@@ -303,7 +303,7 @@ type geminiCandidate struct {
 }
 
 // Chat sends a chat request to the specified model
-func (s *OIDC ProviderService) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
+func (s *Service) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	if strings.HasPrefix(req.Model, "aws:") || strings.Contains(req.Model, "claude") {
 		return s.chatClaude(ctx, req)
 	} else if strings.Contains(req.Model, "gemini") {
@@ -313,8 +313,8 @@ func (s *OIDC ProviderService) Chat(ctx context.Context, req *ChatRequest) (*Cha
 	return nil, fmt.Errorf("unsupported model: %s", req.Model)
 }
 
-// chatClaude sends request to Claude via OIDC Provider
-func (s *OIDC ProviderService) chatClaude(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
+// chatClaude sends request to Claude via OIDCProvider
+func (s *Service) chatClaude(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	token, err := s.getToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
@@ -350,7 +350,7 @@ func (s *OIDC ProviderService) chatClaude(ctx context.Context, req *ChatRequest)
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := OIDC ProviderBaseURL + ClaudeAPIPath
+	url := OIDCProviderBaseURL + ClaudeAPIPath
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -407,8 +407,8 @@ func (s *OIDC ProviderService) chatClaude(ctx context.Context, req *ChatRequest)
 	}, nil
 }
 
-// chatGemini sends request to Gemini via OIDC Provider
-func (s *OIDC ProviderService) chatGemini(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
+// chatGemini sends request to Gemini via OIDCProvider
+func (s *Service) chatGemini(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	token, err := s.getToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
@@ -443,7 +443,7 @@ func (s *OIDC ProviderService) chatGemini(ctx context.Context, req *ChatRequest)
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := OIDC ProviderBaseURL + fmt.Sprintf(GeminiAPIPathTemplate, req.Model)
+	url := OIDCProviderBaseURL + fmt.Sprintf(GeminiAPIPathTemplate, req.Model)
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -502,13 +502,13 @@ type ModelInfo struct {
 	CreatedAt int64  `json:"created_at"`
 }
 
-// ListModels retrieves available models from OIDC Provider
-func (s *OIDC ProviderService) ListModels(ctx context.Context) ([]ModelInfo, error) {
+// ListModels retrieves available models from OIDCProvider
+func (s *Service) ListModels(ctx context.Context) ([]ModelInfo, error) {
 	// Check if using mTLS (certificates loaded in transport)
 	transport := s.httpClient.Transport.(*http.Transport)
 	usingMTLS := len(transport.TLSClientConfig.Certificates) > 0
 
-	url := OIDC ProviderBaseURL + ModelsAPIPath
+	url := OIDCProviderBaseURL + ModelsAPIPath
 	httpReq, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -522,13 +522,13 @@ func (s *OIDC ProviderService) ListModels(ctx context.Context) ([]ModelInfo, err
 		}
 		httpReq.Header.Set("Authorization", "Bearer "+token)
 	} else {
-		log.Printf("Using mTLS authentication for OIDC Provider models")
+		log.Printf("Using mTLS authentication for OIDCProvider models")
 	}
 
-	// NEW: Add X-Forwarded-For for proxy requests (required by OIDC Provider)
+	// NEW: Add X-Forwarded-For for proxy requests (required by OIDCProvider)
 	if s.userVPNIP != "" {
 		httpReq.Header.Set("X-Forwarded-For", s.userVPNIP)
-		log.Printf("OIDC Provider request with proxy headers (IP: %s)", s.userVPNIP)
+		log.Printf("OIDCProvider request with proxy headers (IP: %s)", s.userVPNIP)
 	}
 
 	// Identify as AlertHub proxy
@@ -582,8 +582,8 @@ func (s *OIDC ProviderService) ListModels(ctx context.Context) ([]ModelInfo, err
 	return models, nil
 }
 
-// HealthCheck verifies OIDC Provider connectivity
-func (s *OIDC ProviderService) HealthCheck(ctx context.Context) error {
+// HealthCheck verifies OIDCProvider connectivity
+func (s *Service) HealthCheck(ctx context.Context) error {
 	_, err := s.getToken()
 	if err != nil {
 		return fmt.Errorf("health check failed: %w", err)

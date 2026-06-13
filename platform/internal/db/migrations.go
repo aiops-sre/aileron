@@ -101,11 +101,11 @@ func InitializeDatabase(db *sql.DB) error {
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_token_updated_at TIMESTAMP`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_auto_connect BOOLEAN DEFAULT false`,
 
-		// Add OIDC Provider hybrid authentication columns
+		// Add OIDCProvider hybrid authentication columns
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_source VARCHAR(50)`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS vpn_ip VARCHAR(45)`,
 
-		// Add indexes for OIDC Provider hybrid auth
+		// Add indexes for OIDCProvider hybrid auth
 		`CREATE INDEX IF NOT EXISTS idx_users_oauth_source ON users(oauth_source) WHERE oauth_source IS NOT NULL`,
 		`CREATE INDEX IF NOT EXISTS idx_users_oauth_token_updated ON users(oauth_token_updated_at) WHERE oauth_id_token IS NOT NULL`,
 
