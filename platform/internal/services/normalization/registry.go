@@ -41,6 +41,21 @@ func NewRegistry() *Registry {
 	r.Register(AzureServiceHealthNormalizer{})
 	r.Register(AliCloudCMSNormalizer{})
 	r.Register(OpsGenieNormalizer{})
+	// CNCF Security
+	r.Register(FalcoNormalizer{})
+	r.Register(KyvernoNormalizer{})
+	r.Register(OPAGatekeeperNormalizer{})
+
+	// CNCF Platform & GitOps
+	r.Register(KeptnNormalizer{})
+	r.Register(CloudEventsNormalizer{})
+	r.Register(NATSNormalizer{})
+	r.Register(FluxCDNormalizer{})
+
+	// CNCF Observability (Prometheus-compatible stores)
+	r.Register(ThanosNormalizer{})
+	r.Register(VictoriaMetricsNormalizer{})
+	r.Register(LokiAlertNormalizer{})
 	return r
 }
 
@@ -79,6 +94,21 @@ func (r *Registry) Normalize(source string, raw map[string]interface{}) (*Normal
 	}
 
 	// 3. Generic fallback — always succeeds.
+	// CNCF Security
+	r.Register(FalcoNormalizer{})
+	r.Register(KyvernoNormalizer{})
+	r.Register(OPAGatekeeperNormalizer{})
+
+	// CNCF Platform & GitOps
+	r.Register(KeptnNormalizer{})
+	r.Register(CloudEventsNormalizer{})
+	r.Register(NATSNormalizer{})
+	r.Register(FluxCDNormalizer{})
+
+	// CNCF Observability (Prometheus-compatible stores)
+	r.Register(ThanosNormalizer{})
+	r.Register(VictoriaMetricsNormalizer{})
+	r.Register(LokiAlertNormalizer{})
 	return r.fallback.Normalize(raw)
 }
 

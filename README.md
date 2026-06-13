@@ -783,6 +783,274 @@ Set `AILERON_ALICLOUD_ENABLED=true`, `ALICLOUD_ACCESS_KEY_ID`, `ALICLOUD_ACCESS_
 
 ---
 
+## CNCF Ecosystem — End-to-End Integration
+
+Aileron is designed to be a first-class citizen of the CNCF landscape. Every component has a CNCF-native alternative and all integrations are wired end-to-end, not just documented.
+
+### Identity & Authentication — Dex and Friends
+
+Aileron uses standard OIDC/OAuth2. **No code changes** are needed to switch providers — set three env vars.
+
+```bash
+# Works with ANY of these CNCF / open-source identity providers:
+OIDC_PROVIDER_URL=https://dex.example.com          # Dex (CNCF)
+OIDC_PROVIDER_URL=https://pinniped.example.com      # Pinniped (CNCF)
+OIDC_PROVIDER_URL=https://your-org.zitadel.cloud    # Zitadel (CNCF Sandbox)
+OIDC_PROVIDER_URL=https://keycloak.example.com/realms/aileron
+OIDC_PROVIDER_URL=https://accounts.google.com
+OIDC_PROVIDER_URL=https://github.com
+OIDC_PROVIDER_URL=https://login.microsoftonline.com/<tenant>/v2.0
+```
+
+#### Deploy Dex alongside Aileron (recommended for self-hosted)
+
+Dex runs **in-cluster** and federates to your existing directory (LDAP, GitHub, Google, SAML):
+
+```bash
+helm upgrade --install aileron ./platform/helm \
+  -f platform/helm/alerthub/values-dex.yaml \
+  --set dex.enabled=true \
+  --set dex.issuerURL=https://dex.aileron.example.com \
+  --set dex.client.secret=$(openssl rand -hex 16) \
+  --set dex.connectors.github.enabled=true \
+  --set dex.connectors.github.clientID=<your-github-app-client-id> \
+  --set dex.connectors.github.clientSecret=<your-github-app-client-secret>
+```
+
+Aileron automatically picks up `OIDC_PROVIDER_URL=https://dex.aileron.example.com` and configures the auth middleware. Groups from Dex map to Aileron roles:
+
+| Dex Group | Aileron Role |
+|---|---|
+| `aileron-admins` | Admin — full platform control |
+| `aileron-operators` | Operator — create rules, approve remediations |
+| `aileron-viewers` | Viewer — read-only dashboard |
+
+Configure via `OIDC_ADMIN_GROUPS`, `OIDC_OPERATOR_GROUPS`, `OIDC_VIEWER_GROUPS`.
+
+#### Supported Identity Providers
+
+| Provider | Type | Connector |
+|---|---|---|
+| **Dex** | CNCF project | In-cluster, ships in Helm chart |
+| **Pinniped** | CNCF project | Standard OIDC |
+| **Zitadel** | CNCF Sandbox | Standard OIDC |
+| **Keycloak** | Open Source | Standard OIDC |
+| **Authelia** | Open Source | Standard OIDC |
+| **Casdoor** | CNCF Sandbox | Standard OIDC |
+| **GitHub** | Cloud | OAuth2 |
+| **Google Workspace** | Cloud | Standard OIDC |
+| **Microsoft Entra ID** | Cloud | Standard OIDC |
+| **Okta** | SaaS | Standard OIDC |
+| **Auth0** | SaaS | Standard OIDC |
+
+---
+
+### Secrets Management — External Secrets Operator
+
+Never store secrets in Git. Aileron's Helm chart ships `ExternalSecret` CRDs that sync from any secrets backend:
+
+```bash
+# Enable in Helm values
+helm upgrade --install aileron ./platform/helm \
+  --set externalSecrets.enabled=true \
+  --set externalSecrets.vaultAddr=https://vault.example.com \
+  --set externalSecrets.secretStore=aileron-vault
+```
+
+Supported backends (via [External Secrets Operator](https://external-secrets.io)):
+
+| Backend | Helm Value |
+|---|---|
+| HashiCorp Vault | `externalSecrets.vaultAddr` |
+| AWS Secrets Manager | `externalSecrets.awsRegion` |
+| GCP Secret Manager | `externalSecrets.gcpProjectId` |
+| Azure Key Vault | `externalSecrets.azureVaultUrl` |
+| 1Password, Doppler, ... | configure SecretStore manually |
+
+---
+
+### TLS — cert-manager
+
+Auto-provision and rotate TLS certificates via Let's Encrypt or your internal CA:
+
+```bash
+helm upgrade --install aileron ./platform/helm \
+  --set certManager.enabled=true \
+  --set certManager.clusterIssuer=letsencrypt-prod \
+  --set certManager.email=admin@example.com
+```
+
+The Helm chart automatically creates a `Certificate` resource and annotates the Ingress. cert-manager handles renewal 15 days before expiry.
+
+---
+
+### GitOps — Flux CD
+
+Deploy and manage Aileron entirely via Flux CD:
+
+```bash
+# Bootstrap Flux
+flux bootstrap github \
+  --owner=your-org \
+  --repository=your-gitops-repo \
+  --path=clusters/production
+
+# Apply Aileron HelmRelease
+kubectl apply -f deploy/flux/aileron-helmrelease.yaml
+```
+
+Flux watches the Aileron Git repository and automatically syncs:
+- **HelmRelease** — deploys the Aileron Helm chart, rolls back on failure
+- **ImageUpdateAutomation** — auto-commits new `ghcr.io/aiops-sre` image tags
+- **Kustomization** — applies RBAC, NetworkPolicy, and cluster-level config
+
+Aileron also **receives** Flux events — Flux reconciliation failures create incidents:
+```yaml
+# In your Flux Notification Controller config:
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Alert
+spec:
+  eventSources:
+  - kind: HelmRelease
+    name: "*"
+  provider:
+    name: aileron-webhook  # points to /api/v1/webhooks/cncf/flux
+```
+
+---
+
+### Alert Sources — CNCF Security & Platform Tools
+
+Register Aileron as a webhook sink in any CNCF tool:
+
+| Tool | Webhook URL | What Aileron Receives |
+|---|---|---|
+| **Falco** | `POST /api/v1/webhooks/cncf/falco` | Runtime security rules (syscall anomalies, container escapes) |
+| **Kyverno** | `POST /api/v1/webhooks/cncf/kyverno` | Policy admission violations |
+| **OPA/Gatekeeper** | `POST /api/v1/webhooks/cncf/opa` | Constraint audit violations |
+| **Flux CD** | `POST /api/v1/webhooks/cncf/flux` | Reconciliation failures, GitOps drift |
+| **Keptn** | `POST /api/v1/webhooks/cncf/keptn` | Quality gate failures, SLO breaches |
+| **CloudEvents** | `POST /api/v1/webhooks/cncf/cloudevents` | Any CloudEvents v1.0 envelope |
+| **NATS** | `POST /api/v1/webhooks/cncf/nats` | NATS JetStream messages via bridge |
+| **Thanos Ruler** | `POST /api/v1/webhooks/prometheus` | Long-range metric alert rules |
+| **VictoriaMetrics** | `POST /api/v1/webhooks/prometheus` | VMAlert rules (Prometheus-compatible) |
+| **Grafana Loki** | `POST /api/v1/webhooks/cncf/loki` | Log-based alerting rules |
+
+**Example: Configure Falco to push to Aileron**
+```yaml
+# /etc/falco/falco.yaml
+json_output: true
+http_output:
+  enabled: true
+  url: https://aileron.example.com/api/v1/webhooks/cncf/falco
+  user_agent: falcosecurity/falco
+```
+
+**Example: Kyverno policy alert**
+```yaml
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+  annotations:
+    policies.kyverno.io/description: "Containers must have resource limits"
+spec:
+  validationFailureAction: Audit
+  webhookTimeoutSeconds: 10
+  # Kyverno sends violations to Aileron automatically
+  # Set KYVERNO_VIOLATION_WEBHOOK=https://aileron.example.com/api/v1/webhooks/cncf/kyverno
+```
+
+---
+
+### OpenTelemetry — OTLP Receiver
+
+Aileron exposes a native OTLP endpoint. Route alerts from **any OTel-instrumented application** or **OpenTelemetry Collector** pipeline:
+
+```yaml
+# OpenTelemetry Collector config (deploy/otel/collector-config.yaml)
+exporters:
+  otlphttp/aileron:
+    endpoint: https://aileron.example.com/api/v1/otlp
+    headers:
+      Authorization: "Bearer ${AILERON_SERVICE_TOKEN}"
+
+service:
+  pipelines:
+    metrics/alerts:
+      receivers: [prometheus, otlp]
+      processors: [filter/severity_warning_plus]
+      exporters: [otlphttp/aileron]
+    logs/errors:
+      receivers: [otlp, k8s_events]
+      processors: [filter/warn_plus]
+      exporters: [otlphttp/aileron]
+```
+
+In your application, set the `aileron.severity` attribute on metrics/logs to route them as alerts:
+```go
+// Go OpenTelemetry SDK example
+meter.Int64Gauge("service.error.count",
+  metric.WithDescription("Error count — high value triggers Aileron incident"),
+).Record(ctx, errorCount,
+  attribute.String("aileron.severity", "high"),
+  attribute.String("aileron.status", "firing"),
+)
+```
+
+**OTLP endpoints:**
+- `POST /api/v1/otlp/v1/metrics` — ExportMetricsServiceRequest (JSON or Protobuf)
+- `POST /api/v1/otlp/v1/logs` — ExportLogsServiceRequest (severity ≥ WARN forwarded)
+
+---
+
+### RCA Evidence — Observability Stack Integration
+
+When OIE investigates an incident, it **automatically queries** your observability stack for corroborating evidence:
+
+```bash
+# Configure via env vars (all optional — OIE uses whichever are set)
+LOKI_URL=http://loki.monitoring.svc.cluster.local:3100
+JAEGER_URL=http://jaeger-query.monitoring.svc.cluster.local:16686
+TEMPO_URL=http://tempo.monitoring.svc.cluster.local:3200
+METRICS_STORE_URL=http://thanos-query.monitoring.svc.cluster.local:9090
+# VictoriaMetrics: METRICS_STORE_URL=http://victoria-metrics:8428
+# Cortex/Mimir:    METRICS_STORE_URL=http://cortex-query-frontend:9009
+```
+
+| Tool | Evidence Fetcher | What It Adds to RCA |
+|---|---|---|
+| **Grafana Loki** | `loki_logs` fetcher | Error/warning logs for affected pod (30 min window) |
+| **Jaeger** | `distributed_traces` fetcher | Failed distributed traces for the service |
+| **Grafana Tempo** | `distributed_traces` fetcher | Same — tries Tempo if Jaeger unavailable |
+| **Thanos / VictoriaMetrics / Cortex** | `long_term_metrics` fetcher | CPU%, memory%, error rate at incident start |
+
+---
+
+### Kubernetes Deployment — Any Managed Cluster
+
+```bash
+# AWS EKS (IRSA service account, ALB ingress, gp3 storage)
+helm upgrade --install aileron ./platform/helm \
+  -f platform/helm/alerthub/values-aws-eks.yaml \
+  --set dex.enabled=true \
+  --set certManager.enabled=true
+
+# Google GKE (Workload Identity, GCLB, pd-ssd)
+helm upgrade --install aileron ./platform/helm \
+  -f platform/helm/alerthub/values-gcp-gke.yaml
+
+# Azure AKS (Azure Workload Identity, AAG ingress)
+helm upgrade --install aileron ./platform/helm \
+  -f platform/helm/alerthub/values-azure-aks.yaml
+
+# Full CNCF stack (Dex + cert-manager + ExternalSecrets + Flux)
+helm upgrade --install aileron ./platform/helm \
+  -f platform/helm/alerthub/values-cncf-full.yaml
+```
+
+---
+
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, style, and PR guidelines.

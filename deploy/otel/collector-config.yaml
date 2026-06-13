@@ -1,0 +1,155 @@
+# OpenTelemetry Collector configuration for routing to Aileron
+# Deploy with: helm install otel-collector open-telemetry/opentelemetry-collector
+#              -f deploy/otel/collector-config.yaml
+#
+# This config routes:
+#   - Prometheus metrics → Aileron OTLP receiver
+#   - Kubernetes events → Aileron OTLP logs receiver
+#   - Alert signals from any OTel-instrumented app → Aileron
+
+config:
+  receivers:
+    # Scrape Prometheus endpoints
+    prometheus:
+      config:
+        scrape_configs:
+        - job_name: 'kubernetes-pods'
+          kubernetes_sd_configs:
+          - role: pod
+          relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: 'true'
+
+    # Receive OTLP from instrumented apps
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+    # Kubernetes events as logs
+    k8s_events:
+      auth_type: serviceAccount
+      namespaces: []  # empty = all namespaces
+
+    # Host metrics (CPU, memory, disk for node-level alerts)
+    hostmetrics:
+      scrapers:
+        cpu:
+          metrics:
+            system.cpu.utilization:
+              enabled: true
+        memory:
+          metrics:
+            system.memory.utilization:
+              enabled: true
+        disk: {}
+        filesystem: {}
+        network: {}
+
+    # Fluent Bit / Fluentd log forwarding
+    fluentforward:
+      endpoint: 0.0.0.0:8006
+
+  processors:
+    # Add Kubernetes metadata to all telemetry
+    k8sattributes:
+      auth_type: serviceAccount
+      extract:
+        metadata:
+        - k8s.namespace.name
+        - k8s.deployment.name
+        - k8s.pod.name
+        - k8s.node.name
+        - k8s.pod.labels
+      pod_association:
+      - sources:
+        - from: resource_attribute
+          name: k8s.pod.ip
+
+    # Filter: only forward alert-worthy metrics to Aileron
+    # (metrics with aileron.severity attribute set by the app,
+    #  OR metrics above threshold via metricstransform)
+    filter/alerts:
+      metrics:
+        include:
+          match_type: regexp
+          resource_attributes:
+          - key: aileron.severity
+            value: ".+"
+      logs:
+        include:
+          severity_number:
+            min: SEVERITY_NUMBER_WARN  # WARN and above only
+
+    # Batch for efficiency
+    batch:
+      timeout: 5s
+      send_batch_size: 100
+
+    # Memory limiter
+    memory_limiter:
+      limit_mib: 512
+      spike_limit_mib: 128
+      check_interval: 5s
+
+    # Add alert metadata for Aileron
+    attributes/aileron:
+      actions:
+      - key: aileron.source
+        value: opentelemetry-collector
+        action: insert
+
+  exporters:
+    # ─── Aileron OTLP receiver ───────────────────────────────────────────────
+    otlphttp/aileron:
+      endpoint: http://aileron-backend.aileron.svc.cluster.local:8080/api/v1/otlp
+      headers:
+        # Set this to a valid Aileron JWT token (service account token)
+        Authorization: "Bearer ${AILERON_SERVICE_TOKEN}"
+      timeout: 10s
+      retry_on_failure:
+        enabled: true
+        initial_interval: 5s
+        max_interval: 30s
+
+    # ─── Debug (disable in production) ──────────────────────────────────────
+    debug:
+      verbosity: basic
+      sampling_initial: 5
+      sampling_thereafter: 200
+
+    # ─── Prometheus remote write (for Thanos/VictoriaMetrics) ───────────────
+    prometheusremotewrite:
+      endpoint: http://thanos-receive.monitoring.svc.cluster.local:10908/api/v1/receive
+      # Or VictoriaMetrics: http://victoria-metrics.monitoring.svc.cluster.local:8480/insert/0/prometheus
+      tls:
+        insecure: true
+
+  service:
+    pipelines:
+      # Route alert-level metrics to Aileron
+      metrics/alerts:
+        receivers: [prometheus, otlp, hostmetrics]
+        processors: [memory_limiter, k8sattributes, filter/alerts, attributes/aileron, batch]
+        exporters: [otlphttp/aileron]
+
+      # Route all metrics to long-term storage
+      metrics/storage:
+        receivers: [prometheus, otlp, hostmetrics]
+        processors: [memory_limiter, k8sattributes, batch]
+        exporters: [prometheusremotewrite]
+
+      # Route error/warning logs to Aileron
+      logs/alerts:
+        receivers: [otlp, k8s_events, fluentforward]
+        processors: [memory_limiter, k8sattributes, filter/alerts, attributes/aileron, batch]
+        exporters: [otlphttp/aileron]
+
+    telemetry:
+      logs:
+        level: warn
+      metrics:
+        address: 0.0.0.0:8888

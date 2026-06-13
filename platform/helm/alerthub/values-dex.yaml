@@ -1,0 +1,138 @@
+# Dex — CNCF Identity Provider
+# Deploy Dex alongside Aileron for in-cluster OIDC
+# Dex federates to LDAP, GitHub, Google, SAML, and any upstream OIDC provider
+#
+# Usage:
+#   helm upgrade --install aileron ./platform/helm \
+#     -f platform/helm/alerthub/values-dex.yaml \
+#     --set dex.config.issuer=https://dex.aileron.example.com
+#
+# After deployment, Aileron auto-detects Dex via:
+#   OIDC_PROVIDER_URL=http://aileron-dex.aileron.svc.cluster.local:5556
+
+dex:
+  enabled: true
+
+  image:
+    repository: ghcr.io/dexidp/dex
+    tag: v2.39.1
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 5556
+    metricsPort: 5558
+
+  ingress:
+    enabled: true
+    className: nginx
+    host: dex.aileron.example.com
+    tls: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+
+  # Dex OIDC issuer URL — must be reachable from browsers AND from Aileron pods
+  # External: https://dex.aileron.example.com
+  # Internal: http://aileron-dex.aileron.svc.cluster.local:5556
+  issuerURL: https://dex.aileron.example.com
+
+  # Aileron OAuth2 client registered in Dex
+  client:
+    id: aileron
+    # Generate: openssl rand -hex 16
+    secret: "change-me-dex-client-secret"
+    redirectURIs:
+      - https://aileron.example.com/api/v1/auth/oidc/callback
+      - http://localhost:3000/api/v1/auth/oidc/callback  # local dev
+
+  # Group → Role mapping (configure in Aileron's OIDC settings)
+  groups:
+    adminGroup: aileron-admins
+    operatorGroup: aileron-operators
+    viewerGroup: aileron-viewers
+
+  # Identity connectors — enable the ones you need
+  connectors:
+    # LDAP / Active Directory
+    ldap:
+      enabled: false
+      host: "ldap.example.com:636"
+      insecureNoSSL: false
+      bindDN: "cn=dex,ou=serviceaccounts,dc=example,dc=com"
+      bindPW: "ldap-bind-password"
+      userSearch:
+        baseDN: "ou=people,dc=example,dc=com"
+        username: uid
+        idAttr: uid
+        emailAttr: mail
+        nameAttr: displayName
+      groupSearch:
+        baseDN: "ou=groups,dc=example,dc=com"
+        nameAttr: cn
+
+    # GitHub OAuth App
+    github:
+      enabled: false
+      clientID: ""
+      clientSecret: ""
+      orgs:
+        - name: your-github-org
+          teams: [aileron-admins, aileron-operators]
+
+    # Google Workspace
+    google:
+      enabled: false
+      clientID: ""
+      clientSecret: ""
+      hostedDomains: [example.com]
+
+    # SAML 2.0
+    saml:
+      enabled: false
+      ssoURL: "https://idp.example.com/saml/sso"
+      # caData: <base64-encoded-ca-cert>
+
+    # Upstream OIDC (Okta, Auth0, Keycloak, Azure AD, etc.)
+    oidc:
+      enabled: false
+      issuer: "https://sso.example.com"
+      clientID: ""
+      clientSecret: ""
+
+  # Static passwords (for local dev/testing only — disable in production)
+  staticPasswords:
+    enabled: false
+    users: []
+    # - email: admin@example.com
+    #   hash: "$2a$10$..."  # bcrypt hash of password
+    #   username: admin
+    #   userID: "admin-id"
+
+  # Storage backend for Dex state
+  storage:
+    type: kubernetes  # kubernetes (CRDs) | sqlite3 | postgres
+    # postgres:
+    #   host: postgres.aileron.svc.cluster.local
+    #   database: dex
+    #   user: dex
+    #   passwordEnvVar: DEX_STORAGE_POSTGRES_PASSWORD
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Aileron auto-configures to use Dex when dex.enabled=true
+# These values are injected as env vars into the Aileron backend deployment
+oidc:
+  providerUrl: ""  # auto-set to dex.issuerURL when dex.enabled=true
+  clientId: ""     # auto-set to dex.client.id
+  clientSecret: "" # auto-set to dex.client.secret
+  adminGroups: aileron-admins
+  operatorGroups: aileron-operators
+  viewerGroups: aileron-viewers
+  defaultRole: viewer
+  autoProvision: true

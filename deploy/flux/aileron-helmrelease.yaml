@@ -1,0 +1,139 @@
+# Aileron — Flux CD GitOps Deployment
+# Deploy and manage Aileron entirely via Flux CD (CNCF project)
+#
+# Prerequisites:
+#   flux bootstrap github --owner=<org> --repository=<gitops-repo> --path=clusters/my-cluster
+#
+# Apply this file:
+#   kubectl apply -f deploy/flux/aileron-helmrelease.yaml
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: aileron
+  namespace: flux-system
+spec:
+  # When Aileron Helm chart is published to a chart registry, use that URL.
+  # For now, reference the Git repository directly via OCI or use a GitRepository source.
+  interval: 1h
+  url: oci://ghcr.io/aiops-sre/charts
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: aileron-gitops
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://github.com/aiops-sre/aileron
+  ref:
+    branch: main
+  # For private repos add a Secret with SSH key or token:
+  # secretRef:
+  #   name: aileron-git-credentials
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: aileron
+  namespace: aileron
+spec:
+  interval: 10m
+  releaseName: aileron
+  chart:
+    spec:
+      chart: ./platform/helm/alerthub
+      sourceRef:
+        kind: GitRepository
+        name: aileron-gitops
+        namespace: flux-system
+      interval: 1h
+  # Values can come from a ConfigMap/Secret in the cluster (GitOps-safe)
+  valuesFrom:
+  - kind: ConfigMap
+    name: aileron-helm-values
+    optional: true
+  - kind: Secret
+    name: aileron-helm-secrets
+    valuesKey: values.yaml
+    optional: true
+  values:
+    # Inline values — override per environment via valuesFrom above
+    oidc:
+      providerUrl: "${OIDC_PROVIDER_URL}"  # Flux variable substitution
+      adminGroups: aileron-admins
+    certManager:
+      enabled: true
+      clusterIssuer: letsencrypt-prod
+    externalSecrets:
+      enabled: true
+      secretStore: aileron-vault
+  # Health checks — Flux waits for these to be healthy before marking release as ready
+  healthChecks:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: aileron-backend
+    namespace: aileron
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: aileron-dex
+    namespace: aileron
+  # Rollback on failure
+  rollback:
+    timeout: 5m
+    cleanupOnFail: true
+  # Upgrade strategy
+  upgrade:
+    remediation:
+      retries: 3
+      strategy: rollback
+    cleanupOnFail: true
+---
+# Kustomization for non-Helm resources (RBAC, NetworkPolicy, etc.)
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: aileron-config
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./deploy/k8s
+  sourceRef:
+    kind: GitRepository
+    name: aileron-gitops
+  prune: true
+  wait: true
+  timeout: 5m
+  # Substitutions from cluster-level secrets
+  postBuild:
+    substituteFrom:
+    - kind: ConfigMap
+      name: aileron-cluster-vars
+    - kind: Secret
+      name: aileron-cluster-secrets
+---
+# ImageUpdateAutomation — auto-update image tags when new images are pushed to GHCR
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageUpdateAutomation
+metadata:
+  name: aileron-image-update
+  namespace: flux-system
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: aileron-gitops
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: Flux CD Bot
+        email: flux-bot@aileron.dev
+      messageTemplate: "chore(images): update aileron images to {{ `{{ range .Updated.Images }}{{ .NewTag }} {{ end }}` }}"
+    push:
+      branch: main
+  update:
+    strategy: Setters
+    path: ./deploy/flux

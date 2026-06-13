@@ -1,0 +1,340 @@
+{{- if .Values.dex.enabled }}
+---
+# Dex ConfigMap — generated from Helm values
+# Dex is the CNCF-recommended in-cluster identity broker
+# Documentation: https://dexidp.io/docs/
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aileron-dex-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: dex
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: aileron
+data:
+  config.yaml: |
+    issuer: {{ .Values.dex.issuerURL }}
+
+    storage:
+      type: {{ .Values.dex.storage.type | default "kubernetes" }}
+      {{- if eq (.Values.dex.storage.type | default "kubernetes") "postgres" }}
+      config:
+        host: {{ .Values.dex.storage.postgres.host }}
+        database: {{ .Values.dex.storage.postgres.database }}
+        user: {{ .Values.dex.storage.postgres.user }}
+        ssl:
+          mode: require
+      {{- end }}
+
+    web:
+      http: 0.0.0.0:5556
+      tlsMinVersion: "1.2"
+
+    telemetry:
+      http: 0.0.0.0:5558
+
+    oauth2:
+      skipApprovalScreen: true
+      responseTypes: ["code"]
+
+    staticClients:
+    - id: {{ .Values.dex.client.id | default "aileron" }}
+      secret: {{ .Values.dex.client.secret }}
+      name: "Aileron AIOps Platform"
+      redirectURIs:
+      {{- range .Values.dex.client.redirectURIs }}
+      - {{ . }}
+      {{- end }}
+
+    connectors:
+    {{- if .Values.dex.connectors.ldap.enabled }}
+    - type: ldap
+      id: ldap
+      name: LDAP
+      config:
+        host: {{ .Values.dex.connectors.ldap.host }}
+        insecureNoSSL: {{ .Values.dex.connectors.ldap.insecureNoSSL | default false }}
+        bindDN: {{ .Values.dex.connectors.ldap.bindDN }}
+        bindPW: $DEX_LDAP_BIND_PW
+        userSearch:
+          baseDN: {{ .Values.dex.connectors.ldap.userSearch.baseDN }}
+          username: {{ .Values.dex.connectors.ldap.userSearch.username | default "uid" }}
+          idAttr: {{ .Values.dex.connectors.ldap.userSearch.idAttr | default "uid" }}
+          emailAttr: {{ .Values.dex.connectors.ldap.userSearch.emailAttr | default "mail" }}
+          nameAttr: {{ .Values.dex.connectors.ldap.userSearch.nameAttr | default "displayName" }}
+        groupSearch:
+          baseDN: {{ .Values.dex.connectors.ldap.groupSearch.baseDN }}
+          filter: "(objectClass=groupOfNames)"
+          userMatchers:
+          - userAttr: DN
+            groupAttr: member
+          nameAttr: {{ .Values.dex.connectors.ldap.groupSearch.nameAttr | default "cn" }}
+    {{- end }}
+
+    {{- if .Values.dex.connectors.github.enabled }}
+    - type: github
+      id: github
+      name: GitHub
+      config:
+        clientID: {{ .Values.dex.connectors.github.clientID }}
+        clientSecret: $DEX_GITHUB_CLIENT_SECRET
+        redirectURI: {{ .Values.dex.issuerURL }}/callback
+        orgs:
+        {{- range .Values.dex.connectors.github.orgs }}
+        - name: {{ .name }}
+          {{- if .teams }}
+          teams:
+          {{- range .teams }}
+          - {{ . }}
+          {{- end }}
+          {{- end }}
+        {{- end }}
+    {{- end }}
+
+    {{- if .Values.dex.connectors.google.enabled }}
+    - type: google
+      id: google
+      name: Google
+      config:
+        clientID: {{ .Values.dex.connectors.google.clientID }}
+        clientSecret: $DEX_GOOGLE_CLIENT_SECRET
+        redirectURI: {{ .Values.dex.issuerURL }}/callback
+        {{- if .Values.dex.connectors.google.hostedDomains }}
+        hostedDomains:
+        {{- range .Values.dex.connectors.google.hostedDomains }}
+        - {{ . }}
+        {{- end }}
+        {{- end }}
+    {{- end }}
+
+    {{- if .Values.dex.connectors.saml.enabled }}
+    - type: saml
+      id: saml
+      name: SAML
+      config:
+        ssoURL: {{ .Values.dex.connectors.saml.ssoURL }}
+        redirectURI: {{ .Values.dex.issuerURL }}/callback
+        usernameAttr: email
+        emailAttr: email
+        groupsAttr: groups
+    {{- end }}
+
+    {{- if .Values.dex.connectors.oidc.enabled }}
+    - type: oidc
+      id: upstream-oidc
+      name: Corporate SSO
+      config:
+        issuer: {{ .Values.dex.connectors.oidc.issuer }}
+        clientID: {{ .Values.dex.connectors.oidc.clientID }}
+        clientSecret: $DEX_UPSTREAM_OIDC_SECRET
+        redirectURI: {{ .Values.dex.issuerURL }}/callback
+        scopes: [openid, email, profile, groups]
+        getUserInfo: true
+    {{- end }}
+
+    {{- if .Values.dex.staticPasswords.enabled }}
+    enablePasswordDB: true
+    staticPasswords:
+    {{- range .Values.dex.staticPasswords.users }}
+    - email: {{ .email }}
+      hash: {{ .hash }}
+      username: {{ .username }}
+      userID: {{ .userID | default (randAlphaNum 8) }}
+    {{- end }}
+    {{- else }}
+    enablePasswordDB: false
+    {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aileron-dex
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: dex
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: aileron
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aileron-dex
+  template:
+    metadata:
+      labels:
+        app: aileron-dex
+        app.kubernetes.io/name: dex
+        app.kubernetes.io/part-of: aileron
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/cncf/dex.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: aileron-dex
+      containers:
+      - name: dex
+        image: "{{ .Values.dex.image.repository }}:{{ .Values.dex.image.tag }}"
+        imagePullPolicy: {{ .Values.dex.image.pullPolicy }}
+        command: ["/usr/local/bin/dex", "serve", "/etc/dex/config.yaml"]
+        ports:
+        - name: http
+          containerPort: 5556
+          protocol: TCP
+        - name: metrics
+          containerPort: 5558
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/dex
+          readOnly: true
+        env:
+        - name: KUBERNETES_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        {{- if .Values.dex.connectors.ldap.enabled }}
+        - name: DEX_LDAP_BIND_PW
+          valueFrom:
+            secretKeyRef:
+              name: aileron-dex-secrets
+              key: ldap-bind-pw
+        {{- end }}
+        {{- if .Values.dex.connectors.github.enabled }}
+        - name: DEX_GITHUB_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aileron-dex-secrets
+              key: github-client-secret
+        {{- end }}
+        {{- if .Values.dex.connectors.google.enabled }}
+        - name: DEX_GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aileron-dex-secrets
+              key: google-client-secret
+        {{- end }}
+        {{- if .Values.dex.connectors.oidc.enabled }}
+        - name: DEX_UPSTREAM_OIDC_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aileron-dex-secrets
+              key: upstream-oidc-secret
+        {{- end }}
+        resources:
+          {{- toYaml .Values.dex.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /healthz/live
+            port: 5558
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz/ready
+            port: 5558
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: config
+        configMap:
+          name: aileron-dex-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aileron-dex
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: dex
+    app.kubernetes.io/part-of: aileron
+spec:
+  type: {{ .Values.dex.service.type | default "ClusterIP" }}
+  ports:
+  - name: http
+    port: {{ .Values.dex.service.port | default 5556 }}
+    targetPort: http
+    protocol: TCP
+  - name: metrics
+    port: {{ .Values.dex.service.metricsPort | default 5558 }}
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app: aileron-dex
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aileron-dex
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: dex
+    app.kubernetes.io/part-of: aileron
+---
+# RBAC for Dex to manage its CRD-based storage
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: aileron-dex
+  labels:
+    app.kubernetes.io/name: dex
+    app.kubernetes.io/part-of: aileron
+rules:
+- apiGroups: ["dex.coreos.com"]
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: aileron-dex
+  labels:
+    app.kubernetes.io/name: dex
+    app.kubernetes.io/part-of: aileron
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: aileron-dex
+subjects:
+- kind: ServiceAccount
+  name: aileron-dex
+  namespace: {{ .Release.Namespace }}
+{{- if .Values.dex.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aileron-dex
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: dex
+    app.kubernetes.io/part-of: aileron
+  annotations:
+    {{- if .Values.dex.ingress.tls }}
+    cert-manager.io/cluster-issuer: {{ .Values.certManager.clusterIssuer | default "letsencrypt-prod" }}
+    {{- end }}
+    {{- with .Values.dex.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.dex.ingress.className | default "nginx" }}
+  {{- if .Values.dex.ingress.tls }}
+  tls:
+  - hosts:
+    - {{ .Values.dex.ingress.host }}
+    secretName: aileron-dex-tls
+  {{- end }}
+  rules:
+  - host: {{ .Values.dex.ingress.host }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aileron-dex
+            port:
+              number: {{ .Values.dex.service.port | default 5556 }}
+{{- end }}
+{{- end }}
