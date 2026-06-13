@@ -4,7 +4,7 @@ import json
 from neo4j import AsyncGraphDatabase
 from .base import BaseTool
 
-NEO4J_URL = os.getenv("NEO4J_URL", "bolt://neo4j.alert-engine-poc.svc.cluster.local:7687")
+NEO4J_URL = os.getenv("NEO4J_URL", "bolt://neo4j.aileron.svc.cluster.local:7687")
 
 def _neo4j_auth() -> tuple[str, str]:
     """Parse credentials: prefer NEO4J_AUTH (user/pass format), fall back to separate vars."""

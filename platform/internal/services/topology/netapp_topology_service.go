@@ -76,7 +76,7 @@ func newOntapClient(clusterIP, user, password string) *ontapClient {
 		httpClient: &http.Client{
 			Timeout: 45 * time.Second,
 			Transport: &http.Transport{
-				// Apple internal CA not in container trust stores.
+				// internal CA not in container trust stores.
 				TLSClientConfig:     &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 				MaxIdleConnsPerHost: 4,
 			},

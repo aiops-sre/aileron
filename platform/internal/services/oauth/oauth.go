@@ -25,7 +25,7 @@ type OAuthClient struct {
 	httpClient *http.Client
 	tokenCache sync.Map // Cache tokens per user
 	mu         sync.Mutex
-	// JWKS cache — RS256 public keys fetched from IdMS, refreshed every hour.
+	// JWKS cache — RS256 public keys fetched from OIDC, refreshed every hour.
 	jwksCache *jwksCacheEntry
 }
 
@@ -37,19 +37,19 @@ type jwksCacheEntry struct {
 
 // OAuthConfig holds OAuth 2.0 configuration
 type OAuthConfig struct {
-	// IdMS Configuration
-	IdMSBaseURL  string //  (prod) or https://idmsac-uat.example.com (uat)
+	// OIDC Configuration
+	OIDCBaseURL  string //  (prod) or https://oidcac-uat.example.com (uat)
 	ClientID     string // Your app's client ID (SRE Command Center: 961469)
 	ClientSecret string // Your app's client secret
 
 	// Multi-Audience Configuration
-	Audiences      []string // ["sre-command-center", "sear-floodgate"]
+	Audiences      []string // ["sre-command-center", "sear-oidc"]
 	RequiredScopes []string // ["dsid", "offline_access", "groups"]
-	RequiredGroups []string // ["aileron-operators", "floodgate-google-models-access"]
+	RequiredGroups []string // ["aileron-operators", "oidc-google-models-access"]
 
-	// Floodgate Configuration
-	FloodgateAppID   string // "928148"
-	FloodgateBaseURL string // ""
+	// OIDC Provider Configuration
+	OIDC ProviderAppID   string // "928148"
+	OIDC ProviderBaseURL string // ""
 
 	// Token Configuration
 	TokenCacheTTL    time.Duration // How long to cache tokens
@@ -59,7 +59,7 @@ type OAuthConfig struct {
 // TokenResponse represents OAuth token response
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
-	IdToken      string `json:"id_token,omitempty"` // Floodgate uses the id_token as the Bearer credential
+	IdToken      string `json:"id_token,omitempty"` // OIDC Provider uses the id_token as the Bearer credential
 	RefreshToken string `json:"refresh_token,omitempty"`
 	TokenType    string `json:"token_type"`
 	ExpiresIn    int    `json:"expires_in"`
@@ -99,17 +99,17 @@ func NewOAuthClient(config *OAuthConfig) *OAuthClient {
 // GetDefaultConfig returns production OAuth configuration
 func GetDefaultConfig() *OAuthConfig {
 	return &OAuthConfig{
-		IdMSBaseURL:    "",
-		ClientID:       "7jdvu5f1gxuuckpbdb5s7jw6tcwpf3", // IdMS OAuth Client ID (App ID: 961469)
-		Audiences:      []string{"sre-command-center", "sear-floodgate"},
+		OIDCBaseURL:    "",
+		ClientID:       "7jdvu5f1gxuuckpbdb5s7jw6tcwpf3", // OIDC OAuth Client ID (App ID: 961469)
+		Audiences:      []string{"sre-command-center", "sear-oidc"},
 		RequiredScopes: []string{"dsid", "offline_access", "groups"},
 		RequiredGroups: []string{
 			"aileron-operators",
-			"floodgate-google-models-access",
-			"floodgate-anthropic-access",
+			"oidc-google-models-access",
+			"oidc-anthropic-access",
 		},
-		FloodgateAppID:   "928148",
-		FloodgateBaseURL: "",
+		OIDC ProviderAppID:   "928148",
+		OIDC ProviderBaseURL: "",
 		TokenCacheTTL:    50 * time.Minute,
 		RefreshThreshold: 5 * time.Minute,
 	}
@@ -132,7 +132,7 @@ func (c *OAuthClient) GenerateToken(ctx context.Context, assertion string, userI
 		}
 	}
 
-	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.IdMSBaseURL)
+	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.OIDCBaseURL)
 
 	// Build multi-audience request
 	audiences := strings.Join(c.config.Audiences, " ")
@@ -144,7 +144,7 @@ func (c *OAuthClient) GenerateToken(ctx context.Context, assertion string, userI
 		"grant_type":    "urn:ietf:params:oauth:grant-type:jwt-bearer",
 		"assertion":     assertion,
 		"scope":         scopes,
-		"audience":      audiences, // Multi-audience: both app and Floodgate
+		"audience":      audiences, // Multi-audience: both app and OIDC Provider
 	}
 
 	jsonData, err := json.Marshal(payload)
@@ -187,7 +187,7 @@ func (c *OAuthClient) GenerateToken(ctx context.Context, assertion string, userI
 
 // RefreshToken refreshes an access token using refresh token
 func (c *OAuthClient) RefreshToken(ctx context.Context, refreshToken string, userID string) (*TokenResponse, error) {
-	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.IdMSBaseURL)
+	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.OIDCBaseURL)
 
 	// Build form-encoded request (different from initial token request)
 	data := url.Values{}
@@ -235,17 +235,17 @@ func (c *OAuthClient) RefreshToken(ctx context.Context, refreshToken string, use
 // TOKEN EXCHANGE (Alternative approach)
 // ============================================================================
 
-// ExchangeTokenForFloodgate exchanges app token for Floodgate token using RFC 8693 token exchange.
-// IDMS corporate OAuth token exchange API uses application/json (per Apple IdMS docs).
-func (c *OAuthClient) ExchangeTokenForFloodgate(ctx context.Context, appToken string, userID string) (*TokenResponse, error) {
-	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.IdMSBaseURL)
+// ExchangeTokenForOIDC Provider exchanges app token for OIDC Provider token using RFC 8693 token exchange.
+// OIDC corporate OAuth token exchange API uses application/json (per Aileron OIDC docs).
+func (c *OAuthClient) ExchangeTokenForOIDC Provider(ctx context.Context, appToken string, userID string) (*TokenResponse, error) {
+	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.OIDCBaseURL)
 
 	payload := map[string]string{
 		"client_id":             c.config.ClientID,
 		"client_secret":         c.config.ClientSecret,
 		"grant_type":            "urn:ietf:params:oauth:grant-type:token-exchange",
 		"scope":                 "dsid groups",
-		"resource":              c.config.FloodgateBaseURL,
+		"resource":              c.config.OIDC ProviderBaseURL,
 		"requested_token_type":  "urn:ietf:params:oauth:token-type:access_token",
 		"subject_token_type":    "urn:ietf:params:oauth:token-type:access_token",
 		"subject_token":         appToken,
@@ -286,20 +286,20 @@ func (c *OAuthClient) ExchangeTokenForFloodgate(ctx context.Context, appToken st
 	return &tokenResp, nil
 }
 
-// ExchangeRefreshForFloodgate uses the IDMS refresh token (which carries the original
+// ExchangeRefreshForOIDC Provider uses the OIDC refresh token (which carries the original
 // authorization consent including audience=hvys3fcwcteqrvw3qzkvtk86viuoqv) to obtain
-// a Floodgate-scoped access token. The access_token from the initial code exchange has
-// aud:"IdMS" which Floodgate rejects; the refresh token is not audience-restricted and
-// can be used to get a token targeted at the Floodgate OIDC client.
-func (c *OAuthClient) ExchangeRefreshForFloodgate(ctx context.Context, refreshToken string) (*TokenResponse, error) {
-	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.IdMSBaseURL)
+// a OIDC Provider-scoped access token. The access_token from the initial code exchange has
+// aud:"OIDC" which OIDC Provider rejects; the refresh token is not audience-restricted and
+// can be used to get a token targeted at the OIDC Provider OIDC client.
+func (c *OAuthClient) ExchangeRefreshForOIDC Provider(ctx context.Context, refreshToken string) (*TokenResponse, error) {
+	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.OIDCBaseURL)
 
 	data := url.Values{}
 	data.Set("client_id", c.config.ClientID)
 	data.Set("client_secret", c.config.ClientSecret)
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", refreshToken)
-	data.Set("audience", "hvys3fcwcteqrvw3qzkvtk86viuoqv") // Floodgate OIDC client ID
+	data.Set("audience", "hvys3fcwcteqrvw3qzkvtk86viuoqv") // OIDC Provider OIDC client ID
 	data.Set("scope", "openid dsid accountname profile groups") // openid required for id_token in response
 
 	req, err := http.NewRequestWithContext(ctx, "POST", tokenURL, strings.NewReader(data.Encode()))
@@ -325,13 +325,13 @@ func (c *OAuthClient) ExchangeRefreshForFloodgate(ctx context.Context, refreshTo
 		return nil, fmt.Errorf("failed to parse refresh response: %w", err)
 	}
 	tokenResp.IssuedAt = time.Now()
-	log.Printf("Floodgate exchange: has_access_token=%v has_id_token=%v expires_in=%d",
+	log.Printf("OIDC Provider exchange: has_access_token=%v has_id_token=%v expires_in=%d",
 		tokenResp.AccessToken != "", tokenResp.IdToken != "", tokenResp.ExpiresIn)
 	return &tokenResp, nil
 }
 
-// FloodgateRequest represents a request to Floodgate
-type FloodgateRequest struct {
+// OIDC ProviderRequest represents a request to OIDC Provider
+type OIDC ProviderRequest struct {
 	Method        string
 	Path          string // e.g., "/api/openai/v1/models"
 	Headers       map[string]string
@@ -341,10 +341,10 @@ type FloodgateRequest struct {
 	MultiAudToken string // Optional: Pre-generated multi-audience token
 }
 
-// ProxyToFloodgate forwards a request to Floodgate with user identity
-func (c *OAuthClient) ProxyToFloodgate(ctx context.Context, req *FloodgateRequest) (*http.Response, error) {
+// ProxyToOIDC Provider forwards a request to OIDC Provider with user identity
+func (c *OAuthClient) ProxyToOIDC Provider(ctx context.Context, req *OIDC ProviderRequest) (*http.Response, error) {
 	if req.UserIP == "" {
-		return nil, fmt.Errorf("user IP is required for Floodgate requests")
+		return nil, fmt.Errorf("user IP is required for OIDC Provider requests")
 	}
 
 	// Get or use multi-audience token
@@ -360,8 +360,8 @@ func (c *OAuthClient) ProxyToFloodgate(ctx context.Context, req *FloodgateReques
 		token = cached.Token.AccessToken
 	}
 
-	// Build Floodgate URL
-	floodgateURL := fmt.Sprintf("%s%s", c.config.FloodgateBaseURL, req.Path)
+	// Build OIDC Provider URL
+	oidcURL := fmt.Sprintf("%s%s", c.config.OIDC ProviderBaseURL, req.Path)
 
 	// Create HTTP request
 	var bodyReader io.Reader
@@ -369,9 +369,9 @@ func (c *OAuthClient) ProxyToFloodgate(ctx context.Context, req *FloodgateReques
 		bodyReader = bytes.NewReader(req.Body)
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, req.Method, floodgateURL, bodyReader)
+	httpReq, err := http.NewRequestWithContext(ctx, req.Method, oidcURL, bodyReader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Floodgate request: %w", err)
+		return nil, fmt.Errorf("failed to create OIDC Provider request: %w", err)
 	}
 
 	// Set required headers
@@ -384,7 +384,7 @@ func (c *OAuthClient) ProxyToFloodgate(ctx context.Context, req *FloodgateReques
 		httpReq.Header.Set(key, value)
 	}
 
-	// Forward to Floodgate
+	// Forward to OIDC Provider
 	return c.httpClient.Do(httpReq)
 }
 
@@ -436,8 +436,8 @@ func (c *OAuthClient) ClearUserToken(userID string) {
 // VALIDATION
 // ============================================================================
 
-// ValidateToken validates an IdMS JWT by verifying its RS256 signature against
-// the IdMS JWKS endpoint, then checking exp/iss/aud claims.
+// ValidateToken validates an OIDC JWT by verifying its RS256 signature against
+// the OIDC JWKS endpoint, then checking exp/iss/aud claims.
 // Replaces the previous stub that returned {"valid":true} for ANY token.
 func (c *OAuthClient) ValidateToken(ctx context.Context, tokenString string) (map[string]interface{}, error) {
 	parts := strings.Split(tokenString, ".")
@@ -494,10 +494,10 @@ func (c *OAuthClient) ValidateToken(ctx context.Context, tokenString string) (ma
 		return nil, fmt.Errorf("JWT has expired")
 	}
 
-	// iss — must come from our IdMS instance.
+	// iss — must come from our OIDC instance.
 	iss, _ := claims["iss"].(string)
-	if !strings.HasPrefix(iss, c.config.IdMSBaseURL) {
-		return nil, fmt.Errorf("JWT issuer %q not trusted (expected prefix %q)", iss, c.config.IdMSBaseURL)
+	if !strings.HasPrefix(iss, c.config.OIDCBaseURL) {
+		return nil, fmt.Errorf("JWT issuer %q not trusted (expected prefix %q)", iss, c.config.OIDCBaseURL)
 	}
 
 	// aud — at least one audience must match our registered audiences.
@@ -532,7 +532,7 @@ func (c *OAuthClient) ValidateToken(ctx context.Context, tokenString string) (ma
 	return claims, nil
 }
 
-// getJWKSKey fetches and caches RSA public keys from the IdMS JWKS endpoint.
+// getJWKSKey fetches and caches RSA public keys from the OIDC JWKS endpoint.
 // Keys are cached for 1 hour; forced refresh on cache miss.
 func (c *OAuthClient) getJWKSKey(ctx context.Context, kid string) (*rsa.PublicKey, error) {
 	c.mu.Lock()
@@ -545,8 +545,8 @@ func (c *OAuthClient) getJWKSKey(ctx context.Context, kid string) (*rsa.PublicKe
 		}
 	}
 
-	// Fetch fresh JWKS from IdMS.
-	jwksURL := fmt.Sprintf("%s/auth/oauth2/keys", c.config.IdMSBaseURL)
+	// Fetch fresh JWKS from OIDC.
+	jwksURL := fmt.Sprintf("%s/auth/oauth2/keys", c.config.OIDCBaseURL)
 	req, err := http.NewRequestWithContext(ctx, "GET", jwksURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("building JWKS request: %w", err)

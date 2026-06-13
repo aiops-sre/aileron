@@ -23,19 +23,19 @@ spec:
       securityContext:
         fsGroup: 1000
       initContainers:
-        {{- if .Values.whisper.enabled }}
-        - name: init-whisperctl
-          image: ghcr.io/aileron-platform/crypto-services/whisperctl:1.1.3
+        {{- if .Values.secrets_manager.enabled }}
+        - name: init-secrets_managerctl
+          image: ghcr.io/aileron-platform/crypto-services/secrets_managerctl:1.1.3
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
           args:
             - |
               set -e
               fetch() {
-                ./whisperctl secret fetch \
-                  --server whisper.example.com \
-                  --client-certificate /etc/ssl/whisper/tls.crt \
-                  --client-key /etc/ssl/whisper/tls.key \
+                ./secrets_managerctl secret fetch \
+                  --server secrets_manager.example.com \
+                  --client-certificate /etc/ssl/secrets_manager/tls.crt \
+                  --client-key /etc/ssl/secrets_manager/tls.key \
                   --client-certificate-format PEM \
                   --namespace aileron-admins \
                   --secret-name "$1" \
@@ -45,10 +45,10 @@ spec:
               fetch alerthub-infra
               fetch alerthub-kubeconfigs
           volumeMounts:
-            - name: whisper-secrets
+            - name: secrets_manager-secrets
               mountPath: /tmp/secrets
-            - name: whisper-cert
-              mountPath: /etc/ssl/whisper
+            - name: secrets_manager-cert
+              mountPath: /etc/ssl/secrets_manager
               readOnly: true
         {{- end }}
       containers:
@@ -125,22 +125,22 @@ spec:
           resources:
             {{- toYaml .Values.oie.resources | nindent 12 }}
           volumeMounts:
-            - name: whisper-secrets
+            - name: secrets_manager-secrets
               mountPath: /tmp/secrets
             - name: kubeconfigs
               mountPath: /etc/kubeconfigs
-            {{- if .Values.whisper.enabled }}
-            - name: whisper-cert
-              mountPath: /etc/ssl/whisper
+            {{- if .Values.secrets_manager.enabled }}
+            - name: secrets_manager-cert
+              mountPath: /etc/ssl/secrets_manager
               readOnly: true
             {{- end }}
       volumes:
-        - name: whisper-secrets
+        - name: secrets_manager-secrets
           emptyDir: {}
         - name: kubeconfigs
           emptyDir: {}
-        {{- if .Values.whisper.enabled }}
-        - name: whisper-cert
+        {{- if .Values.secrets_manager.enabled }}
+        - name: secrets_manager-cert
           csi:
             driver: cmcs.crypto-services.example.com
             readOnly: true
@@ -148,6 +148,6 @@ spec:
               cmcs.crypto-services.example.com/duration: "24h"
               cmcs.crypto-services.example.com/fs-group: "1000"
               cmcs.crypto-services.example.com/issuer-kind: AppleCertificateManagerCorpCA
-              cmcs.crypto-services.example.com/issuer-name: applecm-whisper-corpca-7915896-7915893
+              cmcs.crypto-services.example.com/issuer-name: applecm-secrets_manager-corpca-7915896-7915893
               cmcs.crypto-services.example.com/key-usages: "client auth,digital signature,key encipherment"
         {{- end }}

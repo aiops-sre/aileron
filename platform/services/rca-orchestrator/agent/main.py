@@ -25,10 +25,10 @@ from learning.continuous import ingest_kafka_incidents, build_and_update_model
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
-KAFKA_BROKERS = os.getenv("KAFKA_BROKERS", "alerthub-kafka-kafka-bootstrap.alert-engine-poc.svc.cluster.local:9092")
+KAFKA_BROKERS = os.getenv("KAFKA_BROKERS", "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092")
 KAFKA_TOPIC_ALERTS = os.getenv("KAFKA_TOPIC_ALERTS", "raw-alerts")
-PG_DSN = os.getenv("POSTGRES_URL", "postgresql://alerthub:@postgres-primary.alert-engine-poc.svc.cluster.local:5432/alerthub")
-BACKEND_URL = os.getenv("BACKEND_URL", "http://alerthub-backend.alert-engine-poc.svc.cluster.local:3000")
+PG_DSN = os.getenv("POSTGRES_URL", "postgresql://alerthub:@postgres-primary.aileron.svc.cluster.local:5432/alerthub")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://alerthub-backend.aileron.svc.cluster.local:3000")
 INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN", "")
 
 # RCA_V2=true enables the deterministic V2 orchestrator. V1 remains the fallback.
@@ -187,7 +187,7 @@ async def _bootstrap_weaviate_knowledge():
     import os as _os
     pg_dsn = _os.getenv(
         "POSTGRES_URL",
-        "postgresql://alerthub:@postgres-primary.alert-engine-poc.svc.cluster.local:5432/alerthub",
+        "postgresql://alerthub:@postgres-primary.aileron.svc.cluster.local:5432/alerthub",
     )
     try:
         imported = await knowledge_store.bootstrap_from_history(pg_dsn, limit=500)
@@ -200,7 +200,7 @@ async def _bootstrap_weaviate_knowledge():
 async def _warm_up_ollama():
     """Send a minimal prompt to load the model into RAM before the first real request."""
     import aiohttp as _aiohttp
-    OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.alert-engine-poc.svc.cluster.local:11434")
+    OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.aileron.svc.cluster.local:11434")
     OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
     try:
         async with _aiohttp.ClientSession() as session:
@@ -373,7 +373,7 @@ async def trigger_training(background: BackgroundTasks):
 @app.get("/api/v1/model/info")
 async def model_info():
     import aiohttp
-    OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.alert-engine-poc.svc.cluster.local:11434")
+    OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.aileron.svc.cluster.local:11434")
     async with aiohttp.ClientSession() as session:
         async with session.get(f"{OLLAMA_URL}/api/tags", timeout=aiohttp.ClientTimeout(total=5)) as resp:
             tags = await resp.json() if resp.status == 200 else {}

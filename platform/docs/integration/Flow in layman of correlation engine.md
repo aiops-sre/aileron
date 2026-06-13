@@ -5,7 +5,7 @@ Here's how you explain it:
 
   The Problem You Solved
 
-  Imagine you're an SRE at Apple, and you have 150+ servers, hundreds of Kubernetes clusters, thousands of services — all being monitored by different tools (Dynatrace, Prometheus, Grafana, Splunk). When something
+  Imagine you're an SRE at a large company, and you have 150+ servers, hundreds of Kubernetes clusters, thousands of services — all being monitored by different tools (Dynatrace, Prometheus, Grafana, Splunk). When something
   goes wrong, every single tool fires its own alert. One server going down can trigger 50–100 individual alerts in seconds — one per affected service, one per affected pod, one from each monitoring tool.
 
   Before AlertHub, your on-call engineer would wake up at 3am to 50 pages, have no idea which one is the real problem, spend 20 minutes just figuring out they're all caused by the same dead server, and then start

@@ -13,9 +13,9 @@ import aiohttp
 
 log = logging.getLogger(__name__)
 
-WEAVIATE_URL = os.getenv("WEAVIATE_URL", "http://weaviate.alert-engine-poc.svc.cluster.local:8080")
+WEAVIATE_URL = os.getenv("WEAVIATE_URL", "http://weaviate.aileron.svc.cluster.local:8080")
 WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY", "weaviate-AIOps-Key-2024")
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.alert-engine-poc.svc.cluster.local:11434")
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.aileron.svc.cluster.local:11434")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
 
 INCIDENT_CLASS = "RCAIncident"

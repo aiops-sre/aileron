@@ -81,7 +81,7 @@ POD_REDIS="redis-cluster-0"                     # ns: aileron
 POD_ARGOCD_APP="argocd-application-controller-0" # ns: argocd
 POD_ARGOCD_REPO="argocd-repo-server-578f7dcbbb-t44mh" # ns: argocd
 POD_JAEGER="jaeger-collector-6999b7f9f-98kqp"   # ns: opentracing
-POD_FLOODGATE="floodgate-test-5c8594c7cf-rszvl"  # ns: interactive-dx-dev
+POD_FLOODGATE="oidc-test-5c8594c7cf-rszvl"  # ns: interactive-dx-dev
 
 # ── Real pods on K8N_Z3_05 (neo4j-0, rca-orchestrator) ──────────────────────
 POD_NEO4J="neo4j-0"                            # ns: aileron
@@ -856,7 +856,7 @@ fi
 
 # ══════════════════════════════════════════════════════════════════════════════
 # T10 — Flapping 3-cycle (OPEN → RESOLVED → OPEN × 3)
-# Real workload: floodgate-test in interactive-dx-dev (on node z1-02)
+# Real workload: oidc-test in interactive-dx-dev (on node z1-02)
 # ══════════════════════════════════════════════════════════════════════════════
 if run T10; then
 section "T10 · Flapping 3-cycle  (${POD_FLOODGATE} in interactive-dx-dev)"
@@ -872,9 +872,9 @@ for cycle in 1 2 3; do
     \"severity\": \"AVAILABILITY\",
     \"status\": \"OPEN\",
     \"startTime\": \"${NOW}\",
-    \"rootCauseEntity\": {\"entityId\": \"KUBERNETES_WORKLOAD-floodgate-test-example-cluster\", \"entityName\": \"floodgate-test\", \"entityType\": \"KUBERNETES_WORKLOAD\"},
+    \"rootCauseEntity\": {\"entityId\": \"KUBERNETES_WORKLOAD-oidc-test-example-cluster\", \"entityName\": \"oidc-test\", \"entityType\": \"KUBERNETES_WORKLOAD\"},
     \"impactedEntities\": [{\"entityId\": \"CLOUD_APPLICATION_INSTANCE-${POD_FLOODGATE}\", \"entityName\": \"${POD_FLOODGATE}\", \"entityType\": \"CLOUD_APPLICATION_INSTANCE\"}],
-    \"customProperties\": {\"k8s.cluster.name\": \"example-cluster\", \"k8s.cluster.uid\": \"${DEV_RNO_UID}\", \"k8s.namespace.name\": \"interactive-dx-dev\", \"k8s.workload.name\": \"floodgate-test\", \"environment\": \"ADC\", \"cycle\": \"${cycle}\"}
+    \"customProperties\": {\"k8s.cluster.name\": \"example-cluster\", \"k8s.cluster.uid\": \"${DEV_RNO_UID}\", \"k8s.namespace.name\": \"interactive-dx-dev\", \"k8s.workload.name\": \"oidc-test\", \"environment\": \"ADC\", \"cycle\": \"${cycle}\"}
   }"
   pause 3
   if [[ "$cycle" -lt 3 ]]; then
@@ -882,14 +882,14 @@ for cycle in 1 2 3; do
       \"state\": \"RESOLVED\",
       \"problemId\": \"${FLAP_PID}\",
       \"problemTitle\": \"RESOLVED: ${POD_FLOODGATE} recovered (cycle ${cycle})\",
-      \"ProblemDetailsText\": \"floodgate-test temporarily recovered.\",
+      \"ProblemDetailsText\": \"oidc-test temporarily recovered.\",
       \"impactLevel\": \"APPLICATION\",
       \"severity\": \"AVAILABILITY\",
       \"status\": \"RESOLVED\",
       \"startTime\": \"${NOW}\",
-      \"rootCauseEntity\": {\"entityId\": \"KUBERNETES_WORKLOAD-floodgate-test-example-cluster\", \"entityName\": \"floodgate-test\", \"entityType\": \"KUBERNETES_WORKLOAD\"},
+      \"rootCauseEntity\": {\"entityId\": \"KUBERNETES_WORKLOAD-oidc-test-example-cluster\", \"entityName\": \"oidc-test\", \"entityType\": \"KUBERNETES_WORKLOAD\"},
       \"impactedEntities\": [{\"entityId\": \"CLOUD_APPLICATION_INSTANCE-${POD_FLOODGATE}\", \"entityName\": \"${POD_FLOODGATE}\", \"entityType\": \"CLOUD_APPLICATION_INSTANCE\"}],
-      \"customProperties\": {\"k8s.cluster.name\": \"example-cluster\", \"k8s.cluster.uid\": \"${DEV_RNO_UID}\", \"k8s.namespace.name\": \"interactive-dx-dev\", \"k8s.workload.name\": \"floodgate-test\", \"environment\": \"ADC\"}
+      \"customProperties\": {\"k8s.cluster.name\": \"example-cluster\", \"k8s.cluster.uid\": \"${DEV_RNO_UID}\", \"k8s.namespace.name\": \"interactive-dx-dev\", \"k8s.workload.name\": \"oidc-test\", \"environment\": \"ADC\"}
     }"
     pause 3
   fi

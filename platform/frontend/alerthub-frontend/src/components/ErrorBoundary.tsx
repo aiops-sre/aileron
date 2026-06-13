@@ -1,8 +1,8 @@
 import React, { Component, ReactNode } from 'react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 
-// Apple Design Tokens
-const apple = {
+// Aileron Design Tokens
+const tokens = {
   red: '#FF3B30',
   blue: '#007AFF',
   label: 'var(--color-text)',
@@ -65,7 +65,7 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback
       }
 
-      // Default Apple-style error UI
+      // Default Aileron-style error UI
       return (
         <div style={{
           minHeight: '400px',
@@ -73,22 +73,22 @@ export class ErrorBoundary extends Component<Props, State> {
           alignItems: 'center',
           justifyContent: 'center',
           padding: '40px 20px',
-          background: apple.background,
+          background: tokens.background,
         }}>
           <div style={{
             textAlign: 'center',
             maxWidth: '400px',
-            background: apple.secondaryBackground,
-            borderRadius: apple.radius.xl,
+            background: tokens.secondaryBackground,
+            borderRadius: tokens.radius.xl,
             padding: '32px',
-            border: `0.5px solid ${apple.separator}`,
+            border: `0.5px solid ${tokens.separator}`,
             boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
           }}>
             <div style={{
               width: '56px',
               height: '56px',
-              borderRadius: apple.radius.md,
-              background: apple.red,
+              borderRadius: tokens.radius.md,
+              background: tokens.red,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -100,7 +100,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <h2 style={{
               fontSize: 20,
               fontWeight: 600,
-              color: apple.label,
+              color: tokens.label,
               margin: '0 0 8px',
             }}>
               Something went wrong
@@ -108,7 +108,7 @@ export class ErrorBoundary extends Component<Props, State> {
             
             <p style={{
               fontSize: 15,
-              color: apple.secondaryLabel,
+              color: tokens.secondaryLabel,
               lineHeight: 1.4,
               marginBottom: 20,
             }}>
@@ -123,9 +123,9 @@ export class ErrorBoundary extends Component<Props, State> {
                   alignItems: 'center',
                   gap: 6,
                   padding: '10px 16px',
-                  borderRadius: apple.radius.sm,
+                  borderRadius: tokens.radius.sm,
                   border: 'none',
-                  background: apple.blue,
+                  background: tokens.blue,
                   color: '#fff',
                   fontSize: 14,
                   fontWeight: 500,
@@ -136,7 +136,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   e.currentTarget.style.background = '#0066D6'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = apple.blue
+                  e.currentTarget.style.background = tokens.blue
                 }}
               >
                 <RefreshCw style={{ width: 14, height: 14 }} />
@@ -147,10 +147,10 @@ export class ErrorBoundary extends Component<Props, State> {
                 onClick={() => window.location.reload()}
                 style={{
                   padding: '10px 16px',
-                  borderRadius: apple.radius.sm,
-                  border: `0.5px solid ${apple.separator}`,
-                  background: apple.fill,
-                  color: apple.label,
+                  borderRadius: tokens.radius.sm,
+                  border: `0.5px solid ${tokens.separator}`,
+                  background: tokens.fill,
+                  color: tokens.label,
                   fontSize: 14,
                   fontWeight: 500,
                   cursor: 'pointer',
@@ -165,10 +165,10 @@ export class ErrorBoundary extends Component<Props, State> {
               <details style={{
                 marginTop: 20,
                 padding: 12,
-                background: apple.fill,
-                borderRadius: apple.radius.sm,
+                background: tokens.fill,
+                borderRadius: tokens.radius.sm,
                 fontSize: 12,
-                color: apple.tertiaryLabel,
+                color: tokens.tertiaryLabel,
                 textAlign: 'left',
               }}>
                 <summary style={{ cursor: 'pointer', fontWeight: 500 }}>

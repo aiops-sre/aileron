@@ -29,7 +29,7 @@ interface AuthState {
   authRetryCount: number
   authError: string | null
   lastAuthAttempt: number | null
-  // Tracks whether a redirect to IdMS is already in flight.
+  // Tracks whether a redirect to OIDC is already in flight.
   // Prevents duplicate navigations when React re-renders ProtectedRoute
   // multiple times before the browser finishes the location change.
   isRedirectingToAuth: boolean
@@ -74,13 +74,13 @@ export const useEnhancedAuthStore = create<EnhancedAuthStore>()(
         sessionStorage.removeItem('access_token')
         sessionStorage.removeItem('refresh_token')
         sessionStorage.removeItem('oauth_id_token')
-        sessionStorage.removeItem('floodgate_token')
-        sessionStorage.removeItem('floodgate_token_expiry')
-        sessionStorage.removeItem('floodgate_token_source')
+        sessionStorage.removeItem('oidc_token')
+        sessionStorage.removeItem('oidc_token_expiry')
+        sessionStorage.removeItem('oidc_token_source')
         sessionStorage.removeItem('user')
         sessionStorage.removeItem('user_groups')
         localStorage.removeItem('access_token')
-        localStorage.removeItem('floodgate_token')
+        localStorage.removeItem('oidc_token')
         localStorage.removeItem('oauth_id_token')
         get().stopSessionMonitoring()
         set({

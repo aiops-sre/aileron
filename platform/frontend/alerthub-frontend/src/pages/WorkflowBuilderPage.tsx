@@ -30,10 +30,10 @@ import {
 import { workflowApi } from '../lib/api';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Apple Design Tokens - Match existing theme
+// Aileron Design Tokens - Match existing theme
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -280,30 +280,30 @@ const WorkflowBuilderPage: React.FC = () => {
     return matchesSearch && matchesFilter;
   });
 
-  // Get status color (Apple theme)
+  // Get status color (Aileron theme)
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case 'active': return apple.green;
-      case 'paused': return apple.yellow;
-      case 'error': return apple.red;
-      default: return apple.gray;
+      case 'active': return tokens.green;
+      case 'paused': return tokens.yellow;
+      case 'error': return tokens.red;
+      default: return tokens.gray;
     }
   };
 
   const getExecutionStatusColor = (status: string) => {
     switch (status) {
-      case 'running': return apple.blue;
-      case 'completed': return apple.green;
-      case 'failed': return apple.red;
-      case 'cancelled': return apple.gray;
-      default: return apple.gray;
+      case 'running': return tokens.blue;
+      case 'completed': return tokens.green;
+      case 'failed': return tokens.red;
+      case 'cancelled': return tokens.gray;
+      default: return tokens.gray;
     }
   };
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: apple.background,
+      background: tokens.background,
     }}>
       <div style={{
         display: 'flex',
@@ -331,7 +331,7 @@ const WorkflowBuilderPage: React.FC = () => {
             <span style={{
               fontSize: 28,
               fontWeight: 700,
-              color: apple.label,
+              color: tokens.label,
               letterSpacing: '-0.02em',
             }}>
               Workflows
@@ -348,13 +348,13 @@ const WorkflowBuilderPage: React.FC = () => {
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: apple.purple,
+                background: tokens.purple,
                 animation: 'pulse 2s infinite',
               }} />
               <span style={{
                 fontSize: 10,
                 fontWeight: 600,
-                color: apple.purple,
+                color: tokens.purple,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
               }}>
@@ -366,9 +366,9 @@ const WorkflowBuilderPage: React.FC = () => {
           {/* Tab Navigation */}
           <nav style={{ padding: '8px 0' }}>
             {[
-              { id: 'workflows', label: 'All Workflows', icon: GitBranch, iconColor: apple.purple, count: workflows.length },
-              { id: 'executions', label: 'Executions', icon: Clock, iconColor: apple.orange, count: workflowExecutions.length, disabled: !selectedWorkflow },
-              { id: 'templates', label: 'Templates', icon: Target, iconColor: apple.green, count: templates.length },
+              { id: 'workflows', label: 'All Workflows', icon: GitBranch, iconColor: tokens.purple, count: workflows.length },
+              { id: 'executions', label: 'Executions', icon: Clock, iconColor: tokens.orange, count: workflowExecutions.length, disabled: !selectedWorkflow },
+              { id: 'templates', label: 'Templates', icon: Target, iconColor: tokens.green, count: templates.length },
             ].map((item) => {
               const active = item.id === activeTab
               const Icon = item.icon
@@ -383,7 +383,7 @@ const WorkflowBuilderPage: React.FC = () => {
                     gap: 10,
                     width: '100%',
                     padding: '7px 12px',
-                    borderRadius: apple.radius.sm,
+                    borderRadius: tokens.radius.sm,
                     border: 'none',
                     cursor: item.disabled ? 'not-allowed' : 'pointer',
                     background: active ? 'rgba(0, 122, 255, 0.12)' : 'transparent',
@@ -393,7 +393,7 @@ const WorkflowBuilderPage: React.FC = () => {
                     opacity: item.disabled ? 0.5 : 1,
                   }}
                   onMouseEnter={(e) => {
-                    if (!active && !item.disabled) (e.currentTarget as HTMLElement).style.background = apple.tertiaryFill
+                    if (!active && !item.disabled) (e.currentTarget as HTMLElement).style.background = tokens.tertiaryFill
                   }}
                   onMouseLeave={(e) => {
                     if (!active && !item.disabled) (e.currentTarget as HTMLElement).style.background = 'transparent'
@@ -414,7 +414,7 @@ const WorkflowBuilderPage: React.FC = () => {
                   <span style={{
                     fontSize: 13,
                     fontWeight: active ? 600 : 400,
-                    color: active ? apple.blue : apple.label,
+                    color: active ? tokens.blue : tokens.label,
                     flex: 1,
                   }}>
                     {item.label}
@@ -423,8 +423,8 @@ const WorkflowBuilderPage: React.FC = () => {
                     <span style={{
                       fontSize: 12,
                       fontWeight: 500,
-                      color: apple.tertiaryLabel,
-                      background: apple.fill,
+                      color: tokens.tertiaryLabel,
+                      background: tokens.fill,
                       padding: '1px 7px',
                       borderRadius: 10,
                     }}>
@@ -443,11 +443,11 @@ const WorkflowBuilderPage: React.FC = () => {
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <h1 style={{ fontSize: 22, fontWeight: 700, color: apple.label, margin: 0 }}>
+                <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.label, margin: 0 }}>
                   {activeTab === 'workflows' ? 'Workflow Automation' : 
                    activeTab === 'executions' ? 'Execution History' : 'Workflow Templates'}
                 </h1>
-                <p style={{ fontSize: 13, color: apple.secondaryLabel, marginTop: 2 }}>
+                <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginTop: 2 }}>
                   {activeTab === 'workflows' ? `${workflows.length} workflows configured` :
                    activeTab === 'executions' ? `${workflowExecutions.length} executions` :
                    `${templates.length} templates available`}
@@ -464,10 +464,10 @@ const WorkflowBuilderPage: React.FC = () => {
                         alignItems: 'center',
                         gap: 6,
                         padding: '8px 12px',
-                        borderRadius: apple.radius.sm,
-                        border: `0.5px solid ${apple.separator}`,
-                        background: apple.fill,
-                        color: apple.label,
+                        borderRadius: tokens.radius.sm,
+                        border: `0.5px solid ${tokens.separator}`,
+                        background: tokens.fill,
+                        color: tokens.label,
                         fontSize: 13,
                         fontWeight: 500,
                         cursor: 'pointer',
@@ -484,9 +484,9 @@ const WorkflowBuilderPage: React.FC = () => {
                         alignItems: 'center',
                         gap: 6,
                         padding: '8px 12px',
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         border: 'none',
-                        background: apple.blue,
+                        background: tokens.blue,
                         color: '#fff',
                         fontSize: 13,
                         fontWeight: 500,
@@ -507,10 +507,10 @@ const WorkflowBuilderPage: React.FC = () => {
                     alignItems: 'center',
                     gap: 6,
                     padding: '8px 12px',
-                    borderRadius: apple.radius.sm,
-                    border: `0.5px solid ${apple.separator}`,
-                    background: apple.fill,
-                    color: apple.label,
+                    borderRadius: tokens.radius.sm,
+                    border: `0.5px solid ${tokens.separator}`,
+                    background: tokens.fill,
+                    color: tokens.label,
                     fontSize: 13,
                     fontWeight: 500,
                     cursor: loading ? 'default' : 'pointer',
@@ -531,12 +531,12 @@ const WorkflowBuilderPage: React.FC = () => {
                 gap: 8,
                 padding: 12,
                 marginBottom: 16,
-                background: `${apple.red}15`,
-                border: `0.5px solid ${apple.red}30`,
-                borderRadius: apple.radius.sm,
+                background: `${tokens.red}15`,
+                border: `0.5px solid ${tokens.red}30`,
+                borderRadius: tokens.radius.sm,
               }}>
-                <AlertTriangle style={{ width: 16, height: 16, color: apple.red, flexShrink: 0 }} />
-                <p style={{ fontSize: 13, color: apple.red, margin: 0, flex: 1 }}>
+                <AlertTriangle style={{ width: 16, height: 16, color: tokens.red, flexShrink: 0 }} />
+                <p style={{ fontSize: 13, color: tokens.red, margin: 0, flex: 1 }}>
                   {error}
                 </p>
                 <button
@@ -546,7 +546,7 @@ const WorkflowBuilderPage: React.FC = () => {
                     border: 'none',
                     cursor: 'pointer',
                     padding: 2,
-                    color: apple.red,
+                    color: tokens.red,
                   }}
                 >
                   <X style={{ width: 14, height: 14 }} />
@@ -565,7 +565,7 @@ const WorkflowBuilderPage: React.FC = () => {
                     transform: 'translateY(-50%)',
                     width: 16,
                     height: 16,
-                    color: apple.tertiaryLabel,
+                    color: tokens.tertiaryLabel,
                     pointerEvents: 'none',
                   }} />
                   <input
@@ -576,13 +576,13 @@ const WorkflowBuilderPage: React.FC = () => {
                     style={{
                       width: '100%',
                       height: 36,
-                      borderRadius: apple.radius.md,
+                      borderRadius: tokens.radius.md,
                       border: 'none',
-                      background: apple.fill,
+                      background: tokens.fill,
                       paddingLeft: 34,
                       paddingRight: searchQuery ? 34 : 12,
                       fontSize: 13,
-                      color: apple.label,
+                      color: tokens.label,
                       outline: 'none',
                       transition: 'box-shadow 0.2s ease',
                     }}
@@ -604,7 +604,7 @@ const WorkflowBuilderPage: React.FC = () => {
                         width: 20,
                         height: 20,
                         borderRadius: '50%',
-                        background: apple.tertiaryLabel,
+                        background: tokens.tertiaryLabel,
                         border: 'none',
                         cursor: 'pointer',
                         display: 'flex',
@@ -613,7 +613,7 @@ const WorkflowBuilderPage: React.FC = () => {
                         padding: 0,
                       }}
                     >
-                      <X style={{ width: 12, height: 12, color: apple.secondaryBackground }} />
+                      <X style={{ width: 12, height: 12, color: tokens.secondaryBackground }} />
                     </button>
                   )}
                 </div>
@@ -626,12 +626,12 @@ const WorkflowBuilderPage: React.FC = () => {
                   }}
                   style={{
                     height: 36,
-                    borderRadius: apple.radius.md,
+                    borderRadius: tokens.radius.md,
                     border: 'none',
-                    background: apple.fill,
+                    background: tokens.fill,
                     padding: '0 24px 0 12px',
                     fontSize: 13,
-                    color: apple.label,
+                    color: tokens.label,
                     outline: 'none',
                     appearance: 'none',
                     cursor: 'pointer',
@@ -647,9 +647,9 @@ const WorkflowBuilderPage: React.FC = () => {
 
           {/* Content Area */}
           <div style={{
-            background: apple.secondaryBackground,
-            borderRadius: apple.radius.lg,
-            border: `0.5px solid ${apple.separator}`,
+            background: tokens.secondaryBackground,
+            borderRadius: tokens.radius.lg,
+            border: `0.5px solid ${tokens.separator}`,
             overflow: 'hidden',
             minHeight: 600,
           }}>
@@ -669,8 +669,8 @@ const WorkflowBuilderPage: React.FC = () => {
                       textAlign: 'center',
                       padding: '80px 20px',
                     }}>
-                      <Loader2 style={{ width: 32, height: 32, color: apple.purple, margin: '0 auto 16px', animation: 'spin 1s linear infinite' }} />
-                      <p style={{ fontSize: 15, color: apple.secondaryLabel, margin: 0 }}>
+                      <Loader2 style={{ width: 32, height: 32, color: tokens.purple, margin: '0 auto 16px', animation: 'spin 1s linear infinite' }} />
+                      <p style={{ fontSize: 15, color: tokens.secondaryLabel, margin: 0 }}>
                         Loading workflows...
                       </p>
                     </div>
@@ -682,13 +682,13 @@ const WorkflowBuilderPage: React.FC = () => {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           style={{
-                            background: apple.secondaryBackground,
-                            border: `0.5px solid ${apple.separator}`,
-                            borderRadius: apple.radius.lg,
+                            background: tokens.secondaryBackground,
+                            border: `0.5px solid ${tokens.separator}`,
+                            borderRadius: tokens.radius.lg,
                             padding: 16,
                             cursor: 'pointer',
                             ...(selectedWorkflow?.id === workflow.id && { 
-                              boxShadow: `0 0 0 2px ${apple.purple}` 
+                              boxShadow: `0 0 0 2px ${tokens.purple}` 
                             })
                           }}
                           onClick={() => setSelectedWorkflow(workflow)}
@@ -698,7 +698,7 @@ const WorkflowBuilderPage: React.FC = () => {
                               <h3 style={{ 
                                 fontSize: 16, 
                                 fontWeight: 600, 
-                                color: apple.label, 
+                                color: tokens.label, 
                                 margin: 0, 
                                 marginBottom: 4,
                                 overflow: 'hidden',
@@ -707,7 +707,7 @@ const WorkflowBuilderPage: React.FC = () => {
                               }}>
                                 {workflow.name}
                               </h3>
-                              <p style={{ fontSize: 13, color: apple.secondaryLabel, margin: 0, lineHeight: 1.4 }}>
+                              <p style={{ fontSize: 13, color: tokens.secondaryLabel, margin: 0, lineHeight: 1.4 }}>
                                 {workflow.description}
                               </p>
                             </div>
@@ -717,7 +717,7 @@ const WorkflowBuilderPage: React.FC = () => {
                               border: 'none',
                               cursor: 'pointer',
                               padding: 4,
-                              color: apple.tertiaryLabel,
+                              color: tokens.tertiaryLabel,
                               marginLeft: 8,
                             }}>
                               <MoreVertical style={{ width: 16, height: 16 }} />
@@ -731,10 +731,10 @@ const WorkflowBuilderPage: React.FC = () => {
                               gap: 4,
                               padding: '2px 8px',
                               borderRadius: 12,
-                              background: workflow.enabled ? `${apple.green}15` : `${apple.gray}15`,
+                              background: workflow.enabled ? `${tokens.green}15` : `${tokens.gray}15`,
                               fontSize: 11,
                               fontWeight: 500,
-                              color: workflow.enabled ? apple.green : apple.gray,
+                              color: workflow.enabled ? tokens.green : tokens.gray,
                             }}>
                               {workflow.enabled ? (
                                 <>
@@ -768,7 +768,7 @@ const WorkflowBuilderPage: React.FC = () => {
                             alignItems: 'center', 
                             justifyContent: 'space-between', 
                             fontSize: 12, 
-                            color: apple.tertiaryLabel,
+                            color: tokens.tertiaryLabel,
                             marginBottom: 12,
                           }}>
                             <span>{workflow.executions || 0} executions</span>
@@ -791,10 +791,10 @@ const WorkflowBuilderPage: React.FC = () => {
                                 justifyContent: 'center',
                                 gap: 4,
                                 padding: '6px 12px',
-                                borderRadius: apple.radius.sm,
+                                borderRadius: tokens.radius.sm,
                                 border: 'none',
-                                background: workflow.enabled ? apple.blue : apple.fill,
-                                color: workflow.enabled ? '#fff' : apple.tertiaryLabel,
+                                background: workflow.enabled ? tokens.blue : tokens.fill,
+                                color: workflow.enabled ? '#fff' : tokens.tertiaryLabel,
                                 fontSize: 12,
                                 fontWeight: 500,
                                 cursor: workflow.enabled ? 'pointer' : 'not-allowed',
@@ -812,10 +812,10 @@ const WorkflowBuilderPage: React.FC = () => {
                               }}
                               style={{
                                 padding: '6px',
-                                borderRadius: apple.radius.sm,
-                                border: `0.5px solid ${apple.separator}`,
-                                background: apple.fill,
-                                color: apple.label,
+                                borderRadius: tokens.radius.sm,
+                                border: `0.5px solid ${tokens.separator}`,
+                                background: tokens.fill,
+                                color: tokens.label,
                                 cursor: 'pointer',
                               }}
                             >
@@ -833,10 +833,10 @@ const WorkflowBuilderPage: React.FC = () => {
                               }}
                               style={{
                                 padding: '6px',
-                                borderRadius: apple.radius.sm,
-                                border: `0.5px solid ${apple.red}30`,
-                                background: `${apple.red}10`,
-                                color: apple.red,
+                                borderRadius: tokens.radius.sm,
+                                border: `0.5px solid ${tokens.red}30`,
+                                background: `${tokens.red}10`,
+                                color: tokens.red,
                                 cursor: 'pointer',
                               }}
                             >
@@ -851,11 +851,11 @@ const WorkflowBuilderPage: React.FC = () => {
                       textAlign: 'center',
                       padding: '80px 20px',
                     }}>
-                      <GitBranch style={{ width: 48, height: 48, color: apple.quaternaryLabel, margin: '0 auto 16px' }} />
-                      <p style={{ fontSize: 17, fontWeight: 500, color: apple.secondaryLabel, margin: 0 }}>
+                      <GitBranch style={{ width: 48, height: 48, color: tokens.quaternaryLabel, margin: '0 auto 16px' }} />
+                      <p style={{ fontSize: 17, fontWeight: 500, color: tokens.secondaryLabel, margin: 0 }}>
                         No workflows found
                       </p>
-                      <p style={{ fontSize: 13, color: apple.tertiaryLabel, marginTop: 4 }}>
+                      <p style={{ fontSize: 13, color: tokens.tertiaryLabel, marginTop: 4 }}>
                         {searchQuery || filterEnabled !== null 
                           ? 'Try adjusting your search or filters'
                           : 'Get started by creating your first workflow'
@@ -869,9 +869,9 @@ const WorkflowBuilderPage: React.FC = () => {
                             alignItems: 'center',
                             gap: 6,
                             padding: '8px 16px',
-                            borderRadius: apple.radius.sm,
+                            borderRadius: tokens.radius.sm,
                             border: 'none',
-                            background: apple.blue,
+                            background: tokens.blue,
                             color: '#fff',
                             fontSize: 13,
                             fontWeight: 500,
@@ -892,10 +892,10 @@ const WorkflowBuilderPage: React.FC = () => {
                   selectedWorkflow ? (
                     <div>
                       <div style={{ marginBottom: 16 }}>
-                        <h3 style={{ fontSize: 16, fontWeight: 600, color: apple.label, margin: 0 }}>
+                        <h3 style={{ fontSize: 16, fontWeight: 600, color: tokens.label, margin: 0 }}>
                           Executions for "{selectedWorkflow.name}"
                         </h3>
-                        <p style={{ fontSize: 13, color: apple.secondaryLabel, marginTop: 4 }}>
+                        <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginTop: 4 }}>
                           Recent execution history and status
                         </p>
                       </div>
@@ -904,9 +904,9 @@ const WorkflowBuilderPage: React.FC = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                           {workflowExecutions.map((execution) => (
                             <div key={execution.id} style={{
-                              background: apple.secondaryBackground,
-                              border: `0.5px solid ${apple.separator}`,
-                              borderRadius: apple.radius.lg,
+                              background: tokens.secondaryBackground,
+                              border: `0.5px solid ${tokens.separator}`,
+                              borderRadius: tokens.radius.lg,
                               padding: 16,
                             }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -922,12 +922,12 @@ const WorkflowBuilderPage: React.FC = () => {
                                     {execution.status}
                                   </div>
                                   
-                                  <span style={{ fontSize: 13, color: apple.secondaryLabel }}>
+                                  <span style={{ fontSize: 13, color: tokens.secondaryLabel }}>
                                     Started: {new Date(execution.started_at).toLocaleString()}
                                   </span>
                                   
                                   {execution.duration && (
-                                    <span style={{ fontSize: 13, color: apple.secondaryLabel }}>
+                                    <span style={{ fontSize: 13, color: tokens.secondaryLabel }}>
                                       Duration: {execution.duration}
                                     </span>
                                   )}
@@ -939,7 +939,7 @@ const WorkflowBuilderPage: React.FC = () => {
                                     border: 'none',
                                     background: 'none',
                                     cursor: 'pointer',
-                                    color: apple.red,
+                                    color: tokens.red,
                                   }}>
                                     <XCircle style={{ width: 16, height: 16 }} />
                                   </button>
@@ -947,7 +947,7 @@ const WorkflowBuilderPage: React.FC = () => {
                               </div>
                               
                               {execution.error && (
-                                <div style={{ marginTop: 8, fontSize: 13, color: apple.red }}>
+                                <div style={{ marginTop: 8, fontSize: 13, color: tokens.red }}>
                                   Error: {execution.error}
                                 </div>
                               )}
@@ -959,11 +959,11 @@ const WorkflowBuilderPage: React.FC = () => {
                           textAlign: 'center',
                           padding: '60px 20px',
                         }}>
-                          <Clock style={{ width: 48, height: 48, color: apple.quaternaryLabel, margin: '0 auto 16px' }} />
-                          <p style={{ fontSize: 15, fontWeight: 500, color: apple.secondaryLabel, margin: 0 }}>
+                          <Clock style={{ width: 48, height: 48, color: tokens.quaternaryLabel, margin: '0 auto 16px' }} />
+                          <p style={{ fontSize: 15, fontWeight: 500, color: tokens.secondaryLabel, margin: 0 }}>
                             No executions yet
                           </p>
-                          <p style={{ fontSize: 13, color: apple.tertiaryLabel, marginTop: 4 }}>
+                          <p style={{ fontSize: 13, color: tokens.tertiaryLabel, marginTop: 4 }}>
                             Execute the workflow to see its history here
                           </p>
                         </div>
@@ -974,11 +974,11 @@ const WorkflowBuilderPage: React.FC = () => {
                       textAlign: 'center',
                       padding: '80px 20px',
                     }}>
-                      <Target style={{ width: 48, height: 48, color: apple.quaternaryLabel, margin: '0 auto 16px' }} />
-                      <p style={{ fontSize: 15, fontWeight: 500, color: apple.secondaryLabel, margin: 0 }}>
+                      <Target style={{ width: 48, height: 48, color: tokens.quaternaryLabel, margin: '0 auto 16px' }} />
+                      <p style={{ fontSize: 15, fontWeight: 500, color: tokens.secondaryLabel, margin: 0 }}>
                         Select a workflow
                       </p>
-                      <p style={{ fontSize: 13, color: apple.tertiaryLabel, marginTop: 4 }}>
+                      <p style={{ fontSize: 13, color: tokens.tertiaryLabel, marginTop: 4 }}>
                         Choose a workflow to view its execution history
                       </p>
                     </div>
@@ -989,10 +989,10 @@ const WorkflowBuilderPage: React.FC = () => {
                 {activeTab === 'templates' && (
                   <div>
                     <div style={{ marginBottom: 16 }}>
-                      <h3 style={{ fontSize: 16, fontWeight: 600, color: apple.label, margin: 0 }}>
+                      <h3 style={{ fontSize: 16, fontWeight: 600, color: tokens.label, margin: 0 }}>
                         Workflow Templates
                       </h3>
-                      <p style={{ fontSize: 13, color: apple.secondaryLabel, marginTop: 4 }}>
+                      <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginTop: 4 }}>
                         Pre-built workflow templates to get you started quickly
                       </p>
                     </div>
@@ -1001,16 +1001,16 @@ const WorkflowBuilderPage: React.FC = () => {
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                         {templates.map((template) => (
                           <div key={template.id} style={{
-                            background: apple.secondaryBackground,
-                            border: `0.5px solid ${apple.separator}`,
-                            borderRadius: apple.radius.lg,
+                            background: tokens.secondaryBackground,
+                            border: `0.5px solid ${tokens.separator}`,
+                            borderRadius: tokens.radius.lg,
                             padding: 16,
                           }}>
                             <div style={{ marginBottom: 12 }}>
-                              <h4 style={{ fontSize: 15, fontWeight: 600, color: apple.label, margin: 0, marginBottom: 4 }}>
+                              <h4 style={{ fontSize: 15, fontWeight: 600, color: tokens.label, margin: 0, marginBottom: 4 }}>
                                 {template.name}
                               </h4>
-                              <p style={{ fontSize: 13, color: apple.secondaryLabel, margin: 0, lineHeight: 1.4 }}>
+                              <p style={{ fontSize: 13, color: tokens.secondaryLabel, margin: 0, lineHeight: 1.4 }}>
                                 {template.description}
                               </p>
                             </div>
@@ -1019,14 +1019,14 @@ const WorkflowBuilderPage: React.FC = () => {
                               <div style={{
                                 padding: '2px 8px',
                                 borderRadius: 12,
-                                background: `${apple.blue}15`,
+                                background: `${tokens.blue}15`,
                                 fontSize: 11,
                                 fontWeight: 500,
-                                color: apple.blue,
+                                color: tokens.blue,
                               }}>
                                 {template.category}
                               </div>
-                              <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>
+                              <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>
                                 {template.usage_count} uses
                               </span>
                             </div>
@@ -1043,9 +1043,9 @@ const WorkflowBuilderPage: React.FC = () => {
                                 justifyContent: 'center',
                                 gap: 6,
                                 padding: '8px 16px',
-                                borderRadius: apple.radius.sm,
+                                borderRadius: tokens.radius.sm,
                                 border: 'none',
-                                background: apple.blue,
+                                background: tokens.blue,
                                 color: '#fff',
                                 fontSize: 13,
                                 fontWeight: 500,
@@ -1063,11 +1063,11 @@ const WorkflowBuilderPage: React.FC = () => {
                         textAlign: 'center',
                         padding: '80px 20px',
                       }}>
-                        <Target style={{ width: 48, height: 48, color: apple.quaternaryLabel, margin: '0 auto 16px' }} />
-                        <p style={{ fontSize: 15, fontWeight: 500, color: apple.secondaryLabel, margin: 0 }}>
+                        <Target style={{ width: 48, height: 48, color: tokens.quaternaryLabel, margin: '0 auto 16px' }} />
+                        <p style={{ fontSize: 15, fontWeight: 500, color: tokens.secondaryLabel, margin: 0 }}>
                           No templates available
                         </p>
-                        <p style={{ fontSize: 13, color: apple.tertiaryLabel, marginTop: 4 }}>
+                        <p style={{ fontSize: 13, color: tokens.tertiaryLabel, marginTop: 4 }}>
                           Check back later for pre-built workflow templates
                         </p>
                       </div>
@@ -1093,17 +1093,17 @@ const WorkflowBuilderPage: React.FC = () => {
           backdropFilter: 'blur(10px)',
         }}>
           <div style={{
-            background: apple.secondaryBackground,
-            borderRadius: apple.radius.lg,
+            background: tokens.secondaryBackground,
+            borderRadius: tokens.radius.lg,
             padding: 20,
             width: '90%',
             maxWidth: 400,
             boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
           }}>
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: apple.label, margin: 0, marginBottom: 8 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, color: tokens.label, margin: 0, marginBottom: 8 }}>
               Create from Template
             </h3>
-            <p style={{ fontSize: 14, color: apple.secondaryLabel, margin: 0, marginBottom: 20 }}>
+            <p style={{ fontSize: 14, color: tokens.secondaryLabel, margin: 0, marginBottom: 20 }}>
               This feature will be implemented to create workflows from templates
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
@@ -1115,10 +1115,10 @@ const WorkflowBuilderPage: React.FC = () => {
                 style={{
                   flex: 1,
                   padding: '8px 16px',
-                  borderRadius: apple.radius.sm,
-                  border: `0.5px solid ${apple.separator}`,
-                  background: apple.fill,
-                  color: apple.label,
+                  borderRadius: tokens.radius.sm,
+                  border: `0.5px solid ${tokens.separator}`,
+                  background: tokens.fill,
+                  color: tokens.label,
                   fontSize: 14,
                   fontWeight: 500,
                   cursor: 'pointer',
@@ -1134,9 +1134,9 @@ const WorkflowBuilderPage: React.FC = () => {
                 style={{
                   flex: 1,
                   padding: '8px 16px',
-                  borderRadius: apple.radius.sm,
+                  borderRadius: tokens.radius.sm,
                   border: 'none',
-                  background: apple.blue,
+                  background: tokens.blue,
                   color: '#fff',
                   fontSize: 14,
                   fontWeight: 500,
@@ -1163,17 +1163,17 @@ const WorkflowBuilderPage: React.FC = () => {
           backdropFilter: 'blur(10px)',
         }}>
           <div style={{
-            background: apple.secondaryBackground,
-            borderRadius: apple.radius.lg,
+            background: tokens.secondaryBackground,
+            borderRadius: tokens.radius.lg,
             padding: 20,
             width: '90%',
             maxWidth: 400,
             boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
           }}>
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: apple.label, margin: 0, marginBottom: 8 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, color: tokens.label, margin: 0, marginBottom: 8 }}>
               Create New Workflow
             </h3>
-            <p style={{ fontSize: 14, color: apple.secondaryLabel, margin: 0, marginBottom: 20 }}>
+            <p style={{ fontSize: 14, color: tokens.secondaryLabel, margin: 0, marginBottom: 20 }}>
               Workflow builder interface will be implemented here
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
@@ -1182,10 +1182,10 @@ const WorkflowBuilderPage: React.FC = () => {
                 style={{
                   flex: 1,
                   padding: '8px 16px',
-                  borderRadius: apple.radius.sm,
-                  border: `0.5px solid ${apple.separator}`,
-                  background: apple.fill,
-                  color: apple.label,
+                  borderRadius: tokens.radius.sm,
+                  border: `0.5px solid ${tokens.separator}`,
+                  background: tokens.fill,
+                  color: tokens.label,
                   fontSize: 14,
                   fontWeight: 500,
                   cursor: 'pointer',
@@ -1201,9 +1201,9 @@ const WorkflowBuilderPage: React.FC = () => {
                 style={{
                   flex: 1,
                   padding: '8px 16px',
-                  borderRadius: apple.radius.sm,
+                  borderRadius: tokens.radius.sm,
                   border: 'none',
-                  background: apple.blue,
+                  background: tokens.blue,
                   color: '#fff',
                   fontSize: 14,
                   fontWeight: 500,

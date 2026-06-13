@@ -5,7 +5,7 @@ import { Loader2, Shield } from 'lucide-react'
 import { useEnhancedAuthStore } from '@/stores/enhancedAuthStore'
 import toast from 'react-hot-toast'
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   purple: '#AF52DE',
   label: 'var(--color-text)',
@@ -31,11 +31,11 @@ export function OAuthCallbackPage() {
     const handleCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search)
 
-      // Hard IdMS error — show error page, do NOT loop back to IDMS
+      // Hard OIDC error — show error page, do NOT loop back to OIDC
       const error = urlParams.get('error')
       if (error) {
         const desc = urlParams.get('error_description') || error
-        console.error('[OAuth] IdMS error:', error)
+        console.error('[OAuth] OIDC error:', error)
         toast.error(`Authentication error: ${desc}`, { duration: 8000 })
         navigate(
           `/manual-login?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(desc)}`,
@@ -61,7 +61,7 @@ export function OAuthCallbackPage() {
           if (!data.success || !data.data) {
             throw new Error(data.message || 'Exchange response missing data')
           }
-          const { tokens, user, redirect, idms_token, floodgate_token, floodgate_expires_in } = data.data
+          const { tokens, user, redirect, oidc_token, oidc_token, oidc_expires_in } = data.data
           setTokens(
             {
               access_token: tokens.access_token,
@@ -74,22 +74,22 @@ export function OAuthCallbackPage() {
               role: user.role_name || 'viewer',
             }
           )
-          // Store IDMS token for server-side features (e.g. CSS photo lookup)
-          if (idms_token) {
-            localStorage.setItem('oauth_id_token', idms_token)
+          // Store OIDC token for server-side features (e.g. CSS photo lookup)
+          if (oidc_token) {
+            localStorage.setItem('oauth_id_token', oidc_token)
           }
-          // Store the Floodgate-scoped token (aud: sear-floodgate) for AI chat.
-          // floodgate_token is the result of a server-side token exchange; fall back
-          // to the raw IDMS token only if the exchange failed (user lacks access).
-          const fgToken = floodgate_token || idms_token
+          // Store the OIDC Provider-scoped token (aud: sear-oidc) for AI chat.
+          // oidc_token is the result of a server-side token exchange; fall back
+          // to the raw OIDC token only if the exchange failed (user lacks access).
+          const fgToken = oidc_token || oidc_token
           if (fgToken) {
-            const expiresInMs = (floodgate_expires_in && floodgate_expires_in > 0)
-              ? (floodgate_expires_in - 30) * 1000
+            const expiresInMs = (oidc_expires_in && oidc_expires_in > 0)
+              ? (oidc_expires_in - 30) * 1000
               : 55 * 60 * 1000
-            localStorage.setItem('floodgate_token', fgToken)
-            localStorage.setItem('floodgate_token_expiry', new Date(Date.now() + expiresInMs).toISOString())
-            localStorage.setItem('floodgate_token_source', floodgate_token ? 'idms-oauth2' : 'idms-direct')
-            // Fresh login — clear stale model cache so AI chat fetches live Floodgate models
+            localStorage.setItem('oidc_token', fgToken)
+            localStorage.setItem('oidc_token_expiry', new Date(Date.now() + expiresInMs).toISOString())
+            localStorage.setItem('oidc_token_source', oidc_token ? 'oidc-oauth2' : 'oidc-direct')
+            // Fresh login — clear stale model cache so AI chat fetches live OIDC Provider models
             localStorage.removeItem('ai_models_cache')
             // Clear the re-auth loop guard so the next token expiry can redirect again
             sessionStorage.removeItem('fg_last_reauth')
@@ -104,7 +104,7 @@ export function OAuthCallbackPage() {
           const msg = (err?.message ?? 'Authentication exchange failed').substring(0, 200)
           console.error('[OAuth] Exchange failed')
           toast.error(`Login failed: ${msg}`, { duration: 8000 })
-          // Go to manual-login NOT back to IDMS — avoids infinite redirect loop
+          // Go to manual-login NOT back to OIDC — avoids infinite redirect loop
           navigate(
             `/manual-login?error=exchange_failed&error_description=${encodeURIComponent(msg)}`,
             { replace: true }
@@ -120,7 +120,7 @@ export function OAuthCallbackPage() {
         const oauthIdToken = urlParams.get('oauth_id_token')
         if (oauthIdToken) {
           localStorage.setItem('oauth_id_token', oauthIdToken)
-          localStorage.setItem('floodgate_token_expiry', new Date(Date.now() + 50 * 60 * 1000).toISOString())
+          localStorage.setItem('oidc_token_expiry', new Date(Date.now() + 50 * 60 * 1000).toISOString())
         }
         setTokens(
           {
@@ -141,7 +141,7 @@ export function OAuthCallbackPage() {
         return
       }
 
-      // Nothing recognizable in the URL — show error, do NOT re-trigger IDMS
+      // Nothing recognizable in the URL — show error, do NOT re-trigger OIDC
       navigate(
         '/manual-login?error=missing_params&error_description=' +
           encodeURIComponent('No authentication data found in callback URL'),
@@ -156,12 +156,12 @@ export function OAuthCallbackPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: apple.background,
+        background: tokens.background,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily:
-          '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+          '-aileron-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
       }}
     >
       <motion.div
@@ -169,9 +169,9 @@ export function OAuthCallbackPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
         style={{
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.xl,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.xl,
+          border: `0.5px solid ${tokens.separator}`,
           padding: 40,
           textAlign: 'center',
           boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
@@ -185,8 +185,8 @@ export function OAuthCallbackPage() {
           style={{
             width: 64,
             height: 64,
-            borderRadius: apple.radius.xl,
-            background: `linear-gradient(135deg, ${apple.blue}, ${apple.purple})`,
+            borderRadius: tokens.radius.xl,
+            background: `linear-gradient(135deg, ${tokens.blue}, ${tokens.purple})`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -196,13 +196,13 @@ export function OAuthCallbackPage() {
           <Shield style={{ width: 28, height: 28, color: '#fff' }} />
         </motion.div>
 
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
           Completing Authentication
         </h2>
         <p
           style={{
             fontSize: 15,
-            color: apple.secondaryLabel,
+            color: tokens.secondaryLabel,
             marginBottom: 24,
             lineHeight: 1.4,
           }}
@@ -217,19 +217,19 @@ export function OAuthCallbackPage() {
             justifyContent: 'center',
             gap: 8,
             padding: '12px 20px',
-            background: apple.fill,
-            borderRadius: apple.radius.md,
+            background: tokens.fill,
+            borderRadius: tokens.radius.md,
           }}
         >
           <Loader2
             style={{
               width: 18,
               height: 18,
-              color: apple.blue,
+              color: tokens.blue,
               animation: 'spin 1s linear infinite',
             }}
           />
-          <span style={{ fontSize: 14, color: apple.secondaryLabel, fontWeight: 500 }}>
+          <span style={{ fontSize: 14, color: tokens.secondaryLabel, fontWeight: 500 }}>
             Processing…
           </span>
         </div>
@@ -238,19 +238,19 @@ export function OAuthCallbackPage() {
           style={{
             marginTop: 24,
             padding: 16,
-            background: apple.tertiaryFill,
-            borderRadius: apple.radius.sm,
-            border: `0.5px solid ${apple.separator}`,
+            background: tokens.tertiaryFill,
+            borderRadius: tokens.radius.sm,
+            border: `0.5px solid ${tokens.separator}`,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <Shield style={{ width: 14, height: 14, color: apple.blue }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: apple.label }}>
+            <Shield style={{ width: 14, height: 14, color: tokens.blue }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: tokens.label }}>
               Secure Authentication
             </span>
           </div>
-          <p style={{ fontSize: 11, color: apple.tertiaryLabel, lineHeight: 1.4, margin: 0 }}>
-            Your credentials are encrypted and processed securely through Apple's authentication
+          <p style={{ fontSize: 11, color: tokens.tertiaryLabel, lineHeight: 1.4, margin: 0 }}>
+            Your credentials are encrypted and processed securely through your organization's authentication
             system.
           </p>
         </div>

@@ -820,7 +820,7 @@ func (kts *KubernetesTopologyService) createKubernetesClient(config *KubernetesC
 	return clientset, nil
 }
 
-// corporateProxyForRequest routes external K8s API traffic through the Apple
+// corporateProxyForRequest routes external K8s API traffic through the
 // corporate proxy while bypassing it for in-cluster / RFC-1918 addresses.
 // Only used if HTTPS_PROXY env var is set; otherwise returns nil (direct connection).
 func corporateProxyForRequest(req *http.Request) (*url.URL, error) {

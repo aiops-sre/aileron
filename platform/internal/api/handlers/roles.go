@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/aileron-platform/aileron/platform/internal/services/dsldap"
+	"github.com/aileron-platform/aileron/platform/internal/services/ldap"
 	"github.com/aileron-platform/aileron/platform/internal/services/rbac"
 )
 
@@ -18,7 +18,7 @@ import (
 type RoleHandler struct {
 	rbacService *rbac.RBACService
 	db          *sql.DB
-	ldapSvc     *dsldap.Service // optional; triggers mapping reload after changes
+	ldapSvc     *ldap.Service // optional; triggers mapping reload after changes
 }
 
 // NewRoleHandler creates a new role handler
@@ -29,8 +29,8 @@ func NewRoleHandler(rbacService *rbac.RBACService, db *sql.DB) *RoleHandler {
 	}
 }
 
-// SetLDAPService attaches the DS-LDAP service so mapping changes trigger live reloads.
-func (h *RoleHandler) SetLDAPService(svc *dsldap.Service) {
+// SetLDAPService attaches the LDAP service so mapping changes trigger live reloads.
+func (h *RoleHandler) SetLDAPService(svc *ldap.Service) {
 	h.ldapSvc = svc
 }
 
@@ -540,7 +540,7 @@ func (h *RoleHandler) AssignRoleToUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Role assigned"})
 }
 
-// ListLDAPMappings returns all DS-LDAP group role mappings
+// ListLDAPMappings returns all LDAP group role mappings
 func (h *RoleHandler) ListLDAPMappings(c *gin.Context) {
 	if err := h.checkPermission(c, "roles.view"); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"success": false, "message": "Permission denied"})
@@ -555,7 +555,7 @@ func (h *RoleHandler) ListLDAPMappings(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": gin.H{"mappings": mappings}})
 }
 
-// UpsertLDAPMapping creates or updates a DS-LDAP group role mapping
+// UpsertLDAPMapping creates or updates a LDAP group role mapping
 func (h *RoleHandler) UpsertLDAPMapping(c *gin.Context) {
 	if err := h.checkPermission(c, "roles.update"); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"success": false, "message": "Permission denied"})
@@ -575,14 +575,14 @@ func (h *RoleHandler) UpsertLDAPMapping(c *gin.Context) {
 	h.logAuditEvent(c, actorID, "ldap_mapping_upserted", "ldap_mapping", nil, map[string]interface{}{
 		"ldap_group": req.LDAPGroup, "role_id": req.RoleID,
 	})
-	// Reload DS-LDAP in-memory mappings immediately (no restart needed)
+	// Reload LDAP in-memory mappings immediately (no restart needed)
 	if h.ldapSvc != nil {
 		h.ldapSvc.ReloadMappings()
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "LDAP mapping saved"})
 }
 
-// DeleteLDAPMapping removes a DS-LDAP group role mapping
+// DeleteLDAPMapping removes a LDAP group role mapping
 func (h *RoleHandler) DeleteLDAPMapping(c *gin.Context) {
 	if err := h.checkPermission(c, "roles.update"); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"success": false, "message": "Permission denied"})
@@ -600,7 +600,7 @@ func (h *RoleHandler) DeleteLDAPMapping(c *gin.Context) {
 	}
 	actorID := h.getUserID(c)
 	h.logAuditEvent(c, actorID, "ldap_mapping_deleted", "ldap_mapping", &mappingID, nil)
-	// Reload DS-LDAP in-memory mappings immediately (no restart needed)
+	// Reload LDAP in-memory mappings immediately (no restart needed)
 	if h.ldapSvc != nil {
 		h.ldapSvc.ReloadMappings()
 	}
@@ -608,7 +608,7 @@ func (h *RoleHandler) DeleteLDAPMapping(c *gin.Context) {
 }
 
 // SearchLDAPGroups handles GET /api/v1/admin/ldap/groups/search?q=<prefix>
-// It returns up to 20 group CNs from DS-LDAP that contain the query prefix.
+// It returns up to 20 group CNs from LDAP that contain the query prefix.
 // Returns an empty array (not an error) when the LDAP service is unavailable
 // or the prefix is too short, so the UI degrades gracefully.
 func (h *RoleHandler) SearchLDAPGroups(c *gin.Context) {

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, X, Bot, Sparkles, AlertCircle, RefreshCw, Copy, Download, Lightbulb, Check, Minimize2, Maximize2, Minus, Wifi, WifiOff, RotateCcw } from 'lucide-react'
 import toast from 'react-hot-toast'
-import apple from '@/lib/apple-tokens'
+import tokens from '@/lib/design-tokens'
 import { useKeyboard, SHORTCUTS } from '../../hooks/useKeyboard'
 import { useSound, useSoundSettings } from '../../hooks/useSound'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -389,7 +389,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
   const autoFetchTokenFromMac = useCallback(async () => {
     // Skip if we already have a valid token
     const existingToken = localStorage.getItem('oauth_id_token')
-    const expiry = localStorage.getItem('floodgate_token_expiry')
+    const expiry = localStorage.getItem('oidc_token_expiry')
     
     if (existingToken && expiry) {
       const expiryTime = new Date(expiry).getTime()
@@ -416,10 +416,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
         const data = await response.json()
         if (data.success && data.token) {
           localStorage.setItem('oauth_id_token', data.token)
-          localStorage.setItem('floodgate_token_expiry', data.expiry)
+          localStorage.setItem('oidc_token_expiry', data.expiry)
           localStorage.setItem('oauth_source', 'local-mac')
           console.log('✅ Token fetched from local Mac service!')
-          toast.success('Floodgate token loaded from your Mac!')
+          toast.success('OIDC Provider token loaded from your Mac!')
         }
       }
     } catch (error) {
@@ -429,7 +429,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
   }, [])
 
   const checkTokenExpiry = useCallback(() => {
-    const expiry = localStorage.getItem('floodgate_token_expiry')
+    const expiry = localStorage.getItem('oidc_token_expiry')
     if (expiry) {
       const expiryTime = new Date(expiry).getTime()
       if (Date.now() >= expiryTime) {
@@ -566,9 +566,9 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
   }, [input, saveDraft])
 
   const refreshToken = () => {
-    localStorage.removeItem('floodgate_token_expiry')
+    localStorage.removeItem('oidc_token_expiry')
     localStorage.removeItem('oauth_id_token')
-    localStorage.removeItem('floodgate_token')
+    localStorage.removeItem('oidc_token')
     window.location.href = '/login'
   }
 
@@ -609,7 +609,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
           toast(`Retry attempt ${attempt}/${CONFIG.MAX_RETRIES}...`, { icon: '🔄' })
         }
 
-        console.log('💬 Sending message to Floodgate:', selectedModel)
+        console.log('💬 Sending message to OIDC Provider:', selectedModel)
 
         const chatMessages = [...messages, userMessage].map(m => ({
           role: m.role as 'user' | 'assistant',
@@ -777,7 +777,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
 
     localStorage.setItem('oauth_id_token', tokenInput.trim())
     const expiry = new Date(Date.now() + 50 * 60 * 1000).toISOString()
-    localStorage.setItem('floodgate_token_expiry', expiry)
+    localStorage.setItem('oidc_token_expiry', expiry)
     localStorage.setItem('oauth_source', 'manual')
     
     setTokenInput('')
@@ -825,9 +825,9 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
               position: 'fixed',
               bottom: 32,
               right: 32,
-              background: apple.secondaryBackground,
-              borderRadius: apple.radius.xl,
-              border: `0.5px solid ${apple.separator}`,
+              background: tokens.secondaryBackground,
+              borderRadius: tokens.radius.xl,
+              border: `0.5px solid ${tokens.separator}`,
               boxShadow: '0 24px 80px rgba(0,0,0,0.2)',
               zIndex: 50,
               display: 'flex',
@@ -841,34 +841,34 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '16px 20px',
-              borderBottom: `0.5px solid ${apple.separator}`,
-              background: apple.fill,
+              borderBottom: `0.5px solid ${tokens.separator}`,
+              background: tokens.fill,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
                 <div style={{
                   padding: 10,
-                  borderRadius: apple.radius.md,
-                  background: `linear-gradient(135deg, ${apple.purple}, ${apple.indigo})`,
+                  borderRadius: tokens.radius.md,
+                  background: `linear-gradient(135deg, ${tokens.purple}, ${tokens.indigo})`,
                   boxShadow: '0 4px 12px rgba(175, 82, 222, 0.3)',
                 }}>
                   <Sparkles style={{ width: 20, height: 20, color: '#fff' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 600, color: apple.label, margin: 0 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 600, color: tokens.label, margin: 0 }}>
                     AlertHub Intelligence
                   </h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                     {/* Connection Status Indicator */}
                     {isOnline ? (
-                      <Wifi style={{ width: 12, height: 12, color: apple.green }} />
+                      <Wifi style={{ width: 12, height: 12, color: tokens.green }} />
                     ) : (
-                      <WifiOff style={{ width: 12, height: 12, color: apple.red }} />
+                      <WifiOff style={{ width: 12, height: 12, color: tokens.red }} />
                     )}
                     
                     {isLoadingModels ? (
                       <>
-                        <RefreshCw style={{ width: 12, height: 12, color: apple.blue, animation: 'spin 1s linear infinite' }} />
-                        <p style={{ fontSize: 12, color: apple.secondaryLabel, margin: 0 }}>Loading...</p>
+                        <RefreshCw style={{ width: 12, height: 12, color: tokens.blue, animation: 'spin 1s linear infinite' }} />
+                        <p style={{ fontSize: 12, color: tokens.secondaryLabel, margin: 0 }}>Loading...</p>
                       </>
                     ) : (
                       <>
@@ -876,10 +876,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          background: models.length > 0 ? apple.green : apple.gray,
+                          background: models.length > 0 ? tokens.green : tokens.gray,
                           ...(models.length > 0 && { animation: 'pulse 2s infinite' }),
                         }} />
-                        <p style={{ fontSize: 12, color: apple.secondaryLabel, margin: 0 }}>
+                        <p style={{ fontSize: 12, color: tokens.secondaryLabel, margin: 0 }}>
                           {models.length > 0 ? 'AI-powered' : 'Demo Mode'}
                           {models.length > 0 && (() => {
                             const source = localStorage.getItem('oauth_source')
@@ -887,7 +887,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                               const sourceLabels: Record<string, string> = {
                                 'mas-proxy': 'MAS Proxy',
                                 'headers': 'MAS',
-                                'floodgate-cli': 'CLI',
+                                'oidc-cli': 'CLI',
                                 'database-cache': 'Cache',
                                 'local-mac': 'Mac',
                                 'backend': 'Backend'
@@ -911,10 +911,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                     alignItems: 'center',
                     gap: 4,
                     fontSize: 11,
-                    color: apple.orange,
-                    background: `${apple.orange}10`,
+                    color: tokens.orange,
+                    background: `${tokens.orange}10`,
                     padding: '4px 8px',
-                    borderRadius: apple.radius.sm,
+                    borderRadius: tokens.radius.sm,
                   }}>
                     <RefreshCw style={{ width: 12, height: 12, animation: 'spin 1s linear infinite' }} />
                     Retry {retryCount}/{CONFIG.MAX_RETRIES}
@@ -933,10 +933,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       fontSize: 12,
                       padding: '6px 8px',
                       maxWidth: 140,
-                      borderRadius: apple.radius.sm,
-                      border: `0.5px solid ${apple.separator}`,
-                      background: apple.background,
-                      color: apple.label,
+                      borderRadius: tokens.radius.sm,
+                      border: `0.5px solid ${tokens.separator}`,
+                      background: tokens.background,
+                      color: tokens.label,
                       outline: 'none',
                       appearance: 'none',
                       cursor: 'pointer',
@@ -956,10 +956,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                     style={{
                       width: 28,
                       height: 28,
-                      borderRadius: apple.radius.sm,
-                      border: `0.5px solid ${apple.separator}`,
-                      background: apple.fill,
-                      color: apple.label,
+                      borderRadius: tokens.radius.sm,
+                      border: `0.5px solid ${tokens.separator}`,
+                      background: tokens.fill,
+                      color: tokens.label,
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -968,10 +968,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                     }}
                     title="Export Chat"
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = apple.secondaryFill
+                      e.currentTarget.style.background = tokens.secondaryFill
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = apple.fill
+                      e.currentTarget.style.background = tokens.fill
                     }}
                   >
                     <Download style={{ width: 14, height: 14 }} />
@@ -983,10 +983,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                   style={{
                     width: 28,
                     height: 28,
-                    borderRadius: apple.radius.sm,
-                    border: `0.5px solid ${apple.separator}`,
-                    background: apple.fill,
-                    color: apple.label,
+                    borderRadius: tokens.radius.sm,
+                    border: `0.5px solid ${tokens.separator}`,
+                    background: tokens.fill,
+                    color: tokens.label,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -995,10 +995,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                   }}
                   title={isMinimized ? 'Expand' : 'Minimize'}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = apple.secondaryFill
+                    e.currentTarget.style.background = tokens.secondaryFill
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = apple.fill
+                    e.currentTarget.style.background = tokens.fill
                   }}
                 >
                   {isMinimized ? <Maximize2 style={{ width: 14, height: 14 }} /> : <Minus style={{ width: 14, height: 14 }} />}
@@ -1010,10 +1010,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                     style={{
                       width: 28,
                       height: 28,
-                      borderRadius: apple.radius.sm,
-                      border: `0.5px solid ${apple.separator}`,
-                      background: apple.fill,
-                      color: apple.label,
+                      borderRadius: tokens.radius.sm,
+                      border: `0.5px solid ${tokens.separator}`,
+                      background: tokens.fill,
+                      color: tokens.label,
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -1022,10 +1022,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                     }}
                     title={isMaximized ? 'Restore' : 'Maximize'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = apple.secondaryFill
+                      e.currentTarget.style.background = tokens.secondaryFill
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = apple.fill
+                      e.currentTarget.style.background = tokens.fill
                     }}
                   >
                     {isMaximized ? <Minimize2 style={{ width: 14, height: 14 }} /> : <Maximize2 style={{ width: 14, height: 14 }} />}
@@ -1037,10 +1037,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                   style={{
                     width: 28,
                     height: 28,
-                    borderRadius: apple.radius.sm,
-                    border: `0.5px solid ${apple.separator}`,
-                    background: apple.fill,
-                    color: apple.red,
+                    borderRadius: tokens.radius.sm,
+                    border: `0.5px solid ${tokens.separator}`,
+                    background: tokens.fill,
+                    color: tokens.red,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -1048,10 +1048,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                     transition: 'all 0.15s',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = `${apple.red}15`
+                    e.currentTarget.style.background = `${tokens.red}15`
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = apple.fill
+                    e.currentTarget.style.background = tokens.fill
                   }}
                 >
                   <X style={{ width: 16, height: 16 }} />
@@ -1063,16 +1063,16 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
             {tokenExpired && !isMinimized && (
               <div style={{
                 padding: 16,
-                background: `${apple.orange}10`,
-                borderBottom: `0.5px solid ${apple.orange}30`,
+                background: `${tokens.orange}10`,
+                borderBottom: `0.5px solid ${tokens.orange}30`,
               }}>
                 <div style={{ display: 'flex', alignItems: 'start', gap: 12 }}>
-                  <AlertCircle style={{ width: 20, height: 20, color: apple.orange, flexShrink: 0, marginTop: 2 }} />
+                  <AlertCircle style={{ width: 20, height: 20, color: tokens.orange, flexShrink: 0, marginTop: 2 }} />
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: apple.orange, marginBottom: 4 }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: tokens.orange, marginBottom: 4 }}>
                       Token Expired
                     </p>
-                    <p style={{ fontSize: 12, color: apple.secondaryLabel, marginBottom: 12 }}>
+                    <p style={{ fontSize: 12, color: tokens.secondaryLabel, marginBottom: 12 }}>
                       Your authentication token has expired. Please login again to use AI features.
                     </p>
                     <button
@@ -1083,9 +1083,9 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                         gap: 6,
                         fontSize: 12,
                         padding: '8px 12px',
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         border: 'none',
-                        background: apple.orange,
+                        background: tokens.orange,
                         color: '#fff',
                         cursor: 'pointer',
                         fontWeight: 500,
@@ -1105,7 +1105,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                 flex: 1,
                 overflowY: 'auto',
                 padding: 20,
-                background: apple.background,
+                background: tokens.background,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 16,
@@ -1114,26 +1114,26 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                 {showTokenInput && (
                   <div style={{
                     padding: 16,
-                    background: apple.secondaryBackground,
-                    border: `0.5px solid ${apple.separator}`,
-                    borderRadius: apple.radius.lg,
+                    background: tokens.secondaryBackground,
+                    border: `0.5px solid ${tokens.separator}`,
+                    borderRadius: tokens.radius.lg,
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 12,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between' }}>
-                      <h4 style={{ fontSize: 14, fontWeight: 600, color: apple.label, margin: 0 }}>
-                        🔑 Setup Floodgate Token
+                      <h4 style={{ fontSize: 14, fontWeight: 600, color: tokens.label, margin: 0 }}>
+                        🔑 Setup OIDC Provider Token
                       </h4>
                       <button
                         onClick={() => setShowTokenInput(false)}
                         style={{
                           width: 24,
                           height: 24,
-                          borderRadius: apple.radius.sm,
+                          borderRadius: tokens.radius.sm,
                           border: 'none',
-                          background: apple.fill,
-                          color: apple.label,
+                          background: tokens.fill,
+                          color: tokens.label,
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -1144,7 +1144,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       </button>
                     </div>
                     
-                    <p style={{ fontSize: 12, color: apple.secondaryLabel, margin: 0 }}>
+                    <p style={{ fontSize: 12, color: tokens.secondaryLabel, margin: 0 }}>
                       Run this command on your Mac terminal:
                     </p>
                     
@@ -1154,12 +1154,12 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                         background: '#1a1a1a',
                         color: '#00ff88',
                         padding: 12,
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         overflow: 'auto',
                         fontFamily: 'SFMono-Regular, Consolas, monospace',
                         margin: 0,
                       }}>
-{`appleconnect getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv \\
+{`oidc-helper getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv \\
   --token-type=oauth --interactivity-type=none \\
   -E prod -G pkce \\
   -o openid,dsid,accountname,profile,groups | \\
@@ -1167,7 +1167,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       </pre>
                       <button
                         onClick={() => {
-                          navigator.clipboard.writeText(`appleconnect getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv --token-type=oauth --interactivity-type=none -E prod -G pkce -o openid,dsid,accountname,profile,groups | grep 'oauth-id-token' | awk '{print $2}'`)
+                          navigator.clipboard.writeText(`oidc-helper getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv --token-type=oauth --interactivity-type=none -E prod -G pkce -o openid,dsid,accountname,profile,groups | grep 'oauth-id-token' | awk '{print $2}'`)
                           toast.success('Command copied to clipboard!')
                         }}
                         style={{
@@ -1175,7 +1175,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                           top: 8,
                           right: 8,
                           padding: 6,
-                          borderRadius: apple.radius.sm,
+                          borderRadius: tokens.radius.sm,
                           background: 'rgba(255,255,255,0.1)',
                           border: '1px solid rgba(255,255,255,0.2)',
                           color: '#fff',
@@ -1188,7 +1188,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       </button>
                     </div>
                     
-                    <p style={{ fontSize: 12, color: apple.secondaryLabel }}>Paste the token below:</p>
+                    <p style={{ fontSize: 12, color: tokens.secondaryLabel }}>Paste the token below:</p>
                     
                     <textarea
                       value={tokenInput}
@@ -1198,10 +1198,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       style={{
                         width: '100%',
                         padding: 10,
-                        borderRadius: apple.radius.sm,
-                        border: `0.5px solid ${apple.separator}`,
-                        background: apple.fill,
-                        color: apple.label,
+                        borderRadius: tokens.radius.sm,
+                        border: `0.5px solid ${tokens.separator}`,
+                        background: tokens.fill,
+                        color: tokens.label,
                         fontSize: 11,
                         fontFamily: 'SFMono-Regular, Consolas, monospace',
                         outline: 'none',
@@ -1215,9 +1215,9 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       style={{
                         width: '100%',
                         padding: '10px 16px',
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         border: 'none',
-                        background: apple.blue,
+                        background: tokens.blue,
                         color: '#fff',
                         fontSize: 13,
                         fontWeight: 500,
@@ -1228,7 +1228,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       Save Token & Load Models
                     </button>
                     
-                    <p style={{ fontSize: 11, color: apple.tertiaryLabel, margin: 0 }}>
+                    <p style={{ fontSize: 11, color: tokens.tertiaryLabel, margin: 0 }}>
                       💡 This token is user-specific and stays on your browser only
                     </p>
                   </div>
@@ -1238,27 +1238,27 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                 {!showTokenInput && models.length === 0 && !isLoadingModels && (
                   <div style={{
                     padding: 14,
-                    background: `${apple.blue}10`,
-                    border: `0.5px solid ${apple.blue}30`,
-                    borderRadius: apple.radius.lg,
+                    background: `${tokens.blue}10`,
+                    border: `0.5px solid ${tokens.blue}30`,
+                    borderRadius: tokens.radius.lg,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'start', gap: 10 }}>
-                      <Sparkles style={{ width: 16, height: 16, color: apple.blue, flexShrink: 0, marginTop: 2 }} />
+                      <Sparkles style={{ width: 16, height: 16, color: tokens.blue, flexShrink: 0, marginTop: 2 }} />
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 12, fontWeight: 600, color: apple.blue, marginBottom: 4 }}>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: tokens.blue, marginBottom: 4 }}>
                           Enable Real AI Models
                         </p>
-                        <p style={{ fontSize: 11, color: apple.secondaryLabel, marginBottom: 8 }}>
-                          Get your Floodgate token to use Claude & Gemini
+                        <p style={{ fontSize: 11, color: tokens.secondaryLabel, marginBottom: 8 }}>
+                          Get your OIDC Provider token to use Claude & Gemini
                         </p>
                         <button
                           onClick={() => setShowTokenInput(true)}
                           style={{
                             fontSize: 12,
                             padding: '6px 12px',
-                            borderRadius: apple.radius.sm,
+                            borderRadius: tokens.radius.sm,
                             border: 'none',
-                            background: apple.blue,
+                            background: tokens.blue,
                             color: '#fff',
                             cursor: 'pointer',
                             fontWeight: 500,
@@ -1288,26 +1288,26 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                         style={{
                           textAlign: 'left',
                           padding: 12,
-                          background: apple.secondaryBackground,
-                          border: `0.5px solid ${apple.separator}`,
-                          borderRadius: apple.radius.md,
+                          background: tokens.secondaryBackground,
+                          border: `0.5px solid ${tokens.separator}`,
+                          borderRadius: tokens.radius.md,
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = apple.blue
+                          e.currentTarget.style.borderColor = tokens.blue
                           e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 122, 255, 0.15)'
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = apple.separator
+                          e.currentTarget.style.borderColor = tokens.separator
                           e.currentTarget.style.boxShadow = 'none'
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                           <span style={{ fontSize: 16 }}>{prompt.icon}</span>
-                          <Lightbulb style={{ width: 12, height: 12, color: apple.yellow }} />
+                          <Lightbulb style={{ width: 12, height: 12, color: tokens.yellow }} />
                         </div>
-                        <p style={{ fontSize: 12, fontWeight: 500, color: apple.label, lineHeight: 1.4, margin: 0 }}>
+                        <p style={{ fontSize: 12, fontWeight: 500, color: tokens.label, lineHeight: 1.4, margin: 0 }}>
                           {prompt.text}
                         </p>
                       </motion.button>
@@ -1330,17 +1330,17 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       <div
                         style={{
                           padding: 12,
-                          borderRadius: apple.radius.lg,
-                          background: message.role === 'user' ? apple.blue : apple.secondaryBackground,
-                          border: message.role === 'user' ? 'none' : `0.5px solid ${apple.separator}`,
-                          color: message.role === 'user' ? '#fff' : apple.label,
+                          borderRadius: tokens.radius.lg,
+                          background: message.role === 'user' ? tokens.blue : tokens.secondaryBackground,
+                          border: message.role === 'user' ? 'none' : `0.5px solid ${tokens.separator}`,
+                          color: message.role === 'user' ? '#fff' : tokens.label,
                           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                         }}
                       >
                         {message.role === 'assistant' && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                            <Bot style={{ width: 14, height: 14, color: apple.purple }} />
-                            <span style={{ fontSize: 12, fontWeight: 600, color: apple.secondaryLabel }}>AI</span>
+                            <Bot style={{ width: 14, height: 14, color: tokens.purple }} />
+                            <span style={{ fontSize: 12, fontWeight: 600, color: tokens.secondaryLabel }}>AI</span>
                           </div>
                         )}
                         <p style={{
@@ -1355,7 +1355,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                         <p style={{
                           fontSize: 11,
                           marginTop: 6,
-                          color: message.role === 'user' ? 'rgba(255,255,255,0.8)' : apple.tertiaryLabel,
+                          color: message.role === 'user' ? 'rgba(255,255,255,0.8)' : tokens.tertiaryLabel,
                         }}>
                           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
@@ -1378,22 +1378,22 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                               gap: 4,
                               fontSize: 11,
                               padding: '4px 8px',
-                              borderRadius: apple.radius.sm,
+                              borderRadius: tokens.radius.sm,
                               border: 'none',
-                              background: apple.fill,
-                              color: apple.secondaryLabel,
+                              background: tokens.fill,
+                              color: tokens.secondaryLabel,
                               cursor: 'pointer',
                               transition: 'all 0.15s',
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.background = apple.secondaryFill
+                              e.currentTarget.style.background = tokens.secondaryFill
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.background = apple.fill
+                              e.currentTarget.style.background = tokens.fill
                             }}
                           >
                             {copiedMessageId === message.id ? (
-                              <><Check style={{ width: 12, height: 12, color: apple.green }} /> Copied</>
+                              <><Check style={{ width: 12, height: 12, color: tokens.green }} /> Copied</>
                             ) : (
                               <><Copy style={{ width: 12, height: 12 }} /> Copy</>
                             )}
@@ -1409,19 +1409,19 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                               gap: 4,
                               fontSize: 11,
                               padding: '4px 8px',
-                              borderRadius: apple.radius.sm,
+                              borderRadius: tokens.radius.sm,
                               border: 'none',
-                              background: apple.fill,
-                              color: apple.secondaryLabel,
+                              background: tokens.fill,
+                              color: tokens.secondaryLabel,
                               cursor: isTyping ? 'default' : 'pointer',
                               opacity: isTyping ? 0.5 : 1,
                               transition: 'all 0.15s',
                             }}
                             onMouseEnter={(e) => {
-                              if (!isTyping) e.currentTarget.style.background = apple.secondaryFill
+                              if (!isTyping) e.currentTarget.style.background = tokens.secondaryFill
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.background = apple.fill
+                              e.currentTarget.style.background = tokens.fill
                             }}
                             title="Regenerate response"
                           >
@@ -1442,16 +1442,16 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                   >
                     <div style={{
                       padding: 12,
-                      background: apple.secondaryBackground,
-                      border: `0.5px solid ${apple.separator}`,
-                      borderRadius: apple.radius.lg,
+                      background: tokens.secondaryBackground,
+                      border: `0.5px solid ${tokens.separator}`,
+                      borderRadius: tokens.radius.lg,
                     }}>
                       <div style={{ display: 'flex', gap: 4 }}>
                         <div style={{
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          background: apple.secondaryLabel,
+                          background: tokens.secondaryLabel,
                           animation: 'bounce 1.4s infinite ease-in-out both',
                           animationDelay: '0ms',
                         }} />
@@ -1459,7 +1459,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          background: apple.secondaryLabel,
+                          background: tokens.secondaryLabel,
                           animation: 'bounce 1.4s infinite ease-in-out both',
                           animationDelay: '160ms',
                         }} />
@@ -1467,7 +1467,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          background: apple.secondaryLabel,
+                          background: tokens.secondaryLabel,
                           animation: 'bounce 1.4s infinite ease-in-out both',
                           animationDelay: '320ms',
                         }} />
@@ -1482,8 +1482,8 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
             {!isMinimized && (
               <div style={{
                 padding: 16,
-                borderTop: `0.5px solid ${apple.separator}`,
-                background: apple.secondaryBackground,
+                borderTop: `0.5px solid ${tokens.separator}`,
+                background: tokens.secondaryBackground,
               }}>
                 {messages.length > 1 && (
                   <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -1491,7 +1491,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       onClick={clearChat}
                       style={{
                         fontSize: 12,
-                        color: apple.secondaryLabel,
+                        color: tokens.secondaryLabel,
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
@@ -1499,10 +1499,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                         transition: 'color 0.15s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.color = apple.label
+                        e.currentTarget.style.color = tokens.label
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.color = apple.secondaryLabel
+                        e.currentTarget.style.color = tokens.secondaryLabel
                       }}
                     >
                       Clear Chat
@@ -1513,7 +1513,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                         disabled={isLoadingModels}
                         style={{
                           fontSize: 12,
-                          color: apple.secondaryLabel,
+                          color: tokens.secondaryLabel,
                           background: 'none',
                           border: 'none',
                           cursor: isLoadingModels ? 'default' : 'pointer',
@@ -1525,10 +1525,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                           transition: 'color 0.15s',
                         }}
                         onMouseEnter={(e) => {
-                          if (!isLoadingModels) e.currentTarget.style.color = apple.label
+                          if (!isLoadingModels) e.currentTarget.style.color = tokens.label
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.color = apple.secondaryLabel
+                          e.currentTarget.style.color = tokens.secondaryLabel
                         }}
                       >
                         <RefreshCw style={{ 
@@ -1544,7 +1544,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                         onClick={() => setShowTokenInput(true)}
                         style={{
                           fontSize: 12,
-                          color: apple.secondaryLabel,
+                          color: tokens.secondaryLabel,
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
@@ -1552,10 +1552,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                           transition: 'color 0.15s',
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.color = apple.label
+                          e.currentTarget.style.color = tokens.label
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.color = apple.secondaryLabel
+                          e.currentTarget.style.color = tokens.secondaryLabel
                         }}
                       >
                         Setup Token
@@ -1581,20 +1581,20 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                           height: 36,
                           padding: '0 12px',
                           paddingRight: '60px', // Space for character counter
-                          borderRadius: apple.radius.md,
-                          border: `0.5px solid ${charCount > CONFIG.MAX_MESSAGE_LENGTH * 0.9 ? apple.red : apple.separator}`,
-                          background: apple.fill,
-                          color: apple.label,
+                          borderRadius: tokens.radius.md,
+                          border: `0.5px solid ${charCount > CONFIG.MAX_MESSAGE_LENGTH * 0.9 ? tokens.red : tokens.separator}`,
+                          background: tokens.fill,
+                          color: tokens.label,
                           fontSize: 14,
                           outline: 'none',
                           transition: 'all 0.2s',
                         }}
                         onFocus={(e) => {
-                          e.target.style.borderColor = charCount > CONFIG.MAX_MESSAGE_LENGTH * 0.9 ? apple.red : apple.blue
+                          e.target.style.borderColor = charCount > CONFIG.MAX_MESSAGE_LENGTH * 0.9 ? tokens.red : tokens.blue
                           e.target.style.boxShadow = `0 0 0 3px rgba(${charCount > CONFIG.MAX_MESSAGE_LENGTH * 0.9 ? '255, 59, 48' : '0, 122, 255'}, 0.2)`
                         }}
                         onBlur={(e) => {
-                          e.target.style.borderColor = charCount > CONFIG.MAX_MESSAGE_LENGTH * 0.9 ? apple.red : apple.separator
+                          e.target.style.borderColor = charCount > CONFIG.MAX_MESSAGE_LENGTH * 0.9 ? tokens.red : tokens.separator
                           e.target.style.boxShadow = 'none'
                         }}
                       />
@@ -1606,7 +1606,7 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                         top: '50%',
                         transform: 'translateY(-50%)',
                         fontSize: 11,
-                        color: charCount > CONFIG.MAX_MESSAGE_LENGTH * 0.9 ? apple.red : apple.tertiaryLabel,
+                        color: charCount > CONFIG.MAX_MESSAGE_LENGTH * 0.9 ? tokens.red : tokens.tertiaryLabel,
                         userSelect: 'none',
                         pointerEvents: 'none',
                       }}>
@@ -1620,13 +1620,13 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       style={{
                         width: 36,
                         height: 36,
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         border: 'none',
                         background: (!input.trim() || isTyping || tokenExpired || charCount > CONFIG.MAX_MESSAGE_LENGTH)
-                          ? apple.fill
-                          : apple.blue,
+                          ? tokens.fill
+                          : tokens.blue,
                         color: (!input.trim() || isTyping || tokenExpired || charCount > CONFIG.MAX_MESSAGE_LENGTH)
-                          ? apple.tertiaryLabel
+                          ? tokens.tertiaryLabel
                           : '#fff',
                         cursor: (!input.trim() || isTyping || tokenExpired || charCount > CONFIG.MAX_MESSAGE_LENGTH)
                           ? 'default'
@@ -1656,10 +1656,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                         top: -24,
                         right: 0,
                         fontSize: 10,
-                        color: apple.green,
-                        background: `${apple.green}10`,
+                        color: tokens.green,
+                        background: `${tokens.green}10`,
                         padding: '2px 6px',
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         display: 'flex',
                         alignItems: 'center',
                         gap: 4,
@@ -1680,13 +1680,13 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                 }}>
                   <p style={{
                     fontSize: 11,
-                    color: apple.tertiaryLabel,
+                    color: tokens.tertiaryLabel,
                     margin: 0,
                   }}>
                     {tokenExpired
                       ? 'Token expired - Click Setup Token'
                       : models.length > 0
-                        ? `Using ${models.length} AI models via Floodgate`
+                        ? `Using ${models.length} AI models via OIDC Provider`
                         : 'Demo mode - Click "Setup Token" for real AI'}
                   </p>
                   
@@ -1697,10 +1697,10 @@ export default function AIChatAssistant({ isOpen, onClose }: AIChatAssistantProp
                       alignItems: 'center',
                       gap: 4,
                       fontSize: 11,
-                      color: apple.red,
-                      background: `${apple.red}10`,
+                      color: tokens.red,
+                      background: `${tokens.red}10`,
                       padding: '2px 6px',
-                      borderRadius: apple.radius.sm,
+                      borderRadius: tokens.radius.sm,
                     }}>
                       <WifiOff style={{ width: 10, height: 10 }} />
                       Offline
@@ -1731,9 +1731,9 @@ export function AIAssistantButton({ onClick }: { onClick: () => void }) {
         right: 24,
         width: 56,
         height: 56,
-        background: `linear-gradient(135deg, ${apple.purple}, ${apple.indigo})`,
+        background: `linear-gradient(135deg, ${tokens.purple}, ${tokens.indigo})`,
         borderRadius: '50%',
-        boxShadow: `0 12px 40px ${apple.purple}40`,
+        boxShadow: `0 12px 40px ${tokens.purple}40`,
         border: 'none',
         cursor: 'pointer',
         display: 'flex',

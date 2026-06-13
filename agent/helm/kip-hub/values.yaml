@@ -84,7 +84,7 @@ llm:
 build:
   enabled: false
 
-# PostgreSQL — connection sourced from whisper secret at runtime
+# PostgreSQL — connection sourced from secrets_manager secret at runtime
 postgres:
   database: kubesense
   user: kubesense
@@ -94,5 +94,5 @@ neo4j:
   url: "http://kubesense-neo4j.aileron-agent.svc.cluster.local:7474"
   user: neo4j
 
-whisper:
+secrets_manager:
   enabled: true

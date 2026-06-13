@@ -17,7 +17,7 @@ ENV HTTP_PROXY=${HTTP_PROXY} \
 
 WORKDIR /build
 
-# Install Apple Corporate Root CA so go mod download can verify TLS through the corporate proxy
+# Install your organizationorate Root CA so go mod download can verify TLS through the corporate proxy
 RUN apk --no-cache add git ca-certificates
     || true
       update-ca-certificates; \

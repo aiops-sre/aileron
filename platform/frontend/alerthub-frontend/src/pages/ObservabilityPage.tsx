@@ -21,10 +21,10 @@ import {
 Chart.register(...registerables)
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Apple Design Tokens
+// Aileron Design Tokens
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -102,7 +102,7 @@ function Sidebar({
               gap: 10,
               width: '100%',
               padding: '7px 12px',
-              borderRadius: apple.radius.sm,
+              borderRadius: tokens.radius.sm,
               border: 'none',
               cursor: 'pointer',
               background: active ? 'rgba(0, 122, 255, 0.12)' : 'transparent',
@@ -111,7 +111,7 @@ function Sidebar({
               textAlign: 'left',
             }}
             onMouseEnter={(e) => {
-              if (!active) (e.currentTarget as HTMLElement).style.background = apple.tertiaryFill
+              if (!active) (e.currentTarget as HTMLElement).style.background = tokens.tertiaryFill
             }}
             onMouseLeave={(e) => {
               if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'
@@ -132,7 +132,7 @@ function Sidebar({
             <span style={{
               fontSize: 13,
               fontWeight: active ? 600 : 400,
-              color: active ? apple.blue : apple.label,
+              color: active ? tokens.blue : tokens.label,
               flex: 1,
             }}>
               {item.label}
@@ -167,18 +167,18 @@ function MetricCard({
 }) {
   const getStatusColor = () => {
     switch (status) {
-      case 'healthy': return apple.green
-      case 'warning': return apple.orange
-      case 'critical': return apple.red
-      default: return apple.gray
+      case 'healthy': return tokens.green
+      case 'warning': return tokens.orange
+      case 'critical': return tokens.red
+      default: return tokens.gray
     }
   }
 
   return (
     <div style={{
-      background: apple.secondaryBackground,
-      border: `0.5px solid ${apple.separator}`,
-      borderRadius: apple.radius.lg,
+      background: tokens.secondaryBackground,
+      border: `0.5px solid ${tokens.separator}`,
+      borderRadius: tokens.radius.lg,
       padding: 20,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -186,7 +186,7 @@ function MetricCard({
           <div style={{
             width: 32,
             height: 32,
-            borderRadius: apple.radius.sm,
+            borderRadius: tokens.radius.sm,
             background: iconColor,
             display: 'flex',
             alignItems: 'center',
@@ -194,7 +194,7 @@ function MetricCard({
           }}>
             <Icon style={{ width: 16, height: 16, color: '#fff' }} />
           </div>
-          <span style={{ fontSize: 13, fontWeight: 500, color: apple.secondaryLabel }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel }}>
             {title}
           </span>
         </div>
@@ -212,10 +212,10 @@ function MetricCard({
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 32, fontWeight: 700, color: apple.label, lineHeight: 1 }}>
+        <div style={{ fontSize: 32, fontWeight: 700, color: tokens.label, lineHeight: 1 }}>
           {value}
         </div>
-        <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>
+        <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>
           {unit}
         </div>
       </div>
@@ -227,7 +227,7 @@ function MetricCard({
           gap: 4,
           fontSize: 12,
           fontWeight: 600,
-          color: trend > 0 ? apple.green : apple.red,
+          color: trend > 0 ? tokens.green : tokens.red,
         }}>
           {trend > 0 ? (
             <TrendingUp style={{ width: 12, height: 12 }} />
@@ -252,9 +252,9 @@ function ChartCard({
 }) {
   return (
     <div style={{
-      background: apple.secondaryBackground,
-      border: `0.5px solid ${apple.separator}`,
-      borderRadius: apple.radius.lg,
+      background: tokens.secondaryBackground,
+      border: `0.5px solid ${tokens.separator}`,
+      borderRadius: tokens.radius.lg,
       overflow: 'hidden',
     }}>
       <div style={{
@@ -262,9 +262,9 @@ function ChartCard({
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '16px 20px',
-        borderBottom: `0.5px solid ${apple.separator}`,
+        borderBottom: `0.5px solid ${tokens.separator}`,
       }}>
-        <h3 style={{ fontSize: 17, fontWeight: 600, color: apple.label, margin: 0 }}>
+        <h3 style={{ fontSize: 17, fontWeight: 600, color: tokens.label, margin: 0 }}>
           {title}
         </h3>
         {actions}
@@ -359,16 +359,16 @@ export function ObservabilityPage() {
             {
               label: 'CPU %',
               data: [],
-              borderColor: apple.blue,
-              backgroundColor: `${apple.blue}20`,
+              borderColor: tokens.blue,
+              backgroundColor: `${tokens.blue}20`,
               tension: 0.4,
               fill: true,
             },
             {
               label: 'Memory GB',
               data: [],
-              borderColor: apple.green,
-              backgroundColor: `${apple.green}20`,
+              borderColor: tokens.green,
+              backgroundColor: `${tokens.green}20`,
               tension: 0.4,
               fill: true,
             }
@@ -386,7 +386,7 @@ export function ObservabilityPage() {
           datasets: [{
             label: 'Requests/sec',
             data: [],
-            backgroundColor: `${apple.purple}80`,
+            backgroundColor: `${tokens.purple}80`,
             borderRadius: 4,
           }]
         },
@@ -402,8 +402,8 @@ export function ObservabilityPage() {
           datasets: [{
             label: 'Response Time (ms)',
             data: [],
-            borderColor: apple.orange,
-            backgroundColor: `${apple.orange}20`,
+            borderColor: tokens.orange,
+            backgroundColor: `${tokens.orange}20`,
             tension: 0.4,
             fill: true,
           }]
@@ -420,8 +420,8 @@ export function ObservabilityPage() {
           datasets: [{
             label: 'Error Rate %',
             data: [],
-            borderColor: apple.red,
-            backgroundColor: `${apple.red}20`,
+            borderColor: tokens.red,
+            backgroundColor: `${tokens.red}20`,
             tension: 0.4,
             fill: true,
           }]
@@ -530,17 +530,17 @@ export function ObservabilityPage() {
   }, [metrics])
 
   const sidebarItems = [
-    { id: 'metrics', label: 'System Metrics', icon: BarChart3, iconColor: apple.blue },
-    { id: 'traces', label: 'Distributed Traces', icon: Route, iconColor: apple.purple },
-    { id: 'logs', label: 'Application Logs', icon: FileText, iconColor: apple.green },
-    { id: 'apm', label: 'APM Integration', icon: Activity, iconColor: apple.orange },
+    { id: 'metrics', label: 'System Metrics', icon: BarChart3, iconColor: tokens.blue },
+    { id: 'traces', label: 'Distributed Traces', icon: Route, iconColor: tokens.purple },
+    { id: 'logs', label: 'Application Logs', icon: FileText, iconColor: tokens.green },
+    { id: 'apm', label: 'APM Integration', icon: Activity, iconColor: tokens.orange },
   ]
 
   if (isLoading) {
     return (
       <div style={{
         minHeight: '100vh',
-        background: apple.background,
+        background: tokens.background,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -549,11 +549,11 @@ export function ObservabilityPage() {
           <Loader2 style={{ 
             width: 32, 
             height: 32, 
-            color: apple.blue, 
+            color: tokens.blue, 
             animation: 'spin 1s linear infinite', 
             margin: '0 auto 16px' 
           }} />
-          <p style={{ fontSize: 15, color: apple.secondaryLabel }}>
+          <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>
             Loading observability data...
           </p>
         </div>
@@ -564,7 +564,7 @@ export function ObservabilityPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: apple.background,
+      background: tokens.background,
     }}>
       <div style={{
         display: 'flex',
@@ -583,7 +583,7 @@ export function ObservabilityPage() {
           <div style={{
             fontSize: 28,
             fontWeight: 700,
-            color: apple.label,
+            color: tokens.label,
             padding: '4px 12px 20px',
             letterSpacing: '-0.02em',
           }}>
@@ -598,10 +598,10 @@ export function ObservabilityPage() {
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
             <div>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: apple.label, margin: 0 }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: tokens.label, margin: 0 }}>
                 {sidebarItems.find(item => item.id === activeTab)?.label || 'Observability'}
               </h1>
-              <p style={{ fontSize: 13, color: apple.secondaryLabel, marginTop: 2 }}>
+              <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginTop: 2 }}>
                 Real-time system monitoring and performance insights
               </p>
             </div>
@@ -611,10 +611,10 @@ export function ObservabilityPage() {
                 onChange={(e) => setTimeRange(e.target.value)}
                 style={{
                   height: 32,
-                  borderRadius: apple.radius.sm,
-                  border: `0.5px solid ${apple.separator}`,
-                  background: apple.fill,
-                  color: apple.label,
+                  borderRadius: tokens.radius.sm,
+                  border: `0.5px solid ${tokens.separator}`,
+                  background: tokens.fill,
+                  color: tokens.label,
                   fontSize: 13,
                   padding: '0 24px 0 8px',
                   outline: 'none',
@@ -634,9 +634,9 @@ export function ObservabilityPage() {
                   alignItems: 'center',
                   gap: 6,
                   padding: '8px 12px',
-                  borderRadius: apple.radius.sm,
+                  borderRadius: tokens.radius.sm,
                   border: 'none',
-                  background: apple.blue,
+                  background: tokens.blue,
                   color: '#fff',
                   fontSize: 13,
                   fontWeight: 500,
@@ -671,7 +671,7 @@ export function ObservabilityPage() {
                     trend={metrics.cpuTrend}
                     status={getStatusClass(metrics.cpu, 80, 90)}
                     icon={Cpu}
-                    iconColor={apple.blue}
+                    iconColor={tokens.blue}
                   />
                   <MetricCard
                     title="Memory Usage"
@@ -680,7 +680,7 @@ export function ObservabilityPage() {
                     trend={metrics.memoryTrend}
                     status={getStatusClass(metrics.memory, 4000, 6000)}
                     icon={Database}
-                    iconColor={apple.green}
+                    iconColor={tokens.green}
                   />
                   <MetricCard
                     title="Request Rate"
@@ -689,7 +689,7 @@ export function ObservabilityPage() {
                     trend={metrics.requestRateTrend}
                     status="healthy"
                     icon={Zap}
-                    iconColor={apple.purple}
+                    iconColor={tokens.purple}
                   />
                   <MetricCard
                     title="Response Time"
@@ -698,7 +698,7 @@ export function ObservabilityPage() {
                     trend={metrics.responseTimeTrend}
                     status={getStatusClass(metrics.responseTime, 200, 500)}
                     icon={Clock}
-                    iconColor={apple.orange}
+                    iconColor={tokens.orange}
                   />
                 </div>
 
@@ -736,37 +736,37 @@ export function ObservabilityPage() {
             {/* Traces Tab */}
             {activeTab === 'traces' && (
               <div style={{
-                background: apple.secondaryBackground,
-                border: `0.5px solid ${apple.separator}`,
-                borderRadius: apple.radius.lg,
+                background: tokens.secondaryBackground,
+                border: `0.5px solid ${tokens.separator}`,
+                borderRadius: tokens.radius.lg,
                 padding: 60,
                 textAlign: 'center',
               }}>
                 <div style={{
                   width: 64,
                   height: 64,
-                  borderRadius: apple.radius.xl,
-                  background: apple.fill,
+                  borderRadius: tokens.radius.xl,
+                  background: tokens.fill,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 20px',
                 }}>
-                  <Route style={{ width: 28, height: 28, color: apple.quaternaryLabel }} />
+                  <Route style={{ width: 28, height: 28, color: tokens.quaternaryLabel }} />
                 </div>
-                <h3 style={{ fontSize: 20, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+                <h3 style={{ fontSize: 20, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
                   Distributed Traces
                 </h3>
-                <p style={{ fontSize: 15, color: apple.secondaryLabel, marginBottom: 20 }}>
+                <p style={{ fontSize: 15, color: tokens.secondaryLabel, marginBottom: 20 }}>
                   Trace viewer will be available when tracing is configured
                 </p>
                 <button
                   onClick={() => window.location.href = '/settings'}
                   style={{
                     padding: '10px 20px',
-                    borderRadius: apple.radius.sm,
+                    borderRadius: tokens.radius.sm,
                     border: 'none',
-                    background: apple.blue,
+                    background: tokens.blue,
                     color: '#fff',
                     fontSize: 14,
                     fontWeight: 500,
@@ -785,9 +785,9 @@ export function ObservabilityPage() {
             {/* Logs Tab */}
             {activeTab === 'logs' && (
               <div style={{
-                background: apple.secondaryBackground,
-                border: `0.5px solid ${apple.separator}`,
-                borderRadius: apple.radius.lg,
+                background: tokens.secondaryBackground,
+                border: `0.5px solid ${tokens.separator}`,
+                borderRadius: tokens.radius.lg,
                 overflow: 'hidden',
               }}>
                 <div style={{
@@ -795,9 +795,9 @@ export function ObservabilityPage() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '16px 20px',
-                  borderBottom: `0.5px solid ${apple.separator}`,
+                  borderBottom: `0.5px solid ${tokens.separator}`,
                 }}>
-                  <h3 style={{ fontSize: 17, fontWeight: 600, color: apple.label, margin: 0 }}>
+                  <h3 style={{ fontSize: 17, fontWeight: 600, color: tokens.label, margin: 0 }}>
                     Application Logs
                   </h3>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -809,7 +809,7 @@ export function ObservabilityPage() {
                         transform: 'translateY(-50%)',
                         width: 14,
                         height: 14,
-                        color: apple.tertiaryLabel,
+                        color: tokens.tertiaryLabel,
                       }} />
                       <input
                         type="search"
@@ -817,23 +817,23 @@ export function ObservabilityPage() {
                         style={{
                           width: '100%',
                           height: 32,
-                          borderRadius: apple.radius.sm,
+                          borderRadius: tokens.radius.sm,
                           border: 'none',
-                          background: apple.fill,
+                          background: tokens.fill,
                           paddingLeft: 28,
                           paddingRight: 8,
                           fontSize: 13,
-                          color: apple.label,
+                          color: tokens.label,
                           outline: 'none',
                         }}
                       />
                     </div>
                     <select style={{
                       height: 32,
-                      borderRadius: apple.radius.sm,
+                      borderRadius: tokens.radius.sm,
                       border: 'none',
-                      background: apple.fill,
-                      color: apple.label,
+                      background: tokens.fill,
+                      color: tokens.label,
                       fontSize: 13,
                       padding: '0 20px 0 8px',
                       outline: 'none',
@@ -850,19 +850,19 @@ export function ObservabilityPage() {
                   <div style={{
                     width: 64,
                     height: 64,
-                    borderRadius: apple.radius.xl,
-                    background: apple.fill,
+                    borderRadius: tokens.radius.xl,
+                    background: tokens.fill,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     margin: '0 auto 20px',
                   }}>
-                    <FileText style={{ width: 28, height: 28, color: apple.quaternaryLabel }} />
+                    <FileText style={{ width: 28, height: 28, color: tokens.quaternaryLabel }} />
                   </div>
-                  <h3 style={{ fontSize: 20, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
                     Log Aggregation
                   </h3>
-                  <p style={{ fontSize: 15, color: apple.secondaryLabel }}>
+                  <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>
                     Log aggregation will be available when configured
                   </p>
                 </div>
@@ -872,31 +872,31 @@ export function ObservabilityPage() {
             {/* APM Tab */}
             {activeTab === 'apm' && (
               <div style={{
-                background: apple.secondaryBackground,
-                border: `0.5px solid ${apple.separator}`,
-                borderRadius: apple.radius.lg,
+                background: tokens.secondaryBackground,
+                border: `0.5px solid ${tokens.separator}`,
+                borderRadius: tokens.radius.lg,
                 padding: 60,
                 textAlign: 'center',
               }}>
                 <div style={{
                   width: 64,
                   height: 64,
-                  borderRadius: apple.radius.xl,
-                  background: apple.fill,
+                  borderRadius: tokens.radius.xl,
+                  background: tokens.fill,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 20px',
                 }}>
-                  <Activity style={{ width: 28, height: 28, color: apple.quaternaryLabel }} />
+                  <Activity style={{ width: 28, height: 28, color: tokens.quaternaryLabel }} />
                 </div>
-                <h3 style={{ fontSize: 20, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+                <h3 style={{ fontSize: 20, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
                   Application Performance Monitoring
                 </h3>
-                <p style={{ fontSize: 15, color: apple.secondaryLabel, marginBottom: 8 }}>
+                <p style={{ fontSize: 15, color: tokens.secondaryLabel, marginBottom: 8 }}>
                   APM metrics will be available when an APM tool is integrated
                 </p>
-                <p style={{ fontSize: 13, color: apple.tertiaryLabel }}>
+                <p style={{ fontSize: 13, color: tokens.tertiaryLabel }}>
                   Supported: Dynatrace, New Relic, Datadog, Elastic APM
                 </p>
               </div>

@@ -112,7 +112,7 @@ function TokenModal({ isOpen, onClose, onSave, token, setToken, expiry, setExpir
   const [show, setShow] = useState(false)
   const [copied, setCopied] = useState(false)
   if (!isOpen) return null
-  const cmd = `appleconnect getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv --token-type=oauth --interactivity-type=none -E prod -G pkce -o openid,dsid,accountname,profile,groups | grep 'oauth-id-token' | awk '{print $2}'`
+  const cmd = `oidc-helper getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv --token-type=oauth --interactivity-type=none -E prod -G pkce -o openid,dsid,accountname,profile,groups | grep 'oauth-id-token' | awk '{print $2}'`
   return (
     <AnimatePresence>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -128,7 +128,7 @@ function TokenModal({ isOpen, onClose, onSave, token, setToken, expiry, setExpir
               <div style={{ width: 28, height: 28, borderRadius: t.r.sm, background: `linear-gradient(135deg, ${t.blue}, ${t.indigo})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Key size={14} color="#fff" />
               </div>
-              <span style={{ fontSize: 15, fontWeight: 600, color: t.label }}>Floodgate Token</span>
+              <span style={{ fontSize: 15, fontWeight: 600, color: t.label }}>OIDC Provider Token</span>
             </div>
             <div style={{ width: 60 }} />
           </div>
@@ -209,7 +209,7 @@ export function AIChatPage() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline'>('online')
   const [showTokenPrompt, setShowTokenPrompt] = useState(false)
-  const [floodgateToken, setFloodgateToken] = useState('')
+  const [oidcToken, setOIDC ProviderToken] = useState('')
   const [tokenExpiry, setTokenExpiry] = useState('')
   const [models, setModels] = useState<AIModel[]>([])
   const [localModels, setLocalModels] = useState<{ id: string; name: string }[]>([])
@@ -334,33 +334,33 @@ export function AIChatPage() {
     window.location.href = `/api/v1/auth/oidc?redirect=${encodeURIComponent(window.location.pathname)}`
   }, [])
 
-  const silentRefreshFloodgateToken = useCallback(async (): Promise<boolean> => {
+  const silentRefreshOIDC ProviderToken = useCallback(async (): Promise<boolean> => {
     try {
       const appToken = sessionStorage.getItem('access_token') || localStorage.getItem('access_token')
       if (!appToken) return false
-      const resp = await fetch('/api/v1/auth/oidc/floodgate-refresh', { headers: { Authorization: `Bearer ${appToken}` } })
+      const resp = await fetch('/api/v1/auth/oidc/oidc-refresh', { headers: { Authorization: `Bearer ${appToken}` } })
       if (!resp.ok) return false
       const data = await resp.json()
-      if (data.success && data.data?.floodgate_token) {
+      if (data.success && data.data?.oidc_token) {
         const expiresIn = data.data.expires_in || 3300
-        sessionStorage.setItem('floodgate_token', data.data.floodgate_token)
-        sessionStorage.setItem('floodgate_token_expiry', new Date(Date.now() + expiresIn * 1000 - 30000).toISOString())
-        sessionStorage.setItem('floodgate_token_source', 'auto-refresh')
+        sessionStorage.setItem('oidc_token', data.data.oidc_token)
+        sessionStorage.setItem('oidc_token_expiry', new Date(Date.now() + expiresIn * 1000 - 30000).toISOString())
+        sessionStorage.setItem('oidc_token_source', 'auto-refresh')
         return true
       }
     } catch {}
     return false
   }, [])
 
-  const checkFloodgateToken = useCallback(async () => {
-    const source = sessionStorage.getItem('floodgate_token_source')
-    if (source !== 'idms-oauth2' && source !== 'auto-refresh') await silentRefreshFloodgateToken()
-    const token = sessionStorage.getItem('floodgate_token') || sessionStorage.getItem('oauth_id_token')
-    const expiry = sessionStorage.getItem('floodgate_token_expiry')
+  const checkOIDC ProviderToken = useCallback(async () => {
+    const source = sessionStorage.getItem('oidc_token_source')
+    if (source !== 'oidc-oauth2' && source !== 'auto-refresh') await silentRefreshOIDC ProviderToken()
+    const token = sessionStorage.getItem('oidc_token') || sessionStorage.getItem('oauth_id_token')
+    const expiry = sessionStorage.getItem('oidc_token_expiry')
     if (!token) {
-      const ok = await silentRefreshFloodgateToken()
+      const ok = await silentRefreshOIDC ProviderToken()
       if (!ok) {
-        // User has no Floodgate session — show manual token prompt instead of redirect-looping.
+        // User has no OIDC Provider session — show manual token prompt instead of redirect-looping.
         setShowTokenPrompt(true)
       }
       return
@@ -368,14 +368,14 @@ export function AIChatPage() {
     if (expiry) {
       const expiryTime = new Date(expiry).getTime(); const now = Date.now()
       if (now >= expiryTime) {
-        const ok = await silentRefreshFloodgateToken()
+        const ok = await silentRefreshOIDC ProviderToken()
         if (!ok) setTokenExpired(true); else { sessionStorage.removeItem('fg_last_reauth'); setTokenExpired(false) }
         return
       }
-      if (now >= expiryTime - 5 * 60 * 1000) silentRefreshFloodgateToken()
+      if (now >= expiryTime - 5 * 60 * 1000) silentRefreshOIDC ProviderToken()
     }
     sessionStorage.removeItem('fg_last_reauth'); setTokenExpired(false)
-  }, [silentRefreshFloodgateToken, setShowTokenPrompt])
+  }, [silentRefreshOIDC ProviderToken, setShowTokenPrompt])
 
   // ── Loading ───────────────────────────────────────────────────────────────
   const loadLocalModels = useCallback(async () => {
@@ -459,7 +459,7 @@ export function AIChatPage() {
     let mounted = true
     const init = async () => {
       if (!mounted) return
-      await checkFloodgateToken()
+      await checkOIDC ProviderToken()
       const onOnline = () => { if (!mounted) return; setIsOnline(true); checkOnlineStatus() }
       const onOffline = () => { if (!mounted) return; setIsOnline(false) }
       window.addEventListener('online', onOnline); window.addEventListener('offline', onOffline)
@@ -541,14 +541,14 @@ export function AIChatPage() {
   }, [])
 
   // ── Actions ───────────────────────────────────────────────────────────────
-  const saveFloodgateToken = async () => {
-    if (!floodgateToken.trim()) { setError('Please enter a valid token'); return }
+  const saveOIDC ProviderToken = async () => {
+    if (!oidcToken.trim()) { setError('Please enter a valid token'); return }
     setIsLoading(true); setError(null)
     try {
       const expiryTime = tokenExpiry || new Date(Date.now() + 50 * 60 * 1000).toISOString()
-      sessionStorage.setItem('floodgate_token', floodgateToken)
-      sessionStorage.setItem('floodgate_token_expiry', expiryTime)
-      sessionStorage.setItem('floodgate_token_source', 'manual')
+      sessionStorage.setItem('oidc_token', oidcToken)
+      sessionStorage.setItem('oidc_token_expiry', expiryTime)
+      sessionStorage.setItem('oidc_token_source', 'manual')
       localStorage.removeItem('ai_models_cache')
       const ok = await loadModelsOptimized()
       if (ok) { setShowTokenPrompt(false); setTokenExpired(false) }
@@ -834,11 +834,11 @@ export function AIChatPage() {
 
     const isLocalModel = (selectedModel || '').startsWith('local:')
     if (!isLocalModel) {
-      const ft = sessionStorage.getItem('floodgate_token') || sessionStorage.getItem('oauth_id_token')
-      const fe = sessionStorage.getItem('floodgate_token_expiry')
-      if (!ft) { const ok = await silentRefreshFloodgateToken(); if (!ok) { setShowTokenPrompt(true); return } }
+      const ft = sessionStorage.getItem('oidc_token') || sessionStorage.getItem('oauth_id_token')
+      const fe = sessionStorage.getItem('oidc_token_expiry')
+      if (!ft) { const ok = await silentRefreshOIDC ProviderToken(); if (!ok) { setShowTokenPrompt(true); return } }
       else if (fe && Date.now() >= new Date(fe).getTime()) {
-        const ok = await silentRefreshFloodgateToken(); if (!ok) { setTokenExpired(true); return }
+        const ok = await silentRefreshOIDC ProviderToken(); if (!ok) { setTokenExpired(true); return }
       }
     }
 
@@ -926,7 +926,7 @@ export function AIChatPage() {
         }
       }
     }
-  }, [input, isLoading, isStreaming, messages, selectedModel, currentSession, settings.soundEnabled, isSoundEnabled, notificationSound, successSound, clearDraft, silentRefreshFloodgateToken, redirectToAuth, buildSuggestions])
+  }, [input, isLoading, isStreaming, messages, selectedModel, currentSession, settings.soundEnabled, isSoundEnabled, notificationSound, successSound, clearDraft, silentRefreshOIDC ProviderToken, redirectToAuth, buildSuggestions])
 
   // Keep sendMessageRef current (fixes stale closure in handleSmartCommand + regenerateLast)
   useEffect(() => { sendMessageRef.current = sendMessage }, [sendMessage])
@@ -943,7 +943,7 @@ export function AIChatPage() {
   const filteredSessions = searchQuery
     ? sessions.filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.messages.some(m => m.content.toLowerCase().includes(searchQuery.toLowerCase())))
     : sessions
-  const hasToken = !!(sessionStorage.getItem('floodgate_token') || sessionStorage.getItem('oauth_id_token'))
+  const hasToken = !!(sessionStorage.getItem('oidc_token') || sessionStorage.getItem('oauth_id_token'))
 
   const groupedSessions = useCallback(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -1080,7 +1080,7 @@ export function AIChatPage() {
               style={{ width: '100%', height: 34, borderRadius: t.r.sm, border: `1px solid ${selectedModel.startsWith('local:') ? t.purple + '60' : t.sep}`, background: selectedModel.startsWith('local:') ? `${t.purple}10` : t.fill, color: selectedModel.startsWith('local:') ? t.purple : t.label, fontSize: 12, paddingLeft: 28, paddingRight: 8, outline: 'none', appearance: 'none', cursor: 'pointer' }}>
               {models.length === 0 && localModels.length === 0 && <option value="">No models available</option>}
               {models.length > 0 && (
-                <optgroup label="☁️ Floodgate">
+                <optgroup label="☁️ OIDC Provider">
                   {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </optgroup>
               )}
@@ -1472,8 +1472,8 @@ export function AIChatPage() {
       </div>
 
       {/* Token modal (developer access) */}
-      <TokenModal isOpen={showTokenPrompt} onClose={() => setShowTokenPrompt(false)} onSave={saveFloodgateToken}
-        token={floodgateToken} setToken={setFloodgateToken} expiry={tokenExpiry} setExpiry={setTokenExpiry}
+      <TokenModal isOpen={showTokenPrompt} onClose={() => setShowTokenPrompt(false)} onSave={saveOIDC ProviderToken}
+        token={oidcToken} setToken={setOIDC ProviderToken} expiry={tokenExpiry} setExpiry={setTokenExpiry}
         error={error} isLoading={isLoading} />
 
       <style>{`

@@ -23,7 +23,7 @@ import {
   Sparkles,
   Target
 } from 'lucide-react'
-import { useAppleDesign, glassmorphismCSS } from '@/lib/apple-design-system'
+import { useAppleDesign, glassmorphismCSS } from '@/lib/design-system'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import type { Alert, AIOpsMetrics, RealTimeUpdate } from '@/types'
 
@@ -96,7 +96,7 @@ const LiveMetricCard = ({
   gradient?: string
   isLoading?: boolean
 }) => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
 
   return (
     <motion.div
@@ -105,8 +105,8 @@ const LiveMetricCard = ({
       whileHover={{ y: -4, scale: 1.02 }}
       style={{
         ...glassmorphismCSS('premium'),
-        borderRadius: apple.radius['2xl'],
-        padding: apple.spacing.lg,
+        borderRadius: tokens.radius['2xl'],
+        padding: tokens.spacing.lg,
         position: 'relative',
         overflow: 'hidden',
         cursor: 'pointer',
@@ -124,7 +124,7 @@ const LiveMetricCard = ({
           bottom: 0,
           background: gradient,
           opacity: 0.03,
-          borderRadius: apple.radius['2xl'],
+          borderRadius: tokens.radius['2xl'],
           zIndex: 0,
         }} />
       )}
@@ -134,14 +134,14 @@ const LiveMetricCard = ({
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'space-between',
-        marginBottom: apple.spacing.md,
+        marginBottom: tokens.spacing.md,
         position: 'relative',
         zIndex: 1,
       }}>
         <div style={{
           width: 52,
           height: 52,
-          borderRadius: apple.radius.xl,
+          borderRadius: tokens.radius.xl,
           background: gradient || color,
           display: 'flex',
           alignItems: 'center',
@@ -156,7 +156,7 @@ const LiveMetricCard = ({
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
           >
-            <RefreshCw style={{ width: 16, height: 16, color: apple.colors.tertiaryLabel }} />
+            <RefreshCw style={{ width: 16, height: 16, color: tokens.colors.tertiaryLabel }} />
           </motion.div>
         )}
       </div>
@@ -164,18 +164,18 @@ const LiveMetricCard = ({
       {/* Value */}
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{
-          fontSize: apple.typography.sizes.largeTitle,
-          fontWeight: apple.typography.weights.black,
-          color: apple.colors.label,
+          fontSize: tokens.typography.sizes.largeTitle,
+          fontWeight: tokens.typography.weights.black,
+          color: tokens.colors.label,
           lineHeight: 1,
           marginBottom: 4,
         }}>
           {value}
           {unit && (
             <span style={{
-              fontSize: apple.typography.sizes.callout,
-              fontWeight: apple.typography.weights.medium,
-              color: apple.colors.secondaryLabel,
+              fontSize: tokens.typography.sizes.callout,
+              fontWeight: tokens.typography.weights.medium,
+              color: tokens.colors.secondaryLabel,
               marginLeft: 4,
             }}>
               {unit}
@@ -184,9 +184,9 @@ const LiveMetricCard = ({
         </div>
         
         <div style={{
-          fontSize: apple.typography.sizes.footnote,
-          fontWeight: apple.typography.weights.semibold,
-          color: apple.colors.secondaryLabel,
+          fontSize: tokens.typography.sizes.footnote,
+          fontWeight: tokens.typography.weights.semibold,
+          color: tokens.colors.secondaryLabel,
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
         }}>
@@ -198,27 +198,27 @@ const LiveMetricCard = ({
       {trend && (
         <div style={{
           position: 'absolute',
-          top: apple.spacing.md,
-          right: apple.spacing.md,
+          top: tokens.spacing.md,
+          right: tokens.spacing.md,
           display: 'flex',
           alignItems: 'center',
           gap: 4,
           padding: '4px 8px',
-          borderRadius: apple.radius.sm,
+          borderRadius: tokens.radius.sm,
           background: trend.isUp 
             ? 'rgba(52, 199, 89, 0.1)' 
             : 'rgba(255, 59, 48, 0.1)',
-          border: `0.5px solid ${trend.isUp ? apple.colors.green : apple.colors.red}40`,
+          border: `0.5px solid ${trend.isUp ? tokens.colors.green : tokens.colors.red}40`,
         }}>
           {trend.isUp ? (
-            <TrendingUp style={{ width: 12, height: 12, color: apple.colors.green }} />
+            <TrendingUp style={{ width: 12, height: 12, color: tokens.colors.green }} />
           ) : (
-            <TrendingDown style={{ width: 12, height: 12, color: apple.colors.red }} />
+            <TrendingDown style={{ width: 12, height: 12, color: tokens.colors.red }} />
           )}
           <span style={{
-            fontSize: apple.typography.sizes.caption1,
-            fontWeight: apple.typography.weights.bold,
-            color: trend.isUp ? apple.colors.green : apple.colors.red,
+            fontSize: tokens.typography.sizes.caption1,
+            fontWeight: tokens.typography.weights.bold,
+            color: trend.isUp ? tokens.colors.green : tokens.colors.red,
           }}>
             {Math.abs(trend.value)}%
           </span>
@@ -234,7 +234,7 @@ const LiveMetricCard = ({
           right: -2,
           bottom: -2,
           background: gradient || `linear-gradient(135deg, ${color}40, ${color}20)`,
-          borderRadius: apple.radius['2xl'],
+          borderRadius: tokens.radius['2xl'],
           opacity: 0,
           transition: 'opacity 300ms ease',
           zIndex: -1,
@@ -246,27 +246,27 @@ const LiveMetricCard = ({
 }
 
 const CorrelationFlowDiagram = ({ strategies }: { strategies: CorrelationMetrics['correlationStrategies'] }) => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
   const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null)
 
   return (
     <div style={{
       ...glassmorphismCSS('premium'),
-      borderRadius: apple.radius['2xl'],
-      padding: apple.spacing.xl,
+      borderRadius: tokens.radius['2xl'],
+      padding: tokens.spacing.xl,
       minHeight: 400,
     }}>
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: apple.spacing.md,
-        marginBottom: apple.spacing.xl,
+        gap: tokens.spacing.md,
+        marginBottom: tokens.spacing.xl,
       }}>
         <div style={{
           width: 48,
           height: 48,
-          borderRadius: apple.radius.lg,
-          background: apple.colors.gradients.blueToIndigo,
+          borderRadius: tokens.radius.lg,
+          background: tokens.colors.gradients.blueToIndigo,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -275,16 +275,16 @@ const CorrelationFlowDiagram = ({ strategies }: { strategies: CorrelationMetrics
         </div>
         <div>
           <h3 style={{
-            fontSize: apple.typography.sizes.title3,
-            fontWeight: apple.typography.weights.bold,
-            color: apple.colors.label,
+            fontSize: tokens.typography.sizes.title3,
+            fontWeight: tokens.typography.weights.bold,
+            color: tokens.colors.label,
             margin: 0,
           }}>
             Live Correlation Flow
           </h3>
           <p style={{
-            fontSize: apple.typography.sizes.subhead,
-            color: apple.colors.secondaryLabel,
+            fontSize: tokens.typography.sizes.subhead,
+            color: tokens.colors.secondaryLabel,
             margin: 0,
           }}>
             Real-time analysis of four correlation strategies
@@ -296,7 +296,7 @@ const CorrelationFlowDiagram = ({ strategies }: { strategies: CorrelationMetrics
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: apple.spacing.lg,
+        gap: tokens.spacing.lg,
       }}>
         {strategies.map((strategy, index) => (
           <motion.div
@@ -307,11 +307,11 @@ const CorrelationFlowDiagram = ({ strategies }: { strategies: CorrelationMetrics
             whileHover={{ scale: 1.05 }}
             onClick={() => setSelectedStrategy(strategy.name)}
             style={{
-              padding: apple.spacing.md,
-              borderRadius: apple.radius.lg,
+              padding: tokens.spacing.md,
+              borderRadius: tokens.radius.lg,
               background: selectedStrategy === strategy.name 
                 ? `${strategy.color}20` 
-                : apple.colors.fill,
+                : tokens.colors.fill,
               border: `2px solid ${selectedStrategy === strategy.name ? strategy.color : 'transparent'}`,
               cursor: 'pointer',
               transition: 'all 300ms ease',
@@ -321,12 +321,12 @@ const CorrelationFlowDiagram = ({ strategies }: { strategies: CorrelationMetrics
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: apple.spacing.sm,
+              marginBottom: tokens.spacing.sm,
             }}>
               <h4 style={{
-                fontSize: apple.typography.sizes.callout,
-                fontWeight: apple.typography.weights.semibold,
-                color: apple.colors.label,
+                fontSize: tokens.typography.sizes.callout,
+                fontWeight: tokens.typography.weights.semibold,
+                color: tokens.colors.label,
                 margin: 0,
               }}>
                 {strategy.name}
@@ -334,24 +334,24 @@ const CorrelationFlowDiagram = ({ strategies }: { strategies: CorrelationMetrics
               <div style={{
                 width: 12,
                 height: 12,
-                borderRadius: apple.radius.full,
+                borderRadius: tokens.radius.full,
                 background: strategy.color,
                 boxShadow: `0 0 12px ${strategy.color}60`,
               }} />
             </div>
             
-            <div style={{ marginBottom: apple.spacing.sm }}>
+            <div style={{ marginBottom: tokens.spacing.sm }}>
               <div style={{
-                fontSize: apple.typography.sizes.title2,
-                fontWeight: apple.typography.weights.black,
+                fontSize: tokens.typography.sizes.title2,
+                fontWeight: tokens.typography.weights.black,
                 color: strategy.color,
                 lineHeight: 1,
               }}>
                 {strategy.count.toLocaleString()}
               </div>
               <div style={{
-                fontSize: apple.typography.sizes.caption1,
-                color: apple.colors.tertiaryLabel,
+                fontSize: tokens.typography.sizes.caption1,
+                color: tokens.colors.tertiaryLabel,
               }}>
                 correlations
               </div>
@@ -363,9 +363,9 @@ const CorrelationFlowDiagram = ({ strategies }: { strategies: CorrelationMetrics
               gap: 4,
             }}>
               <div style={{
-                fontSize: apple.typography.sizes.footnote,
-                fontWeight: apple.typography.weights.medium,
-                color: apple.colors.secondaryLabel,
+                fontSize: tokens.typography.sizes.footnote,
+                fontWeight: tokens.typography.weights.medium,
+                color: tokens.colors.secondaryLabel,
               }}>
                 {strategy.accuracy}% accuracy
               </div>
@@ -373,7 +373,7 @@ const CorrelationFlowDiagram = ({ strategies }: { strategies: CorrelationMetrics
                 width: '100%',
                 height: 4,
                 borderRadius: 2,
-                background: apple.colors.fill,
+                background: tokens.colors.fill,
                 overflow: 'hidden',
               }}>
                 <motion.div
@@ -396,26 +396,26 @@ const CorrelationFlowDiagram = ({ strategies }: { strategies: CorrelationMetrics
 }
 
 const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
   
   const performanceMetrics = [
     {
       label: 'Commands',
       value: metrics.totalCommands,
-      color: apple.colors.blue,
+      color: tokens.colors.blue,
       icon: Zap,
     },
     {
       label: 'Memory',
       value: metrics.memoryUsage,
       percentage: metrics.memoryPercent,
-      color: apple.colors.orange,
+      color: tokens.colors.orange,
       icon: HardDrive,
     },
     {
       label: 'Connections',
       value: metrics.connectionsReceived,
-      color: apple.colors.green,
+      color: tokens.colors.green,
       icon: Network,
     },
     {
@@ -423,7 +423,7 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
       value: metrics.keyspaceHits > 0 ? 
         `${Math.round(metrics.keyspaceHits / (metrics.keyspaceHits + metrics.keyspaceMisses) * 100)}%` : 
         '0%',
-      color: apple.colors.purple,
+      color: tokens.colors.purple,
       icon: Target,
     }
   ]
@@ -431,20 +431,20 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
   return (
     <div style={{
       ...glassmorphismCSS('premium'),
-      borderRadius: apple.radius['2xl'],
-      padding: apple.spacing.xl,
+      borderRadius: tokens.radius['2xl'],
+      padding: tokens.spacing.xl,
     }}>
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: apple.spacing.md,
-        marginBottom: apple.spacing.xl,
+        gap: tokens.spacing.md,
+        marginBottom: tokens.spacing.xl,
       }}>
         <div style={{
           width: 48,
           height: 48,
-          borderRadius: apple.radius.lg,
-          background: apple.colors.gradients.orangeToRed,
+          borderRadius: tokens.radius.lg,
+          background: tokens.colors.gradients.orangeToRed,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -453,16 +453,16 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
         </div>
         <div>
           <h3 style={{
-            fontSize: apple.typography.sizes.title3,
-            fontWeight: apple.typography.weights.bold,
-            color: apple.colors.label,
+            fontSize: tokens.typography.sizes.title3,
+            fontWeight: tokens.typography.weights.bold,
+            color: tokens.colors.label,
             margin: 0,
           }}>
             Redis Performance
           </h3>
           <p style={{
-            fontSize: apple.typography.sizes.subhead,
-            color: apple.colors.secondaryLabel,
+            fontSize: tokens.typography.sizes.subhead,
+            color: tokens.colors.secondaryLabel,
             margin: 0,
           }}>
             Live backend performance metrics
@@ -473,7 +473,7 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-        gap: apple.spacing.md,
+        gap: tokens.spacing.md,
       }}>
         {performanceMetrics.map((metric, index) => (
           <motion.div
@@ -482,8 +482,8 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.1 }}
             style={{
-              padding: apple.spacing.md,
-              borderRadius: apple.radius.lg,
+              padding: tokens.spacing.md,
+              borderRadius: tokens.radius.lg,
               background: `${metric.color}10`,
               border: `1px solid ${metric.color}30`,
               textAlign: 'center',
@@ -492,7 +492,7 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
             <div style={{
               width: 36,
               height: 36,
-              borderRadius: apple.radius.md,
+              borderRadius: tokens.radius.md,
               background: metric.color,
               display: 'flex',
               alignItems: 'center',
@@ -503,8 +503,8 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
             </div>
             
             <div style={{
-              fontSize: apple.typography.sizes.title3,
-              fontWeight: apple.typography.weights.bold,
+              fontSize: tokens.typography.sizes.title3,
+              fontWeight: tokens.typography.weights.bold,
               color: metric.color,
               lineHeight: 1,
               marginBottom: 4,
@@ -513,8 +513,8 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
             </div>
             
             <div style={{
-              fontSize: apple.typography.sizes.caption1,
-              color: apple.colors.secondaryLabel,
+              fontSize: tokens.typography.sizes.caption1,
+              color: tokens.colors.secondaryLabel,
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
             }}>
@@ -527,7 +527,7 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
                 width: '100%',
                 height: 4,
                 borderRadius: 2,
-                background: apple.colors.fill,
+                background: tokens.colors.fill,
                 overflow: 'hidden',
               }}>
                 <motion.div
@@ -547,15 +547,15 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
       </div>
       
       <div style={{
-        marginTop: apple.spacing.lg,
-        padding: apple.spacing.sm,
-        borderRadius: apple.radius.sm,
-        background: apple.colors.fill,
+        marginTop: tokens.spacing.lg,
+        padding: tokens.spacing.sm,
+        borderRadius: tokens.radius.sm,
+        background: tokens.colors.fill,
         textAlign: 'center',
       }}>
         <div style={{
-          fontSize: apple.typography.sizes.caption1,
-          color: apple.colors.tertiaryLabel,
+          fontSize: tokens.typography.sizes.caption1,
+          color: tokens.colors.tertiaryLabel,
         }}>
           Last updated: {new Date(metrics.lastUpdated).toLocaleTimeString()}
         </div>
@@ -569,7 +569,7 @@ const RedisPerformanceVisualization = ({ metrics }: { metrics: RedisMetrics }) =
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const AdvancedRealTimeDashboard = () => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
   const [isLoading, setIsLoading] = useState(true)
   const [correlationMetrics, setCorrelationMetrics] = useState<CorrelationMetrics | null>(null)
   const [redisMetrics, setRedisMetrics] = useState<RedisMetrics | null>(null)
@@ -648,10 +648,10 @@ export const AdvancedRealTimeDashboard = () => {
       { range: '60-70%', count: 179 },
     ],
     correlationStrategies: [
-      { name: 'ML Similarity', count: 1203, accuracy: 96.4, color: apple.colors.blue },
-      { name: 'Rule-Based', count: 847, accuracy: 92.1, color: apple.colors.green },
-      { name: 'Temporal', count: 456, accuracy: 89.7, color: apple.colors.orange },
-      { name: 'Semantic', count: 341, accuracy: 94.8, color: apple.colors.purple },
+      { name: 'ML Similarity', count: 1203, accuracy: 96.4, color: tokens.colors.blue },
+      { name: 'Rule-Based', count: 847, accuracy: 92.1, color: tokens.colors.green },
+      { name: 'Temporal', count: 456, accuracy: 89.7, color: tokens.colors.orange },
+      { name: 'Semantic', count: 341, accuracy: 94.8, color: tokens.colors.purple },
     ]
   }
 
@@ -670,8 +670,8 @@ export const AdvancedRealTimeDashboard = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: apple.colors.background,
-      padding: apple.spacing.lg,
+      background: tokens.colors.background,
+      padding: tokens.spacing.lg,
     }}>
       <motion.div
         initial={{ opacity: 0 }}
@@ -686,16 +686,16 @@ export const AdvancedRealTimeDashboard = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: apple.spacing.xl,
+          marginBottom: tokens.spacing.xl,
         }}>
           <div>
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               style={{
-                fontSize: apple.typography.sizes.largeTitle,
-                fontWeight: apple.typography.weights.black,
-                color: apple.colors.label,
+                fontSize: tokens.typography.sizes.largeTitle,
+                fontWeight: tokens.typography.weights.black,
+                color: tokens.colors.label,
                 margin: 0,
               }}
             >
@@ -706,8 +706,8 @@ export const AdvancedRealTimeDashboard = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
               style={{
-                fontSize: apple.typography.sizes.callout,
-                color: apple.colors.secondaryLabel,
+                fontSize: tokens.typography.sizes.callout,
+                color: tokens.colors.secondaryLabel,
                 margin: '8px 0 0',
               }}
             >
@@ -715,26 +715,26 @@ export const AdvancedRealTimeDashboard = () => {
             </motion.p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: apple.spacing.md }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.md }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: 6,
               padding: '6px 12px',
-              borderRadius: apple.radius.sm,
+              borderRadius: tokens.radius.sm,
               background: isConnected ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)',
-              border: `1px solid ${isConnected ? apple.colors.green : apple.colors.red}40`,
+              border: `1px solid ${isConnected ? tokens.colors.green : tokens.colors.red}40`,
             }}>
               <div style={{
                 width: 8,
                 height: 8,
-                borderRadius: apple.radius.full,
-                background: isConnected ? apple.colors.green : apple.colors.red,
+                borderRadius: tokens.radius.full,
+                background: isConnected ? tokens.colors.green : tokens.colors.red,
               }} />
               <span style={{
-                fontSize: apple.typography.sizes.caption1,
-                fontWeight: apple.typography.weights.semibold,
-                color: isConnected ? apple.colors.green : apple.colors.red,
+                fontSize: tokens.typography.sizes.caption1,
+                fontWeight: tokens.typography.weights.semibold,
+                color: isConnected ? tokens.colors.green : tokens.colors.red,
               }}>
                 {isConnected ? 'LIVE' : 'DISCONNECTED'}
               </span>
@@ -746,15 +746,15 @@ export const AdvancedRealTimeDashboard = () => {
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: apple.spacing.lg,
-          marginBottom: apple.spacing.xl,
+          gap: tokens.spacing.lg,
+          marginBottom: tokens.spacing.xl,
         }}>
           <LiveMetricCard
             title="Total Correlations"
             value={usingMockData ? '—' : mockCorrelationMetrics.totalCorrelations.toLocaleString()}
             icon={Brain}
-            color={apple.colors.blue}
-            gradient={apple.colors.gradients.blueToIndigo}
+            color={tokens.colors.blue}
+            gradient={tokens.colors.gradients.blueToIndigo}
             trend={{ value: 12.3, isUp: true }}
             isLoading={isLoading}
           />
@@ -763,8 +763,8 @@ export const AdvancedRealTimeDashboard = () => {
             value={mockCorrelationMetrics.accuracyScore}
             unit="%"
             icon={Target}
-            color={apple.colors.green}
-            gradient={apple.colors.gradients.greenToTeal}
+            color={tokens.colors.green}
+            gradient={tokens.colors.gradients.greenToTeal}
             trend={{ value: 2.1, isUp: true }}
             isLoading={isLoading}
           />
@@ -772,47 +772,47 @@ export const AdvancedRealTimeDashboard = () => {
             title="Redis Commands"
             value={mockRedisMetrics.totalCommands.toLocaleString()}
             icon={Database}
-            color={apple.colors.orange}
-            gradient={apple.colors.gradients.orangeToRed}
+            color={tokens.colors.orange}
+            gradient={tokens.colors.gradients.orangeToRed}
             isLoading={isLoading}
           />
           <LiveMetricCard
             title="Infra Analysis"
             value="Every Minute"
             icon={Server}
-            color={apple.colors.purple}
-            gradient={apple.colors.gradients.purpleToPink}
+            color={tokens.colors.purple}
+            gradient={tokens.colors.gradients.purpleToPink}
             isLoading={isLoading}
           />
         </div>
 
         {/* Correlation Flow Diagram */}
-        <div style={{ marginBottom: apple.spacing.xl }}>
+        <div style={{ marginBottom: tokens.spacing.xl }}>
           <CorrelationFlowDiagram strategies={mockCorrelationMetrics.correlationStrategies} />
         </div>
 
         {/* Redis Performance Visualization */}
-        <div style={{ marginBottom: apple.spacing.xl }}>
+        <div style={{ marginBottom: tokens.spacing.xl }}>
           <RedisPerformanceVisualization metrics={mockRedisMetrics} />
         </div>
 
         {/* Infrastructure Correlation Timeline */}
         <div style={{
           ...glassmorphismCSS('premium'),
-          borderRadius: apple.radius['2xl'],
-          padding: apple.spacing.xl,
+          borderRadius: tokens.radius['2xl'],
+          padding: tokens.spacing.xl,
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: apple.spacing.md,
-            marginBottom: apple.spacing.lg,
+            gap: tokens.spacing.md,
+            marginBottom: tokens.spacing.lg,
           }}>
             <div style={{
               width: 48,
               height: 48,
-              borderRadius: apple.radius.lg,
-              background: apple.colors.gradients.purpleToPink,
+              borderRadius: tokens.radius.lg,
+              background: tokens.colors.gradients.purpleToPink,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -821,16 +821,16 @@ export const AdvancedRealTimeDashboard = () => {
             </div>
             <div>
               <h3 style={{
-                fontSize: apple.typography.sizes.title3,
-                fontWeight: apple.typography.weights.bold,
-                color: apple.colors.label,
+                fontSize: tokens.typography.sizes.title3,
+                fontWeight: tokens.typography.weights.bold,
+                color: tokens.colors.label,
                 margin: 0,
               }}>
                 Infrastructure Correlation Analysis
               </h3>
               <p style={{
-                fontSize: apple.typography.sizes.subhead,
-                color: apple.colors.secondaryLabel,
+                fontSize: tokens.typography.sizes.subhead,
+                color: tokens.colors.secondaryLabel,
                 margin: 0,
               }}>
                 Live correlation analysis running every minute
@@ -841,24 +841,24 @@ export const AdvancedRealTimeDashboard = () => {
           {infraCorrelations.length === 0 ? (
             <div style={{
               textAlign: 'center',
-              padding: apple.spacing.xl,
+              padding: tokens.spacing.xl,
             }}>
               <Eye style={{ 
                 width: 48, 
                 height: 48, 
-                color: apple.colors.quaternaryLabel,
+                color: tokens.colors.quaternaryLabel,
                 margin: '0 auto 16px'
               }} />
               <p style={{
-                fontSize: apple.typography.sizes.callout,
-                color: apple.colors.secondaryLabel,
+                fontSize: tokens.typography.sizes.callout,
+                color: tokens.colors.secondaryLabel,
                 margin: 0,
               }}>
                 Monitoring for infrastructure correlations...
               </p>
               <p style={{
-                fontSize: apple.typography.sizes.footnote,
-                color: apple.colors.tertiaryLabel,
+                fontSize: tokens.typography.sizes.footnote,
+                color: tokens.colors.tertiaryLabel,
                 margin: '8px 0 0',
               }}>
                 Analysis runs every minute with 0 alerts currently analyzed
@@ -868,7 +868,7 @@ export const AdvancedRealTimeDashboard = () => {
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: apple.spacing.md,
+              gap: tokens.spacing.md,
             }}>
               {infraCorrelations.map((correlation, index) => (
                 <motion.div
@@ -877,10 +877,10 @@ export const AdvancedRealTimeDashboard = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                   style={{
-                    padding: apple.spacing.md,
-                    borderRadius: apple.radius.lg,
-                    background: apple.colors.fill,
-                    border: `1px solid ${apple.colors.separator}`,
+                    padding: tokens.spacing.md,
+                    borderRadius: tokens.radius.lg,
+                    background: tokens.colors.fill,
+                    border: `1px solid ${tokens.colors.separator}`,
                   }}
                 >
                   {/* Correlation details would go here */}

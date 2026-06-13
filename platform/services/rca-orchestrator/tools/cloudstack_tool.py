@@ -8,8 +8,8 @@ import aiohttp
 from .base import BaseTool
 
 CS_ENDPOINTS = {
-    "rno": os.getenv("CLOUDSTACK_RNO_URL", "https://interactive-cs-rno-prod.apple.com/client/api"),
-    "mdn": os.getenv("CLOUDSTACK_MDN_URL", "https://interactive-cs-mdn-prod.apple.com/client/api"),
+    "rno": os.getenv("CLOUDSTACK_RNO_URL", "https://interactive-cs-rno-prod.example.com/client/api"),
+    "mdn": os.getenv("CLOUDSTACK_MDN_URL", "https://interactive-cs-mdn-prod.example.com/client/api"),
 }
 CS_API_KEY = os.getenv("CLOUDSTACK_API_KEY", "")
 CS_SECRET_KEY = os.getenv("CLOUDSTACK_SECRET_KEY", "")

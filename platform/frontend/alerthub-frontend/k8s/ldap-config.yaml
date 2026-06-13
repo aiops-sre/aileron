@@ -4,8 +4,8 @@
 # This ConfigMap and Secret target namespace "alerthub" (not "aileron")
 # and reference a different application ("sre-command-center") from an earlier
 # iteration of this project. They use a direct LDAP bind approach that has been
-# replaced by DS-LDAP/MAS SSO via the alerthub-dsldap-config ConfigMap defined
-# in helm/alerthub/templates/configmaps/dsldap-config.yaml.
+# replaced by LDAP/MAS SSO via the alerthub-ldap-config ConfigMap defined
+# in helm/alerthub/templates/configmaps/ldap-config.yaml.
 #
 # The Secret also contains placeholder credentials (CHANGE_ME values).
 # DO NOT apply this file to any cluster.
@@ -23,9 +23,9 @@ data:
   LDAP_ENABLED: "true"
   LDAP_SERVER: ""
   LDAP_PORT: "636"
-  LDAP_BASE_DN: "o=apple"
+  LDAP_BASE_DN: "dc=example,dc=com"
   LDAP_USER_SEARCH_BASE: "ou=people"
-  LDAP_USER_FILTER: "appleconnectname=%s"
+  LDAP_USER_FILTER: "oidc-helpername=%s"
   LDAP_GROUP_SEARCH_BASE: "ou=groups"
   LDAP_GROUP_FILTER: "uniquemember=%s"
   LDAP_USE_TLS: "true"
@@ -74,7 +74,7 @@ metadata:
 type: Opaque
 stringData:
   # LDAP Service Account - Replace with your AppID credentials
-  LDAP_BIND_DN: "appid=YOUR_APP_ID,ou=applications,o=apple"
+  LDAP_BIND_DN: "appid=YOUR_APP_ID,ou=applications,dc=example,dc=com"
   LDAP_BIND_PASSWORD: "YOUR_APP_PASSWORD"
 
   # JWT Secret - Generate a strong random key

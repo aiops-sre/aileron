@@ -60,19 +60,19 @@ config:
   env: production
   logLevel: info
   port: "3000"
-  idmsEnabled: "true"
-  idmsAutoProvision: "true"
-  idmsDefaultRole: viewer
-  idmsStrictMode: "false"
+  oidcEnabled: "true"
+  oidcAutoProvision: "true"
+  oidcDefaultRole: viewer
+  oidcStrictMode: "false"
   internalTlsInsecure: "true"
 
 # ---------------------------------------------------------------------------
-# DS-LDAP
+# LDAP
 # ---------------------------------------------------------------------------
-dsldap:
+ldap:
   enabled: "true"
   serverUrl: 
-  userSearchBase: "ou=people,o=apple"
+  userSearchBase: "ou=people,dc=example,dc=com"
   cacheTtlMinutes: "5"
   adminGroups: aileron-admins
   operatorGroups: "aileron-operators,aileron-operators"
@@ -83,16 +83,16 @@ dsldap:
 # ---------------------------------------------------------------------------
 secrets:
   name: alerthub-secrets
-  dsldapName: alerthub-dsldap-credentials
+  ldapName: alerthub-ldap-credentials
   hclName: alerthub-hcl-credentials
   neo4jCredsName: neo4j-credentials
   infraCredsName: infrastructure-credentials
-  whisperCertName: alerthub-whisper-cert
+  secrets_managerCertName: alerthub-secrets_manager-cert
 
 build:
   enabled: true
 
-whisper:
+secrets_manager:
   enabled: true
 
 # ---------------------------------------------------------------------------

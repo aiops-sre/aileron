@@ -20,12 +20,12 @@ from agent.prompts import SYSTEM_PROMPT, RCA_EXTRACTION_PROMPT, SIMILAR_INCIDENT
 
 log = logging.getLogger(__name__)
 
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.alert-engine-poc.svc.cluster.local:11434")
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.aileron.svc.cluster.local:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
 MAX_TOOL_ROUNDS = int(os.getenv("MAX_TOOL_ROUNDS", "3"))
 OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "240"))
 
-# Endor (Apple internal LLM gateway) configuration — all values from env vars
+# Endor (internal LLM gateway) configuration — all values from env vars
 _ENDOR_CLIENT_ID = os.getenv("ENDOR_CLIENT_ID", "")
 _ENDOR_CLIENT_SECRET = os.getenv("ENDOR_CLIENT_SECRET", "")
 _ENDOR_TOTP_SECRET = os.getenv("ENDOR_TOTP_SECRET", "")  # base32 seed
@@ -34,7 +34,7 @@ _ENDOR_ACCOUNT_NAME = os.getenv("ENDOR_ACCOUNT_NAME", "")
 _ENDOR_ACCOUNT_PASSWORD = os.getenv("ENDOR_ACCOUNT_PASSWORD", "")
 _ENDOR_OIDC_APP_ID = os.getenv("ENDOR_OIDC_APP_ID", "")
 _ENDOR_DEVICE_ID = int(os.getenv("ENDOR_DEVICE_ID", "1"))
-_ENDOR_RESOURCE_SERVER = os.getenv("ENDOR_RESOURCE_SERVER", "https://api.endor.apple.com/")
+_ENDOR_RESOURCE_SERVER = os.getenv("ENDOR_RESOURCE_SERVER", "https://api.endor.example.com/")
 _ENDOR_DEFAULT_MODEL = os.getenv("ENDOR_DEFAULT_MODEL", "gemini-2.5-flash")
 
 
@@ -66,14 +66,14 @@ class RCAOrchestrator:
     async def run_agent_loop(
         self, inv: Investigation, emit: Callable[[StreamEvent], None]
     ) -> Investigation:
-        """Main ReAct agent loop using Ollama tool calling or Floodgate Claude."""
+        """Main ReAct agent loop using Ollama tool calling or OIDC Provider Claude."""
         from learning.knowledge_store import KnowledgeStore
         ks = self.knowledge_store
 
-        use_floodgate = inv.llm_provider == "floodgate" and inv.llm_token
+        use_oidc = inv.llm_provider == "oidc" and inv.llm_token
         use_endor = inv.llm_provider == "endor"
-        if use_floodgate:
-            log.info(f"Investigation {inv.id}: using Floodgate {inv.llm_model}")
+        if use_oidc:
+            log.info(f"Investigation {inv.id}: using OIDC Provider {inv.llm_model}")
         elif use_endor:
             log.info(f"Investigation {inv.id}: using Endor {inv.llm_model or _ENDOR_DEFAULT_MODEL}")
         else:
@@ -119,10 +119,10 @@ class RCAOrchestrator:
 
         while round_count < MAX_TOOL_ROUNDS:
             round_count += 1
-            if use_floodgate:
-                # Floodgate Claude does not support Ollama-style tool calling natively;
+            if use_oidc:
+                # OIDC Provider Claude does not support Ollama-style tool calling natively;
                 # run a single-shot summarisation round instead.
-                response = await self._floodgate_chat(messages, inv.llm_model, inv.llm_token)
+                response = await self._oidc_chat(messages, inv.llm_model, inv.llm_token)
             elif use_endor:
                 response = await self._endor_chat(messages, inv.llm_model)
             else:
@@ -150,8 +150,8 @@ class RCAOrchestrator:
             elif round_count == 5:
                 await self._phase(inv, InvestigationPhase.evidence_collection, emit)
 
-            # For Floodgate/Endor (no tool calls), stop after first substantive response
-            if use_floodgate or use_endor or not tool_calls_raw:
+            # For OIDC Provider/Endor (no tool calls), stop after first substantive response
+            if use_oidc or use_endor or not tool_calls_raw:
                 break
 
             # Execute tool calls (Ollama path only)
@@ -206,8 +206,8 @@ class RCAOrchestrator:
         # Phase: RCA extraction
         await self._phase(inv, InvestigationPhase.root_cause_analysis, emit)
         messages.append({"role": "user", "content": RCA_EXTRACTION_PROMPT})
-        if use_floodgate:
-            rca_response = await self._floodgate_chat(messages, inv.llm_model, inv.llm_token)
+        if use_oidc:
+            rca_response = await self._oidc_chat(messages, inv.llm_model, inv.llm_token)
         elif use_endor:
             rca_response = await self._endor_chat(messages, inv.llm_model)
         else:
@@ -333,10 +333,10 @@ class RCAOrchestrator:
             log.error(f"Ollama request failed: {e}")
             return None
 
-    async def _floodgate_chat(
+    async def _oidc_chat(
         self, messages: list[dict], model: str, token: str, json_mode: bool = False
     ) -> dict | None:
-        """Call Claude via Floodgate proxy with the user-supplied OAuth token."""
+        """Call Claude via OIDC Provider proxy with the user-supplied OAuth token."""
         import ssl
 
         # Map short model names to full Claude model IDs
@@ -370,13 +370,13 @@ class RCAOrchestrator:
             body["system"] = system_content
 
         ssl_ctx = ssl.create_default_context()
-        # Apple's internal CA is not in the default trust store. Allow bypassing
+        # your organization's internal CA is not in the default trust store. Allow bypassing
         # certificate verification only when INTERNAL_TLS_INSECURE=true is explicitly
         # set (same flag used by the Go backend for internal service calls).
         if os.getenv("INTERNAL_TLS_INSECURE", "").lower() in ("true", "1", "yes"):
             ssl_ctx.check_hostname = False
             ssl_ctx.verify_mode = ssl.CERT_NONE
-        # Load custom CA bundle if provided (e.g. Apple corporate CA)
+        # Load custom CA bundle if provided (e.g. Aileron corporate CA)
         elif ca_bundle := os.getenv("SSL_CA_BUNDLE"):
             ssl_ctx.load_verify_locations(ca_bundle)
         connector = aiohttp.TCPConnector(ssl=ssl_ctx)
@@ -384,7 +384,7 @@ class RCAOrchestrator:
         try:
             async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.post(
-                    "https://floodgate.g.apple.com/api/anthropic/v1/messages",
+                    "https://oidc.g.example.com/api/anthropic/v1/messages",
                     json=body,
                     headers={
                         "Authorization": f"Bearer {token}",
@@ -396,7 +396,7 @@ class RCAOrchestrator:
                 ) as resp:
                     raw = await resp.text()
                     if resp.status != 200:
-                        log.error(f"Floodgate error {resp.status}: {raw[:500]}")
+                        log.error(f"OIDC Provider error {resp.status}: {raw[:500]}")
                         return None
                     data = await resp.json(content_type=None)
                     # Normalise to Ollama-style response so the rest of run_agent_loop is unchanged
@@ -406,10 +406,10 @@ class RCAOrchestrator:
                             text += block.get("text", "")
                     return {"message": {"role": "assistant", "content": text, "tool_calls": []}}
         except asyncio.TimeoutError:
-            log.error("Floodgate request timed out")
+            log.error("OIDC Provider request timed out")
             return None
         except Exception as e:
-            log.error(f"Floodgate request failed: {e}")
+            log.error(f"OIDC Provider request failed: {e}")
             return None
 
     def _totp_now(self, secret_b32: str, step: int = 30, digits: int = 6) -> str:
@@ -427,7 +427,7 @@ class RCAOrchestrator:
         return f"{code % (10 ** digits):0{digits}d}"
 
     async def _endor_chat(self, messages: list[dict], model: str | None = None) -> dict | None:
-        """Call a model via Endor (Apple internal LLM gateway) using system account + TOTP auth."""
+        """Call a model via Endor (internal LLM gateway) using system account + TOTP auth."""
         if not _ENDOR_TOTP_SECRET:
             log.error("Endor: ENDOR_TOTP_SECRET not configured")
             return None

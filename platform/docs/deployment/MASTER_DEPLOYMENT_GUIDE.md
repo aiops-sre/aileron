@@ -1,6 +1,6 @@
 # SRE Command Center — Deployment Guide
 
-> Build, push, and deploy both services to the Apple internal Kubernetes cluster.  
+> Build, push, and deploy both services to the internal Kubernetes cluster.  
 > Version: v1.0.0 | Cluster: example-cluster | Namespace: aileron
 
 ---
@@ -122,7 +122,7 @@ kubectl -n aileron rollout status \
 | Service | `frontend` | ClusterIP, port 80 |
 | Ingress | `alerthub-ingress` | Routes to frontend + /api to backend |
 | Secret | `alerthub-secrets` | App credentials (postgres, JWT, redis, neo4j) |
-| Secret | `alerthub-dsldap-credentials` | LDAP_APP_ID, LDAP_APP_PASSWORD |
+| Secret | `alerthub-ldap-credentials` | LDAP_APP_ID, LDAP_APP_PASSWORD |
 | Secret | `jfrog-dockers-access` | Image pull secret for JFrog registry |
 
 ### Useful kubectl Commands
@@ -174,8 +174,8 @@ kubectl -n aileron edit secret alerthub-secrets
 | `REDIS_URL` | Redis connection | `redis://:pass@host:6379` |
 | `KAFKA_BROKERS` | Broker list | `kafka-0:9092,kafka-1:9092` |
 | `JWT_SECRET` | Token signing key | 32+ char random string |
-| `MAS_CLIENT_ID` | IdMS OAuth client | From IdMS app registration |
-| `MAS_CLIENT_SECRET` | IdMS OAuth secret | From IdMS app registration |
+| `MAS_CLIENT_ID` | OIDC OAuth client | From OIDC app registration |
+| `MAS_CLIENT_SECRET` | OIDC OAuth secret | From OIDC app registration |
 | `MAS_REDIRECT_URL` | OAuth callback | `https://aileron.example.com/auth/mas/callback` |
 | `BERT_SERVICE_URL` | BERT embedding service | `http://bert-service:8080` |
 | `RCA_ORCHESTRATOR_URL` | RCA service | `http://rca-svc:8006` (leave empty to disable) |
@@ -184,7 +184,7 @@ kubectl -n aileron edit secret alerthub-secrets
 | `AUTONOMOUS_CORRELATION_URL` | Autonomous AI svc | Optional external correlation service |
 | `INSECURE_SKIP_VERIFY` | TLS skip (dev only) | `false` in production |
 
-LDAP credentials are in the separate `alerthub-dsldap-credentials` secret:
+LDAP credentials are in the separate `alerthub-ldap-credentials` secret:
 
 | Variable | Purpose |
 |---|---|

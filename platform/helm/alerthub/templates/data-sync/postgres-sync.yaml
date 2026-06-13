@@ -6,7 +6,7 @@
 
   Replicator user creation is handled in the postgres StatefulSet's postStart
   lifecycle hook (runs as the superuser with local trust auth — no separate
-  Job or Whisper secrets required).
+  Job or SecretsManager secrets required).
 
   MDN (standby):
     - No extra resources; standby bootstrap is handled in the StatefulSet

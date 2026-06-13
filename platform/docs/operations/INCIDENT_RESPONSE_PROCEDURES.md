@@ -788,7 +788,7 @@ on_call_schedule:
     contacts:
       - name: "SRE Team Primary"
         phone: "+1-XXX-XXX-XXXX"
-        pagerduty: "sre-primary@apple.pagerduty.com"
+        pagerduty: "sre-primary@tokens.pagerduty.com"
         
   secondary_sre:
     schedule: "24/7"
@@ -796,7 +796,7 @@ on_call_schedule:
     contacts:
       - name: "SRE Team Secondary"
         phone: "+1-XXX-XXX-XXXX"
-        pagerduty: "sre-secondary@apple.pagerduty.com"
+        pagerduty: "sre-secondary@tokens.pagerduty.com"
         
   incident_commander:
     schedule: "business_hours_extended"
@@ -804,31 +804,31 @@ on_call_schedule:
     contacts:
       - name: "Senior SRE Manager"
         phone: "+1-XXX-XXX-XXXX"
-        pagerduty: "ic-primary@apple.pagerduty.com"
+        pagerduty: "ic-primary@tokens.pagerduty.com"
 ```
 
 ### **Specialist Team Contacts**
 ```yaml
 specialist_teams:
   database:
-    primary: "dba-oncall@apple.com"
+    primary: "dba-oncall@example.com"
     phone: "+1-XXX-XXX-XXXX"
-    escalation: "dba-manager@apple.com"
+    escalation: "dba-manager@example.com"
     
   security:
-    primary: "security-oncall@apple.com"
+    primary: "security-oncall@example.com"
     phone: "+1-XXX-XXX-XXXX"
-    escalation: "security-manager@apple.com"
+    escalation: "security-manager@example.com"
     
   ai_ml:
-    primary: "ai-team-oncall@apple.com"
+    primary: "ai-team-oncall@example.com"
     business_hours_only: true
-    escalation: "ai-team-lead@apple.com"
+    escalation: "ai-team-lead@example.com"
     
   network:
-    primary: "network-oncall@apple.com"
+    primary: "network-oncall@example.com"
     phone: "+1-XXX-XXX-XXXX"
-    escalation: "network-manager@apple.com"
+    escalation: "network-manager@example.com"
 ```
 
 ### **Management Escalation**
@@ -836,19 +836,19 @@ specialist_teams:
 management_contacts:
   engineering_manager:
     name: "Engineering Manager"
-    email: "engineering-manager@apple.com"
+    email: "engineering-manager@example.com"
     phone: "+1-XXX-XXX-XXXX"
     escalation_threshold: "30_minutes_sev1"
     
   director_engineering:
     name: "Director of Engineering"
-    email: "director-eng@apple.com"
+    email: "director-eng@example.com"
     phone: "+1-XXX-XXX-XXXX"
     escalation_threshold: "1_hour_sev1"
     
   vp_engineering:
     name: "VP Engineering"
-    email: "vp-eng@apple.com"
+    email: "vp-eng@example.com"
     phone: "+1-XXX-XXX-XXXX"
     escalation_threshold: "2_hours_sev1"
 ```

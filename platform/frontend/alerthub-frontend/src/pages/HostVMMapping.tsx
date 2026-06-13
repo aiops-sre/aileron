@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Server, Database, CheckCircle, AlertCircle, Search, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react'
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -121,13 +121,13 @@ export function HostVMMapping() {
   const healthyVMs = hosts.reduce((sum, h) => sum + h.vms.filter(vm => vm.health_status === 'healthy').length, 0)
 
   return (
-    <div style={{ padding: 24, maxWidth: 1600, margin: '0 auto', background: apple.background, minHeight: '100vh' }}>
+    <div style={{ padding: 24, maxWidth: 1600, margin: '0 auto', background: tokens.background, minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
           Host to VM Mapping
         </h1>
-        <p style={{ fontSize: 15, color: apple.secondaryLabel }}>
+        <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>
           Infrastructure host and virtual machine relationships
         </p>
       </div>
@@ -135,7 +135,7 @@ export function HostVMMapping() {
       {/* Controls */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: apple.tertiaryLabel }} />
+          <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: tokens.tertiaryLabel }} />
           <input
             type="text"
             placeholder="Search hosts or VMs..."
@@ -146,11 +146,11 @@ export function HostVMMapping() {
               paddingLeft: 40,
               paddingRight: 12,
               height: 36,
-              borderRadius: apple.radius.sm,
-              border: `0.5px solid ${apple.separator}`,
-              background: apple.secondaryBackground,
+              borderRadius: tokens.radius.sm,
+              border: `0.5px solid ${tokens.separator}`,
+              background: tokens.secondaryBackground,
               fontSize: 13,
-              color: apple.label,
+              color: tokens.label,
               outline: 'none',
             }}
           />
@@ -161,12 +161,12 @@ export function HostVMMapping() {
           onChange={(e) => setSelectedRegion(e.target.value)}
           style={{
             height: 36,
-            borderRadius: apple.radius.sm,
-            border: `0.5px solid ${apple.separator}`,
-            background: apple.secondaryBackground,
+            borderRadius: tokens.radius.sm,
+            border: `0.5px solid ${tokens.separator}`,
+            background: tokens.secondaryBackground,
             padding: '0 12px',
             fontSize: 13,
-            color: apple.label,
+            color: tokens.label,
             outline: 'none',
           }}
         >
@@ -179,12 +179,12 @@ export function HostVMMapping() {
           style={{
             height: 36,
             padding: '0 16px',
-            borderRadius: apple.radius.sm,
-            border: `0.5px solid ${apple.separator}`,
-            background: apple.secondaryBackground,
+            borderRadius: tokens.radius.sm,
+            border: `0.5px solid ${tokens.separator}`,
+            background: tokens.secondaryBackground,
             fontSize: 13,
             fontWeight: 500,
-            color: apple.label,
+            color: tokens.label,
             cursor: 'pointer',
           }}
         >
@@ -197,9 +197,9 @@ export function HostVMMapping() {
           style={{
             height: 36,
             padding: '0 16px',
-            borderRadius: apple.radius.sm,
+            borderRadius: tokens.radius.sm,
             border: 'none',
-            background: apple.blue,
+            background: tokens.blue,
             color: '#fff',
             fontSize: 13,
             fontWeight: 500,
@@ -219,67 +219,67 @@ export function HostVMMapping() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         <div style={{
           padding: 20,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.lg,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.lg,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel, marginBottom: 4 }}>Total Hosts</div>
-          <div style={{ fontSize: 32, fontWeight: 600, color: apple.label }}>{hosts.length}</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel, marginBottom: 4 }}>Total Hosts</div>
+          <div style={{ fontSize: 32, fontWeight: 600, color: tokens.label }}>{hosts.length}</div>
         </div>
         <div style={{
           padding: 20,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.lg,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.lg,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel, marginBottom: 4 }}>Total VMs</div>
-          <div style={{ fontSize: 32, fontWeight: 600, color: apple.blue }}>{totalVMs}</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel, marginBottom: 4 }}>Total VMs</div>
+          <div style={{ fontSize: 32, fontWeight: 600, color: tokens.blue }}>{totalVMs}</div>
         </div>
         <div style={{
           padding: 20,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.lg,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.lg,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel, marginBottom: 4 }}>Healthy Hosts</div>
-          <div style={{ fontSize: 32, fontWeight: 600, color: apple.green }}>{healthyHosts}</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel, marginBottom: 4 }}>Healthy Hosts</div>
+          <div style={{ fontSize: 32, fontWeight: 600, color: tokens.green }}>{healthyHosts}</div>
         </div>
         <div style={{
           padding: 20,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.lg,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.lg,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel, marginBottom: 4 }}>Healthy VMs</div>
-          <div style={{ fontSize: 32, fontWeight: 600, color: apple.green }}>{healthyVMs}</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel, marginBottom: 4 }}>Healthy VMs</div>
+          <div style={{ fontSize: 32, fontWeight: 600, color: tokens.green }}>{healthyVMs}</div>
         </div>
       </div>
 
       {/* Host List */}
       {loading ? (
         <div style={{
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.lg,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.lg,
+          border: `0.5px solid ${tokens.separator}`,
           padding: 60,
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: 15, color: apple.secondaryLabel }}>Loading topology...</div>
+          <div style={{ fontSize: 15, color: tokens.secondaryLabel }}>Loading topology...</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {filteredHosts.map((host) => {
             const isExpanded = expandedHosts.has(host.id)
             const healthIcon = host.health_status === 'healthy' ? CheckCircle : AlertCircle
-            const healthColor = host.health_status === 'healthy' ? apple.green : apple.red
+            const healthColor = host.health_status === 'healthy' ? tokens.green : tokens.red
             
             return (
               <div
                 key={host.id}
                 style={{
-                  background: apple.secondaryBackground,
-                  borderRadius: apple.radius.lg,
-                  border: `0.5px solid ${apple.separator}`,
+                  background: tokens.secondaryBackground,
+                  borderRadius: tokens.radius.lg,
+                  border: `0.5px solid ${tokens.separator}`,
                   overflow: 'hidden',
                 }}
               >
@@ -292,20 +292,20 @@ export function HostVMMapping() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 16,
-                    background: isExpanded ? apple.fill : '#fff',
-                    borderBottom: isExpanded ? `0.5px solid ${apple.separator}` : 'none',
+                    background: isExpanded ? tokens.fill : '#fff',
+                    borderBottom: isExpanded ? `0.5px solid ${tokens.separator}` : 'none',
                   }}
                 >
                   {isExpanded ? (
-                    <ChevronDown style={{ width: 16, height: 16, color: apple.tertiaryLabel }} />
+                    <ChevronDown style={{ width: 16, height: 16, color: tokens.tertiaryLabel }} />
                   ) : (
-                    <ChevronRight style={{ width: 16, height: 16, color: apple.tertiaryLabel }} />
+                    <ChevronRight style={{ width: 16, height: 16, color: tokens.tertiaryLabel }} />
                   )}
                   
                   <div style={{
                     width: 40,
                     height: 40,
-                    borderRadius: apple.radius.md,
+                    borderRadius: tokens.radius.md,
                     background: `${healthColor}15`,
                     display: 'flex',
                     alignItems: 'center',
@@ -315,10 +315,10 @@ export function HostVMMapping() {
                   </div>
 
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: apple.label, marginBottom: 2 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: tokens.label, marginBottom: 2 }}>
                       {host.name}
                     </div>
-                    <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>
+                    <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>
                       {host.vms.length} VMs · {host.status}
                     </div>
                   </div>
@@ -333,10 +333,10 @@ export function HostVMMapping() {
                   <div style={{
                     padding: '4px 12px',
                     borderRadius: 12,
-                    background: apple.fill,
+                    background: tokens.fill,
                     fontSize: 13,
                     fontWeight: 600,
-                    color: apple.label,
+                    color: tokens.label,
                   }}>
                     {host.vms.length}
                   </div>
@@ -346,23 +346,23 @@ export function HostVMMapping() {
                 {isExpanded && (
                   <div style={{ padding: 20 }}>
                     {host.vms.length === 0 ? (
-                      <div style={{ padding: 40, textAlign: 'center', color: apple.tertiaryLabel, fontSize: 13 }}>
+                      <div style={{ padding: 40, textAlign: 'center', color: tokens.tertiaryLabel, fontSize: 13 }}>
                         No virtual machines on this host
                       </div>
                     ) : (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
                         {host.vms.map((vm) => {
                           const vmHealthIcon = vm.health_status === 'healthy' ? CheckCircle : AlertCircle
-                          const vmHealthColor = vm.health_status === 'healthy' ? apple.green : apple.red
+                          const vmHealthColor = vm.health_status === 'healthy' ? tokens.green : tokens.red
                           
                           return (
                             <div
                               key={vm.id}
                               style={{
                                 padding: 12,
-                                background: apple.fill,
-                                borderRadius: apple.radius.sm,
-                                border: `0.5px solid ${apple.separator}`,
+                                background: tokens.fill,
+                                borderRadius: tokens.radius.sm,
+                                border: `0.5px solid ${tokens.separator}`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 12,
@@ -371,7 +371,7 @@ export function HostVMMapping() {
                               <div style={{
                                 width: 32,
                                 height: 32,
-                                borderRadius: apple.radius.sm,
+                                borderRadius: tokens.radius.sm,
                                 background: `${vmHealthColor}15`,
                                 display: 'flex',
                                 alignItems: 'center',
@@ -385,7 +385,7 @@ export function HostVMMapping() {
                                 <div style={{
                                   fontSize: 13,
                                   fontWeight: 500,
-                                  color: apple.label,
+                                  color: tokens.label,
                                   marginBottom: 2,
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
@@ -393,7 +393,7 @@ export function HostVMMapping() {
                                 }}>
                                   {vm.name}
                                 </div>
-                                <div style={{ fontSize: 11, color: apple.tertiaryLabel }}>
+                                <div style={{ fontSize: 11, color: tokens.tertiaryLabel }}>
                                   {vm.status}
                                   {vm.properties?.cpu && ` · ${vm.properties.cpu} vCPU`}
                                   {vm.properties?.memory && ` · ${vm.properties.memory}GB RAM`}
@@ -416,13 +416,13 @@ export function HostVMMapping() {
 
           {filteredHosts.length === 0 && !loading && (
             <div style={{
-              background: apple.secondaryBackground,
-              borderRadius: apple.radius.lg,
-              border: `0.5px solid ${apple.separator}`,
+              background: tokens.secondaryBackground,
+              borderRadius: tokens.radius.lg,
+              border: `0.5px solid ${tokens.separator}`,
               padding: 60,
               textAlign: 'center',
             }}>
-              <div style={{ fontSize: 15, color: apple.secondaryLabel }}>
+              <div style={{ fontSize: 15, color: tokens.secondaryLabel }}>
                 {searchTerm ? 'No hosts or VMs match your search' : 'No infrastructure hosts found'}
               </div>
             </div>

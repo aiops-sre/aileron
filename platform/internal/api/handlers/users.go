@@ -591,7 +591,7 @@ type cssPhotoCacheEntry struct {
 var photoCache sync.Map // map[userID]cssPhotoCacheEntry
 
 // GetMyPhoto returns the caller's profile photo.
-// Priority: OIDC picture URL (from IdMS profile scope) CSS search empty.
+// Priority: OIDC picture URL (from OIDC profile scope) CSS search empty.
 // GET /api/v1/users/me/photo
 func (h *UserHandler) GetMyPhoto(c *gin.Context) {
 	userID, _ := c.Get("user_id")
@@ -635,22 +635,22 @@ func (h *UserHandler) GetMyPhoto(c *gin.Context) {
 	}
 
 	// Priority 2: CSS search (returns name; photo URL may be in document) 
-	idmsToken := ""
+	oidcToken := ""
 	if h.redis != nil && cacheKey != "" {
 		var stored string
-		if err := h.redis.Get("idms:token:"+cacheKey, &stored); err == nil && stored != "" {
-			idmsToken = stored
+		if err := h.redis.Get("oidc:token:"+cacheKey, &stored); err == nil && stored != "" {
+			oidcToken = stored
 		}
 	}
-	if idmsToken == "" {
-		idmsToken = c.GetHeader("X-IDMS-Token")
+	if oidcToken == "" {
+		oidcToken = c.GetHeader("X-OIDC-Token")
 	}
-	if idmsToken == "" {
+	if oidcToken == "" {
 		c.JSON(http.StatusOK, gin.H{"success": true, "data": gin.H{"photo": "", "name": ""}})
 		return
 	}
-	if len(idmsToken) < 7 || idmsToken[:7] != "Bearer " {
-		idmsToken = "Bearer " + idmsToken
+	if len(oidcToken) < 7 || oidcToken[:7] != "Bearer " {
+		oidcToken = "Bearer " + oidcToken
 	}
 
 	// Look up the user's DSO shortname to use as the CSS search query.
@@ -671,11 +671,11 @@ func (h *UserHandler) GetMyPhoto(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": true, "data": gin.H{"photo": "", "name": ""}})
 		return
 	}
-	req.Header.Set("Authorization", idmsToken)
+	req.Header.Set("Authorization", oidcToken)
 	req.Header.Set("Accept", "application/json")
 
-	// Apple's corporate CA is not in the default trust store inside pods;
-	// skip verification for internal idms-int-rsvc calls only when INTERNAL_TLS_INSECURE=true.
+	// Private/corporate CA may not be in the default trust store inside pods;
+	// skip verification for internal oidc-int-rsvc calls only when INTERNAL_TLS_INSECURE=true.
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -702,11 +702,11 @@ func (h *UserHandler) GetMyPhoto(c *gin.Context) {
 	entityID, displayName := parseCSSPerson(body)
 	log.Printf("CSS parsed entityID=%q displayName=%q for user %v", entityID, displayName, userID)
 
-	// Try to fetch a photo using the entity_id (Apple DSID) from the CSS response.
+	// Try to fetch a photo using the entity_id (Aileron DSID) from the CSS response.
 	// The photo endpoint pattern is: /service/css/picture/entity/<entity_id>
 	photoURL := ""
-	if entityID != "" && idmsToken != "" {
-		photoURL = tryFetchCSSPhoto(c.Request.Context(), entityID, idmsToken)
+	if entityID != "" && oidcToken != "" {
+		photoURL = tryFetchCSSPhoto(c.Request.Context(), entityID, oidcToken)
 		log.Printf("CSS photo for entity %s: %q", entityID, photoURL)
 	}
 
@@ -727,7 +727,7 @@ func (h *UserHandler) GetMyPhoto(c *gin.Context) {
 
 // GetUserPhoto returns the profile photo and display name for any user by their ID.
 // Uses the same CSS lookup as GetMyPhoto but with the target user's username.
-// The caller's IDMS token is used to authenticate against the CSS search API.
+// The caller's OIDC token is used to authenticate against the CSS search API.
 // GET /api/v1/users/:id/photo
 func (h *UserHandler) GetUserPhoto(c *gin.Context) {
 	targetID, err := uuid.Parse(c.Param("id"))
@@ -770,24 +770,24 @@ func (h *UserHandler) GetUserPhoto(c *gin.Context) {
 		return
 	}
 
-	// Get the caller's IDMS token
+	// Get the caller's OIDC token
 	callerID, _ := c.Get("user_id")
-	idmsToken := ""
+	oidcToken := ""
 	if h.redis != nil && callerID != nil {
 		var stored string
-		if err2 := h.redis.Get("idms:token:"+fmt.Sprintf("%v", callerID), &stored); err2 == nil {
-			idmsToken = stored
+		if err2 := h.redis.Get("oidc:token:"+fmt.Sprintf("%v", callerID), &stored); err2 == nil {
+			oidcToken = stored
 		}
 	}
-	if idmsToken == "" {
-		idmsToken = c.GetHeader("X-IDMS-Token")
+	if oidcToken == "" {
+		oidcToken = c.GetHeader("X-OIDC-Token")
 	}
-	if idmsToken == "" {
+	if oidcToken == "" {
 		c.JSON(http.StatusOK, gin.H{"success": true, "data": gin.H{"photo": "", "name": fullName}})
 		return
 	}
-	if len(idmsToken) < 7 || idmsToken[:7] != "Bearer " {
-		idmsToken = "Bearer " + idmsToken
+	if len(oidcToken) < 7 || oidcToken[:7] != "Bearer " {
+		oidcToken = "Bearer " + oidcToken
 	}
 
 	cssURL := "https://directory.example.com/service/css/search?q=" + cssUsername
@@ -796,7 +796,7 @@ func (h *UserHandler) GetUserPhoto(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": true, "data": gin.H{"photo": "", "name": fullName}})
 		return
 	}
-	req.Header.Set("Authorization", idmsToken)
+	req.Header.Set("Authorization", oidcToken)
 	req.Header.Set("Accept", "application/json")
 
 	client := &http.Client{
@@ -822,7 +822,7 @@ func (h *UserHandler) GetUserPhoto(c *gin.Context) {
 	}
 	photoURL := ""
 	if entityID != "" {
-		photoURL = tryFetchCSSPhoto(c.Request.Context(), entityID, idmsToken)
+		photoURL = tryFetchCSSPhoto(c.Request.Context(), entityID, oidcToken)
 	}
 
 	photoCache.Store("u:"+cacheKey, cssPhotoCacheEntry{photoURL: photoURL, name: fullName, expiry: time.Now().Add(30 * time.Minute)})
@@ -842,7 +842,7 @@ func tryFetchCSSPhoto(ctx context.Context, entityID, token string) string {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: os.Getenv("INTERNAL_TLS_INSECURE") == "true"}, //nolint:gosec
 		},
 	}
-	// Try the known Apple CSS photo endpoint patterns.
+	// Try the known Aileron CSS photo endpoint patterns.
 	candidates := []string{
 		"https://directory.example.com/service/css/picture/entity/" + entityID,
 		"https://directory.example.com/service/css/photos/entity/" + entityID,
@@ -919,7 +919,7 @@ func (h *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// Current-user endpoints (must be registered before /:id to avoid conflict)
 		users.GET("/me/photo", h.GetMyPhoto)
 
-		// Per-user photo (admin use — CSS lookup with caller's IDMS token)
+		// Per-user photo (admin use — CSS lookup with caller's OIDC token)
 		users.GET("/:id/photo", h.GetUserPhoto)
 
 		// User settings endpoints (for authenticated user)

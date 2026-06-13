@@ -574,9 +574,9 @@ fi
 
 ### Primary Contacts
 - **On-Call Engineer**: +1-XXX-XXX-XXXX (PagerDuty rotation)
-- **SRE Manager**: engineering-sre-manager@apple.com
-- **Development Lead**: alerthub-dev-lead@apple.com
-- **Product Manager**: alerthub-pm@apple.com
+- **SRE Manager**: engineering-sre-manager@example.com
+- **Development Lead**: alerthub-dev-lead@example.com
+- **Product Manager**: alerthub-pm@example.com
 
 ### Vendor Contacts
 - **Cloud Provider**: AWS Enterprise Support (+1-XXX-XXX-XXXX)
@@ -584,10 +584,10 @@ fi
 - **Monitoring Support**: Datadog Enterprise (+1-XXX-XXX-XXXX)
 
 ### Internal Teams
-- **Security Operations**: security-ops@apple.com
-- **Network Operations**: network-ops@apple.com
-- **Database Team**: dba-team@apple.com
-- **Platform Engineering**: platform-eng@apple.com
+- **Security Operations**: security-ops@example.com
+- **Network Operations**: network-ops@example.com
+- **Database Team**: dba-team@example.com
+- **Platform Engineering**: platform-eng@example.com
 
 ---
 

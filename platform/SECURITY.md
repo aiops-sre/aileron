@@ -27,7 +27,7 @@ You will receive an acknowledgement within **1 business day** and a resolution t
 ## Security architecture
 
 - All inter-service communication is encrypted in transit (mTLS via Istio)
-- Authentication via Apple IdMS / MAS OAuth2 with automatic token refresh
+- Authentication via Aileron OIDC / MAS OAuth2 with automatic token refresh
 - RBAC enforced at the API layer: Admin / SRE / Operator / Viewer roles
 - Secrets managed via Kubernetes secrets (`alerthub-secrets`) — never in code or git history
 - Audit logging enabled for all mutating API operations

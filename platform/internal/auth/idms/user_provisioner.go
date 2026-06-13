@@ -1,4 +1,4 @@
-package idms
+package oidc
 
 import (
 	"database/sql"
@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// UserProvisioner handles automatic user provisioning from IDMS OAuth2.
+// UserProvisioner handles automatic user provisioning from OIDC OAuth2.
 //
 // Role resolution priority (same for new and existing users):
 //  1. DB-configured LDAP group mappings  — explicit, auditable, Admin-UI configurable
@@ -20,7 +20,7 @@ import (
 //  4. Existing DB role                    — preserve; never silently downgrade
 //  5. config.DefaultRole                  — last resort
 //
-// Groups are evaluated across ALL of the user's IDMS groups; the most-privileged
+// Groups are evaluated across ALL of the user's OIDC groups; the most-privileged
 // role that any single group confers is used (principle of highest earned privilege).
 type UserProvisioner struct {
 	db           *sql.DB
@@ -31,7 +31,7 @@ type UserProvisioner struct {
 }
 
 // NewUserProvisioner creates a new user provisioner.
-// Reads group lists from environment variables (set in alerthub-dsldap-config):
+// Reads group lists from environment variables (set in alerthub-ldap-config):
 //
 //	OIDC_ADMIN_GROUPS    — comma-separated LDAP groups that confer admin role
 //	OIDC_OPERATOR_GROUPS — comma-separated LDAP groups that confer operator role
@@ -55,7 +55,7 @@ func NewUserProvisioner(db *sql.DB, config *Config) *UserProvisioner {
 	return p
 }
 
-// ProvisionUser creates or updates a user based on IDMS identity.
+// ProvisionUser creates or updates a user based on OIDC identity.
 func (p *UserProvisioner) ProvisionUser(user *UserContext) error {
 	if !p.config.AutoProvision {
 		return nil
@@ -152,7 +152,7 @@ func (p *UserProvisioner) createUser(user *UserContext) error {
 
 	userID := uuid.New()
 	// Note: DB columns mas_enabled/mas_username/last_mas_sync retain legacy names
-	// to avoid a migration; they track IDMS-provisioned users.
+	// to avoid a migration; they track OIDC-provisioned users.
 	_, err := p.db.Exec(`
 		INSERT INTO users (id, username, email, full_name, role_id, role, mas_enabled, mas_username,
 		                   last_mas_sync, is_active, is_verified, created_at, updated_at)
@@ -209,7 +209,7 @@ func (p *UserProvisioner) updateUser(userID uuid.UUID, user *UserContext) error 
 	return nil
 }
 
-// syncGroups replaces the user's IDMS group membership.
+// syncGroups replaces the user's OIDC group membership.
 // The underlying table (user_mas_groups / mas_group column) retains legacy names
 // to avoid a DB migration.
 func (p *UserProvisioner) syncGroups(userID uuid.UUID, groups []string) {
@@ -272,21 +272,21 @@ func (p *UserProvisioner) lookupRoleFromGroups(groups []string) (string, uuid.UU
 	return roleName, roleID
 }
 
-// SyncAllUsers refreshes the last-seen timestamp for all IDMS-provisioned users.
+// SyncAllUsers refreshes the last-seen timestamp for all OIDC-provisioned users.
 func (p *UserProvisioner) SyncAllUsers() (int, error) {
 	rows, err := p.db.Query(`
 		SELECT id, mas_username FROM users WHERE mas_enabled = true AND mas_username IS NOT NULL
 	`)
 	if err != nil {
-		return 0, fmt.Errorf("failed to query IDMS users: %w", err)
+		return 0, fmt.Errorf("failed to query OIDC users: %w", err)
 	}
 	defer rows.Close()
 
 	synced := 0
 	for rows.Next() {
 		var userID int
-		var idmsUsername string
-		if err := rows.Scan(&userID, &idmsUsername); err != nil {
+		var oidcUsername string
+		if err := rows.Scan(&userID, &oidcUsername); err != nil {
 			continue
 		}
 		if _, err = p.db.Exec(`UPDATE users SET last_mas_sync = NOW() WHERE id = $1`, userID); err == nil {
@@ -296,8 +296,8 @@ func (p *UserProvisioner) SyncAllUsers() (int, error) {
 	return synced, nil
 }
 
-// GetUserByIDMSUsername retrieves a user record with their current IDMS groups.
-func (p *UserProvisioner) GetUserByIDMSUsername(username string) (map[string]interface{}, error) {
+// GetUserByOIDCUsername retrieves a user record with their current OIDC groups.
+func (p *UserProvisioner) GetUserByOIDCUsername(username string) (map[string]interface{}, error) {
 	row := p.db.QueryRow(`
 		SELECT id, username, email, role, mas_enabled, mas_username, last_mas_sync, created_at, updated_at
 		FROM users WHERE mas_username = $1 OR username = $1
@@ -305,12 +305,12 @@ func (p *UserProvisioner) GetUserByIDMSUsername(username string) (map[string]int
 
 	var id int
 	var uname, email, role string
-	var idmsEnabled bool
-	var idmsUsername sql.NullString
+	var oidcEnabled bool
+	var oidcUsername sql.NullString
 	var lastSync sql.NullTime
 	var createdAt, updatedAt time.Time
 
-	err := row.Scan(&id, &uname, &email, &role, &idmsEnabled, &idmsUsername, &lastSync, &createdAt, &updatedAt)
+	err := row.Scan(&id, &uname, &email, &role, &oidcEnabled, &oidcUsername, &lastSync, &createdAt, &updatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -320,8 +320,8 @@ func (p *UserProvisioner) GetUserByIDMSUsername(username string) (map[string]int
 
 	user := map[string]interface{}{
 		"id": id, "username": uname, "email": email, "role": role,
-		"idms_enabled": idmsEnabled, "idms_username": idmsUsername.String,
-		"last_idms_sync": lastSync.Time, "created_at": createdAt, "updated_at": updatedAt,
+		"oidc_enabled": oidcEnabled, "oidc_username": oidcUsername.String,
+		"last_oidc_sync": lastSync.Time, "created_at": createdAt, "updated_at": updatedAt,
 	}
 
 	groupRows, err := p.db.Query(`SELECT mas_group, synced_at FROM user_mas_groups WHERE user_id = $1`, id)
@@ -338,7 +338,7 @@ func (p *UserProvisioner) GetUserByIDMSUsername(username string) (map[string]int
 			groups = append(groups, map[string]interface{}{"group": group, "synced_at": syncedAt})
 		}
 	}
-	user["idms_groups"] = groups
+	user["oidc_groups"] = groups
 	return user, nil
 }
 

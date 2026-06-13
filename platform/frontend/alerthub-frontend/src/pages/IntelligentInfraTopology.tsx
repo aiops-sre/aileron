@@ -998,7 +998,7 @@ export default function IntelligentInfraTopology() {
 
   return (
     <div style={{ height: '100vh', background: c.bg, display: 'flex', flexDirection: 'column',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif', overflow: 'hidden' }}>
+      fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", sans-serif', overflow: 'hidden' }}>
 
       {/* ── PAGE HEADER ──────────────────────────────────────────────────────── */}
       <div style={{ padding: '12px 20px', borderBottom: `1px solid ${c.sep}`,

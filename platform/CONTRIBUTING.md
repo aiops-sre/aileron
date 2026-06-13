@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-git clone git@github.com/aileron-platform:interactive-service-delivery/alert-engine.git
+git clone git@github.com/aileron-platform:aiops-sre/alert-engine.git
 cd alert-engine
 
 # Install git hooks (do this once after cloning)

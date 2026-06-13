@@ -334,7 +334,7 @@ sequenceDiagram
     LLM--)AH: kubesense.llm.narratives → Situations tab
 
     API-->>-OPS: root_cause · confidence 87% · evidence_grade A
-    Note over OPS: Change identified: git commit abc123 by user@apple.com<br/>kubectl rollout undo deployment/frontend -n payments
+    Note over OPS: Change identified: git commit abc123 by user@example.com<br/>kubectl rollout undo deployment/frontend -n payments
 ```
 
 ---

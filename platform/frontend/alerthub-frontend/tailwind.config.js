@@ -7,11 +7,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', 'sans-serif'],
-        display: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Icons', 'Helvetica Neue', 'sans-serif'],
+        sans: ['-aileron-system', 'BlinkMacSystemFont', 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', 'sans-serif'],
+        display: ['-aileron-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Icons', 'Helvetica Neue', 'sans-serif'],
       },
       colors: {
-        apple: {
+        aileron: {
           blue: '#0071e3',
           'blue-hover': '#0077ed',
           green: '#34c759',
@@ -43,18 +43,18 @@ export default {
         }
       },
       borderRadius: {
-        'apple-lg': '12px',
-        'apple-xl': '18px',
-        'apple-2xl': '24px',
+        'aileron-lg': '12px',
+        'aileron-xl': '18px',
+        'aileron-2xl': '24px',
       },
       boxShadow: {
-        'apple-sm': '0 2px 8px rgba(0,0,0,0.04)',
-        'apple-md': '0 4px 12px rgba(0,0,0,0.08)',
-        'apple-lg': '0 8px 24px rgba(0,0,0,0.12)',
-        'apple-xl': '0 16px 40px rgba(0,0,0,0.16)',
+        'aileron-sm': '0 2px 8px rgba(0,0,0,0.04)',
+        'aileron-md': '0 4px 12px rgba(0,0,0,0.08)',
+        'aileron-lg': '0 8px 24px rgba(0,0,0,0.12)',
+        'aileron-xl': '0 16px 40px rgba(0,0,0,0.16)',
       },
       backdropBlur: {
-        'apple': '20px',
+        'aileron': '20px',
       },
       animation: {
         'pulse-ring': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',

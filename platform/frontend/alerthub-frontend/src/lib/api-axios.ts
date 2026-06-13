@@ -44,7 +44,7 @@ api.interceptors.response.use(
 
       try {
         // Try to refresh the token first.
-        // MAS/IDMS users store tokens in sessionStorage; manual-login users use localStorage.
+        // MAS/OIDC users store tokens in sessionStorage; manual-login users use localStorage.
         const refreshToken = sessionStorage.getItem('refresh_token') || localStorage.getItem('refresh_token')
         if (refreshToken) {
           const refreshResponse = await axios.post('/api/v1/auth/refresh', {
@@ -115,7 +115,7 @@ function showReAuthModal() {
       align-items: center;
       justify-content: center;
       z-index: 10000;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -aileron-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     ">
       <div style="
         background: var(--color-card, white);

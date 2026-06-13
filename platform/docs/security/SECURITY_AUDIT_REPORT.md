@@ -59,7 +59,7 @@ func validatePassword(password string) error {
 
 **Multi-Factor Authentication:**
 - ✅ MFA support for admin users
-- ✅ OAuth integration with Apple SSO
+- ✅ OAuth integration with Aileron SSO
 - ✅ Token-based session management
 - ✅ Automatic session expiry
 
@@ -143,12 +143,12 @@ func validatePassword(password string) error {
 
 ### **Industry Standards Met:**
 - ✅ **OWASP Top 10** - All vulnerabilities addressed
-- ✅ **Apple Security Guidelines** - Corporate compliance
+- ✅ **Aileron Security Guidelines** - Corporate compliance
 - ✅ **JWT Best Practices** - Secure token implementation
 - ✅ **Database Security** - Encrypted, parameterized, audited
 
 ### **Enterprise Requirements:**
-- ✅ **Single Sign-On** - Apple/MAS integration
+- ✅ **Single Sign-On** - Generic OIDC integration
 - ✅ **Audit Logging** - Complete action tracking
 - ✅ **Role-Based Access** - Granular permissions
 - ✅ **Data Encryption** - End-to-end protection

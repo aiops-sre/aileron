@@ -41,35 +41,35 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       initContainers:
-        {{- if index .Values "whisper" "enabled" | default false }}
-        - name: init-whisperctl
-          image: ghcr.io/aileron-platform/crypto-services/whisperctl:1.1.3
+        {{- if index .Values "secrets_manager" "enabled" | default false }}
+        - name: init-secrets_managerctl
+          image: ghcr.io/aileron-platform/crypto-services/secrets_managerctl:1.1.3
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
           args:
             - |
               set -e
               fetch() {
-                ./whisperctl secret fetch \
-                  --server whisper.example.com \
-                  --client-certificate /etc/ssl/whisper/tls.crt \
-                  --client-key /etc/ssl/whisper/tls.key \
+                ./secrets_managerctl secret fetch \
+                  --server secrets_manager.example.com \
+                  --client-certificate /etc/ssl/secrets_manager/tls.crt \
+                  --client-key /etc/ssl/secrets_manager/tls.key \
                   --client-certificate-format PEM \
                   --namespace aileron-admins \
                   --secret-name "$1" \
                   --output-dir /tmp/secrets
               }
               fetch alerthub-app-secrets
-              fetch alerthub-dsldap
+              fetch alerthub-ldap
               fetch alerthub-hcl
               fetch alerthub-infra
               fetch alerthub-jfrog
               fetch alerthub-kubeconfigs
           volumeMounts:
-            - name: whisper-secrets
+            - name: secrets_manager-secrets
               mountPath: /tmp/secrets
-            - name: whisper-cert
-              mountPath: /etc/ssl/whisper
+            - name: secrets_manager-cert
+              mountPath: /etc/ssl/secrets_manager
               readOnly: true
         {{- else }}
         - name: init-k8s-secrets
@@ -82,9 +82,9 @@ spec:
                 "$DB_PASSWORD" "$DB_USER" "$JWT_SECRET" "$INTERNAL_SERVICE_TOKEN" "$REDIS_PASSWORD" "$AI_API_KEY" "$JWT_REFRESH_SECRET" "$OAUTH_CLIENT_SECRET" "$WEAVIATE_API_KEY" "$NETAPP_PASSWORD" "$LDAP_BIND_PASSWORD" \
                 > /tmp/secrets/alerthub-app-secrets
               printf '{"LDAP_APP_ID":"%s","LDAP_APP_PASSWORD":"%s"}' \
-                "$LDAP_APP_ID" "$LDAP_APP_PASSWORD" > /tmp/secrets/alerthub-dsldap
-              printf '{"IDMS_APP_ID":"%s","IDMS_APP_PASSWORD":"%s"}' \
-                "$IDMS_APP_ID" "$IDMS_APP_PASSWORD" > /tmp/secrets/alerthub-hcl
+                "$LDAP_APP_ID" "$LDAP_APP_PASSWORD" > /tmp/secrets/alerthub-ldap
+              printf '{"OIDC_APP_ID":"%s","OIDC_APP_PASSWORD":"%s"}' \
+                "$OIDC_APP_ID" "$OIDC_APP_PASSWORD" > /tmp/secrets/alerthub-hcl
               printf '{"DYNATRACE_API_TOKEN":"%s","CLOUDSTACK_API_KEY":"%s","CLOUDSTACK_SECRET_KEY":"%s"}' \
                 "$DYNATRACE_API_TOKEN" "$CLOUDSTACK_API_KEY" "$CLOUDSTACK_SECRET_KEY" \
                 > /tmp/secrets/alerthub-infra
@@ -148,23 +148,23 @@ spec:
             - name: LDAP_APP_ID
               valueFrom:
                 secretKeyRef:
-                  name: alerthub-dsldap-credentials
+                  name: alerthub-ldap-credentials
                   key: LDAP_APP_ID
             - name: LDAP_APP_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: alerthub-dsldap-credentials
+                  name: alerthub-ldap-credentials
                   key: LDAP_APP_PASSWORD
-            - name: IDMS_APP_ID
+            - name: OIDC_APP_ID
               valueFrom:
                 secretKeyRef:
                   name: alerthub-hcl-credentials
-                  key: IDMS_APP_ID
-            - name: IDMS_APP_PASSWORD
+                  key: OIDC_APP_ID
+            - name: OIDC_APP_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: alerthub-hcl-credentials
-                  key: IDMS_APP_PASSWORD
+                  key: OIDC_APP_PASSWORD
             - name: DYNATRACE_API_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -181,7 +181,7 @@ spec:
                   name: infrastructure-credentials
                   key: cloudstack-secret-key
           volumeMounts:
-            - name: whisper-secrets
+            - name: secrets_manager-secrets
               mountPath: /tmp/secrets
         {{- end }}
       containers:
@@ -193,7 +193,7 @@ spec:
             - |
               ENV=/tmp/secrets/env.sh
               > "$ENV"
-              for f in alerthub-app-secrets alerthub-dsldap alerthub-hcl alerthub-infra alerthub-jfrog; do
+              for f in alerthub-app-secrets alerthub-ldap alerthub-hcl alerthub-infra alerthub-jfrog; do
                 [ -f "/tmp/secrets/$f" ] || continue
                 awk -F'"' '{
                   for (i=2; i<NF; i+=4) {
@@ -226,47 +226,47 @@ spec:
             - configMapRef:
                 name: alerthub-config
           env:
-            - name: DSLDAP_ENABLED
+            - name: LDAP_ENABLED
               valueFrom:
                 configMapKeyRef:
-                  name: alerthub-dsldap-config
-                  key: DSLDAP_ENABLED
+                  name: alerthub-ldap-config
+                  key: LDAP_ENABLED
                   optional: true
-            - name: DSLDAP_SERVER_URL
+            - name: LDAP_SERVER_URL
               valueFrom:
                 configMapKeyRef:
-                  name: alerthub-dsldap-config
-                  key: DSLDAP_SERVER_URL
+                  name: alerthub-ldap-config
+                  key: LDAP_SERVER_URL
                   optional: true
-            - name: DSLDAP_USER_SEARCH_BASE
+            - name: LDAP_USER_SEARCH_BASE
               valueFrom:
                 configMapKeyRef:
-                  name: alerthub-dsldap-config
-                  key: DSLDAP_USER_SEARCH_BASE
+                  name: alerthub-ldap-config
+                  key: LDAP_USER_SEARCH_BASE
                   optional: true
-            - name: DSLDAP_CACHE_TTL_MINUTES
+            - name: LDAP_CACHE_TTL_MINUTES
               valueFrom:
                 configMapKeyRef:
-                  name: alerthub-dsldap-config
-                  key: DSLDAP_CACHE_TTL_MINUTES
+                  name: alerthub-ldap-config
+                  key: LDAP_CACHE_TTL_MINUTES
                   optional: true
-            - name: DSLDAP_ADMIN_GROUPS
+            - name: LDAP_ADMIN_GROUPS
               valueFrom:
                 configMapKeyRef:
-                  name: alerthub-dsldap-config
-                  key: DSLDAP_ADMIN_GROUPS
+                  name: alerthub-ldap-config
+                  key: LDAP_ADMIN_GROUPS
                   optional: true
-            - name: DSLDAP_OPERATOR_GROUPS
+            - name: LDAP_OPERATOR_GROUPS
               valueFrom:
                 configMapKeyRef:
-                  name: alerthub-dsldap-config
-                  key: DSLDAP_OPERATOR_GROUPS
+                  name: alerthub-ldap-config
+                  key: LDAP_OPERATOR_GROUPS
                   optional: true
-            - name: DSLDAP_VIEWER_GROUPS
+            - name: LDAP_VIEWER_GROUPS
               valueFrom:
                 configMapKeyRef:
-                  name: alerthub-dsldap-config
-                  key: DSLDAP_VIEWER_GROUPS
+                  name: alerthub-ldap-config
+                  key: LDAP_VIEWER_GROUPS
                   optional: true
             # Injected via Kubernetes downward API so the LLM enricher builds
             # the correct Ollama service URL for whichever namespace this pod runs in.
@@ -275,13 +275,13 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
           volumeMounts:
-            - name: whisper-secrets
+            - name: secrets_manager-secrets
               mountPath: /tmp/secrets
             - name: kubeconfigs
               mountPath: /etc/kubeconfigs
-            {{- if index .Values "whisper" "enabled" | default false }}
-            - name: whisper-cert
-              mountPath: /etc/ssl/whisper
+            {{- if index .Values "secrets_manager" "enabled" | default false }}
+            - name: secrets_manager-cert
+              mountPath: /etc/ssl/secrets_manager
               readOnly: true
             {{- end }}
           resources:
@@ -318,12 +318,12 @@ spec:
             periodSeconds: 5
             failureThreshold: 20
       volumes:
-        - name: whisper-secrets
+        - name: secrets_manager-secrets
           emptyDir: {}
         - name: kubeconfigs
           emptyDir: {}
-        {{- if index .Values "whisper" "enabled" | default false }}
-        - name: whisper-cert
+        {{- if index .Values "secrets_manager" "enabled" | default false }}
+        - name: secrets_manager-cert
           csi:
             driver: cmcs.crypto-services.example.com
             readOnly: true
@@ -331,9 +331,9 @@ spec:
               cmcs.crypto-services.example.com/duration: "24h"
               cmcs.crypto-services.example.com/fs-group: "1000"
               cmcs.crypto-services.example.com/issuer-kind: AppleCertificateManagerCorpCA
-              cmcs.crypto-services.example.com/issuer-name: applecm-whisper-corpca-7915896-7915893
+              cmcs.crypto-services.example.com/issuer-name: applecm-secrets_manager-corpca-7915896-7915893
               cmcs.crypto-services.example.com/key-usages: "client auth,digital signature,key encipherment"
         {{- else }}
-        - name: whisper-cert
+        - name: secrets_manager-cert
           emptyDir: {}
         {{- end }}

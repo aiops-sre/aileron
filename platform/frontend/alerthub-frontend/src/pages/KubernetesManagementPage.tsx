@@ -7,8 +7,8 @@ import {
   Info, AlertCircle, Loader2, Shield, Tag, Zap, FileText, Wrench, Play,
 } from 'lucide-react'
 
-// ─── Apple Design Tokens ──────────────────────────────────────────────────────
-const apple = {
+// ─── Aileron Design Tokens ──────────────────────────────────────────────────────
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -173,13 +173,13 @@ function labelsMatch(selector: Record<string, string>, labels: Record<string, st
 function truncate(s: string, n: number) { return s.length > n ? s.slice(0, n) + '…' : s }
 
 function getNsHealthScore(pods: K8sPod[], deps: K8sDeployment[]): { score: number; grade: 'A' | 'B' | 'C' | 'D' | 'F'; color: string } {
-  if (pods.length === 0 && deps.length === 0) return { score: 100, grade: 'A', color: apple.green }
+  if (pods.length === 0 && deps.length === 0) return { score: 100, grade: 'A', color: tokens.green }
   let total = 0, healthy = 0
   pods.forEach(p => { total++; if (p.phase === 'Running' && p.ready && p.restarts < 5) healthy++ })
   deps.forEach(d => { total++; if (d.ready_replicas >= d.replicas && d.replicas > 0) healthy++ })
   const score = total === 0 ? 100 : Math.round((healthy / total) * 100)
   const grade = score >= 95 ? 'A' : score >= 80 ? 'B' : score >= 60 ? 'C' : score >= 40 ? 'D' : 'F'
-  const color = score >= 95 ? apple.green : score >= 80 ? apple.blue : score >= 60 ? apple.orange : apple.red
+  const color = score >= 95 ? tokens.green : score >= 80 ? tokens.blue : score >= 60 ? tokens.orange : tokens.red
   return { score, grade, color }
 }
 
@@ -226,19 +226,19 @@ function Badge({ color, children }: { color: string; children: React.ReactNode }
 }
 
 function PhaseBadge({ phase }: { phase: string }) {
-  const c = phase === 'Running' ? apple.green : phase === 'Pending' ? apple.orange : phase === 'Succeeded' ? apple.blue : apple.red
+  const c = phase === 'Running' ? tokens.green : phase === 'Pending' ? tokens.orange : phase === 'Succeeded' ? tokens.blue : tokens.red
   return <Badge color={c}>{phase}</Badge>
 }
 
 function TypeBadge({ type }: { type: string }) {
-  const c = type === 'LoadBalancer' ? apple.blue : type === 'NodePort' ? apple.orange : apple.gray
+  const c = type === 'LoadBalancer' ? tokens.blue : type === 'NodePort' ? tokens.orange : tokens.gray
   return <Badge color={c}>{type}</Badge>
 }
 
 function Spinner() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 48 }}>
-      <Loader2 style={{ width: 28, height: 28, color: apple.blue, animation: 'spin 1s linear infinite' }} />
+      <Loader2 style={{ width: 28, height: 28, color: tokens.blue, animation: 'spin 1s linear infinite' }} />
     </div>
   )
 }
@@ -246,8 +246,8 @@ function Spinner() {
 function EmptyState({ icon: Icon, text }: { icon: React.ComponentType<any>; text: string }) {
   return (
     <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-      <Icon style={{ width: 40, height: 40, color: apple.gray, marginBottom: 12 }} />
-      <p style={{ fontSize: 14, color: apple.tertiaryLabel, margin: 0 }}>{text}</p>
+      <Icon style={{ width: 40, height: 40, color: tokens.gray, marginBottom: 12 }} />
+      <p style={{ fontSize: 14, color: tokens.tertiaryLabel, margin: 0 }}>{text}</p>
     </div>
   )
 }
@@ -261,25 +261,25 @@ function ShowMoreFooter({ shown, total, onShowMore, onShowAll, onCollapse, incre
   if (remaining <= 0) {
     if (!onCollapse) return null
     return (
-      <div style={{ padding: '10px 18px', borderTop: `0.5px solid ${apple.separator}`, display: 'flex', justifyContent: 'center' }}>
-        <button onClick={onCollapse} style={{ padding: '4px 12px', fontSize: 12, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.gray, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+      <div style={{ padding: '10px 18px', borderTop: `0.5px solid ${tokens.separator}`, display: 'flex', justifyContent: 'center' }}>
+        <button onClick={onCollapse} style={{ padding: '4px 12px', fontSize: 12, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.gray, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
           <ChevronUp style={{ width: 11, height: 11 }} /> Collapse
         </button>
       </div>
     )
   }
   return (
-    <div style={{ padding: '10px 18px', borderTop: `0.5px solid ${apple.separator}`, display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
-      <button onClick={onShowMore} style={{ padding: '5px 14px', fontSize: 12, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.blue}44`, background: apple.blue + '12', color: apple.blue, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
+    <div style={{ padding: '10px 18px', borderTop: `0.5px solid ${tokens.separator}`, display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
+      <button onClick={onShowMore} style={{ padding: '5px 14px', fontSize: 12, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.blue}44`, background: tokens.blue + '12', color: tokens.blue, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
         <ChevronDown style={{ width: 11, height: 11 }} />
         Show {Math.min(increment, remaining)} more
       </button>
       {remaining > increment && (
-        <button onClick={onShowAll} style={{ padding: '5px 14px', fontSize: 12, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+        <button onClick={onShowAll} style={{ padding: '5px 14px', fontSize: 12, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
           Show all {remaining} remaining
         </button>
       )}
-      <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>Showing {shown} of {total}</span>
+      <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>Showing {shown} of {total}</span>
     </div>
   )
 }
@@ -288,15 +288,15 @@ function StatCard({ label, value, sub, color, icon: Icon }: {
   label: string; value: number | string; sub?: string; color: string; icon: React.ComponentType<any>
 }) {
   return (
-    <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ width: 32, height: 32, borderRadius: apple.radius.sm, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, borderRadius: tokens.radius.sm, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon style={{ width: 16, height: 16, color }} />
         </div>
-        <span style={{ fontSize: 12, color: apple.tertiaryLabel, fontWeight: 500 }}>{label}</span>
+        <span style={{ fontSize: 12, color: tokens.tertiaryLabel, fontWeight: 500 }}>{label}</span>
       </div>
-      <div style={{ fontSize: 26, fontWeight: 700, color: apple.label, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: apple.secondaryLabel }}>{sub}</div>}
+      <div style={{ fontSize: 26, fontWeight: 700, color: tokens.label, lineHeight: 1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: tokens.secondaryLabel }}>{sub}</div>}
     </div>
   )
 }
@@ -304,9 +304,9 @@ function StatCard({ label, value, sub, color, icon: Icon }: {
 function SearchInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
   return (
     <div style={{ position: 'relative', marginBottom: 12 }}>
-      <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: apple.gray }} />
+      <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: tokens.gray }} />
       <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        style={{ width: '100%', padding: '7px 12px 7px 32px', boxSizing: 'border-box', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 13, outline: 'none' }}
+        style={{ width: '100%', padding: '7px 12px 7px 32px', boxSizing: 'border-box', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 13, outline: 'none' }}
       />
     </div>
   )
@@ -326,11 +326,11 @@ function KubectlPanel({ pod, namespace, clusterContext }: { pod?: K8sPod; namesp
   const cmds: { key: string; label: string; cmd: string; color?: string }[] = pod ? [
     { key: 'logs', label: 'Logs', cmd: `kubectl ${ctx}logs ${podName} -n ${ns} --tail=200` },
     { key: 'logs-f', label: 'Logs (follow)', cmd: `kubectl ${ctx}logs -f ${podName} -n ${ns}` },
-    { key: 'prev', label: 'Previous logs', cmd: `kubectl ${ctx}logs ${podName} -n ${ns} --previous`, color: apple.orange },
+    { key: 'prev', label: 'Previous logs', cmd: `kubectl ${ctx}logs ${podName} -n ${ns} --previous`, color: tokens.orange },
     { key: 'describe', label: 'Describe', cmd: `kubectl ${ctx}describe pod ${podName} -n ${ns}` },
     { key: 'events', label: 'Pod events', cmd: `kubectl ${ctx}get events -n ${ns} --field-selector involvedObject.name=${podName} --sort-by=.lastTimestamp` },
-    { key: 'exec', label: 'Exec shell', cmd: `kubectl ${ctx}exec -it ${podName} -n ${ns} -- /bin/sh`, color: apple.purple },
-    { key: 'delete', label: 'Delete pod', cmd: `kubectl ${ctx}delete pod ${podName} -n ${ns}`, color: apple.red },
+    { key: 'exec', label: 'Exec shell', cmd: `kubectl ${ctx}exec -it ${podName} -n ${ns} -- /bin/sh`, color: tokens.purple },
+    { key: 'delete', label: 'Delete pod', cmd: `kubectl ${ctx}delete pod ${podName} -n ${ns}`, color: tokens.red },
     { key: 'json', label: 'Get JSON', cmd: `kubectl ${ctx}get pod ${podName} -n ${ns} -o json` },
   ] : [
     { key: 'pods', label: 'List pods', cmd: `kubectl ${ctx}get pods -n ${ns} -o wide` },
@@ -352,12 +352,12 @@ function KubectlPanel({ pod, namespace, clusterContext }: { pod?: K8sPod; namesp
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {cmds.map(c => (
-        <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: apple.radius.sm, background: '#0d111766', border: '0.5px solid #ffffff12' }}>
+        <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: tokens.radius.sm, background: '#0d111766', border: '0.5px solid #ffffff12' }}>
           <code style={{ flex: 1, fontSize: 11, color: '#c9d1d9', fontFamily: '"SF Mono", monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {c.cmd}
           </code>
-          <button onClick={() => copy(c.cmd, c.key)} style={{ flexShrink: 0, padding: '3px 8px', fontSize: 11, borderRadius: apple.radius.sm, border: '0.5px solid #ffffff20', background: '#ffffff10', color: c.color ?? '#c9d1d9', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, whiteSpace: 'nowrap' }}>
-            {copied === c.key ? <ClipboardCheck style={{ width: 10, height: 10, color: apple.green }} /> : <Copy style={{ width: 10, height: 10 }} />}
+          <button onClick={() => copy(c.cmd, c.key)} style={{ flexShrink: 0, padding: '3px 8px', fontSize: 11, borderRadius: tokens.radius.sm, border: '0.5px solid #ffffff20', background: '#ffffff10', color: c.color ?? '#c9d1d9', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, whiteSpace: 'nowrap' }}>
+            {copied === c.key ? <ClipboardCheck style={{ width: 10, height: 10, color: tokens.green }} /> : <Copy style={{ width: 10, height: 10 }} />}
             {c.label}
           </button>
         </div>
@@ -369,24 +369,24 @@ function KubectlPanel({ pod, namespace, clusterContext }: { pod?: K8sPod; namesp
 // ─── Auto-Diagnosis Card ───────────────────────────────────────────────────────
 function DiagnosisCard({ issue }: { issue: DiagIssue }) {
   const [copied, setCopied] = useState(false)
-  const color = issue.severity === 'error' ? apple.red : issue.severity === 'warning' ? apple.orange : apple.blue
+  const color = issue.severity === 'error' ? tokens.red : issue.severity === 'warning' ? tokens.orange : tokens.blue
   const Icon = issue.severity === 'error' ? XCircle : issue.severity === 'warning' ? AlertTriangle : CheckCircle
 
   return (
-    <div style={{ padding: '10px 14px', borderRadius: apple.radius.sm, border: `0.5px solid ${color}30`, background: color + '0d', marginBottom: 6 }}>
+    <div style={{ padding: '10px 14px', borderRadius: tokens.radius.sm, border: `0.5px solid ${color}30`, background: color + '0d', marginBottom: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: issue.detail ? 4 : 0 }}>
         <Icon style={{ width: 14, height: 14, color, flexShrink: 0 }} />
         <span style={{ fontSize: 13, fontWeight: 600, color }}>{issue.title}</span>
       </div>
-      {issue.detail && <p style={{ margin: '4px 0 0 22px', fontSize: 12, color: apple.secondaryLabel, lineHeight: 1.5 }}>{issue.detail}</p>}
+      {issue.detail && <p style={{ margin: '4px 0 0 22px', fontSize: 12, color: tokens.secondaryLabel, lineHeight: 1.5 }}>{issue.detail}</p>}
       {issue.fix && (
         <div style={{ marginTop: 8, marginLeft: 22, display: 'flex', alignItems: 'center', gap: 6 }}>
           <code style={{ fontSize: 11, color: '#c9d1d9', fontFamily: 'monospace', background: '#0d1117', padding: '3px 8px', borderRadius: 4, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {issue.fix}
           </code>
           <button onClick={() => { navigator.clipboard.writeText(issue.fix!); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-            style={{ padding: '3px 7px', fontSize: 11, borderRadius: apple.radius.sm, border: '0.5px solid #ffffff20', background: '#ffffff10', color: '#c9d1d9', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-            {copied ? <ClipboardCheck style={{ width: 10, height: 10, color: apple.green }} /> : <Copy style={{ width: 10, height: 10 }} />}
+            style={{ padding: '3px 7px', fontSize: 11, borderRadius: tokens.radius.sm, border: '0.5px solid #ffffff20', background: '#ffffff10', color: '#c9d1d9', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+            {copied ? <ClipboardCheck style={{ width: 10, height: 10, color: tokens.green }} /> : <Copy style={{ width: 10, height: 10 }} />}
             Copy
           </button>
         </div>
@@ -467,8 +467,8 @@ function GlobalSearch({ allTopologies, allEvents, onNavigate, busyClusters }: {
   }, [allTopologies, allEvents, query])
 
   const kindColor: Record<string, string> = {
-    Pod: apple.green, Service: apple.blue, Deployment: apple.orange,
-    Node: apple.purple, Namespace: apple.gray, Ingress: apple.pink, Event: apple.yellow,
+    Pod: tokens.green, Service: tokens.blue, Deployment: tokens.orange,
+    Node: tokens.purple, Namespace: tokens.gray, Ingress: tokens.pink, Event: tokens.yellow,
   }
 
   // Group by cluster first, then kind within each cluster
@@ -489,7 +489,7 @@ function GlobalSearch({ allTopologies, allEvents, onNavigate, busyClusters }: {
   return (
     <div ref={containerRef} style={{ position: 'relative', flex: 1, maxWidth: 580 }}>
       <div style={{ position: 'relative' }}>
-        <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: apple.gray, pointerEvents: 'none' }} />
+        <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: tokens.gray, pointerEvents: 'none' }} />
         <input
           ref={inputRef}
           type="text"
@@ -497,12 +497,12 @@ function GlobalSearch({ allTopologies, allEvents, onNavigate, busyClusters }: {
           onChange={e => { setQuery(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
           placeholder={clusterCount > 0 ? `Search across ${loadedCount}/${clusterCount} clusters… (⌘K)` : 'Global search… (⌘K)'}
-          style={{ width: '100%', padding: '8px 32px 8px 32px', boxSizing: 'border-box', borderRadius: apple.radius.md, border: `0.5px solid ${open && query ? apple.blue + '80' : apple.separator}`, background: apple.fill, color: apple.label, fontSize: 13, outline: 'none', transition: 'border-color 0.15s' }}
+          style={{ width: '100%', padding: '8px 32px 8px 32px', boxSizing: 'border-box', borderRadius: tokens.radius.md, border: `0.5px solid ${open && query ? tokens.blue + '80' : tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 13, outline: 'none', transition: 'border-color 0.15s' }}
         />
         <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 4 }}>
-          {busyCount > 0 && <Loader2 style={{ width: 12, height: 12, color: apple.blue, animation: 'spin 1s linear infinite' }} />}
+          {busyCount > 0 && <Loader2 style={{ width: 12, height: 12, color: tokens.blue, animation: 'spin 1s linear infinite' }} />}
           {query && (
-            <button onClick={() => { setQuery(''); setOpen(false) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: apple.gray, padding: 2, display: 'flex' }}>
+            <button onClick={() => { setQuery(''); setOpen(false) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tokens.gray, padding: 2, display: 'flex' }}>
               <XCircle style={{ width: 13, height: 13 }} />
             </button>
           )}
@@ -510,47 +510,47 @@ function GlobalSearch({ allTopologies, allEvents, onNavigate, busyClusters }: {
       </div>
 
       {open && query.length >= 2 && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 2000, background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.md, boxShadow: '0 12px 40px rgba(0,0,0,0.22)', marginTop: 4, overflow: 'hidden', maxHeight: 560, overflowY: 'auto' }}>
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 2000, background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.md, boxShadow: '0 12px 40px rgba(0,0,0,0.22)', marginTop: 4, overflow: 'hidden', maxHeight: 560, overflowY: 'auto' }}>
           {results.length === 0 ? (
             <div style={{ padding: '24px 16px', textAlign: 'center' }}>
-              <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>No resources match "{query}"</div>
-              {busyCount > 0 && <div style={{ fontSize: 11, color: apple.tertiaryLabel, marginTop: 6 }}>Still loading {busyCount} cluster(s)…</div>}
+              <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>No resources match "{query}"</div>
+              {busyCount > 0 && <div style={{ fontSize: 11, color: tokens.tertiaryLabel, marginTop: 6 }}>Still loading {busyCount} cluster(s)…</div>}
             </div>
           ) : (
             Object.entries(groupedByClusters).map(([cluster, kindMap]) => (
               <div key={cluster}>
                 {/* Cluster header */}
-                <div style={{ padding: '8px 14px 6px', background: apple.fill, borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8, position: 'sticky', top: 0, zIndex: 1 }}>
-                  <Cloud style={{ width: 12, height: 12, color: apple.blue }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: apple.blue }}>{cluster}</span>
-                  <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>
+                <div style={{ padding: '8px 14px 6px', background: tokens.fill, borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8, position: 'sticky', top: 0, zIndex: 1 }}>
+                  <Cloud style={{ width: 12, height: 12, color: tokens.blue }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: tokens.blue }}>{cluster}</span>
+                  <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>
                     {Object.values(kindMap).reduce((s, arr) => s + arr.length, 0)} results
                   </span>
                 </div>
                 {Object.entries(kindMap).map(([kind, items]) => (
                   <div key={kind}>
                     <div style={{ padding: '6px 14px 3px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Badge color={kindColor[kind] ?? apple.gray}>{kind}</Badge>
+                      <Badge color={kindColor[kind] ?? tokens.gray}>{kind}</Badge>
                       {items[0].totalInCategory && items[0].totalInCategory > items.length && (
-                        <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>{items.length} of {items[0].totalInCategory}</span>
+                        <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>{items.length} of {items[0].totalInCategory}</span>
                       )}
                     </div>
                     {items.map((r, i) => (
                       <div key={i}
-                        style={{ padding: '9px 14px 9px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, borderBottom: `0.5px solid ${apple.separator}` }}
+                        style={{ padding: '9px 14px 9px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, borderBottom: `0.5px solid ${tokens.separator}` }}
                         onClick={() => { onNavigate(r.cluster, r.tab, r.nsFilter); setOpen(false); setQuery('') }}
-                        onMouseEnter={e => (e.currentTarget.style.background = apple.fill)}
+                        onMouseEnter={e => (e.currentTarget.style.background = tokens.fill)}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 500, color: apple.label, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
-                          <div style={{ fontSize: 11, color: apple.tertiaryLabel, marginTop: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: tokens.label, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                          <div style={{ fontSize: 11, color: tokens.tertiaryLabel, marginTop: 1 }}>
                             {r.namespace && <span>{r.namespace}</span>}
                             {r.extra && <span style={{ marginLeft: r.namespace ? 8 : 0 }}>{r.extra}</span>}
                           </div>
                         </div>
-                        {r.status && <Badge color={r.kind === 'Pod' && r.status === 'Running' ? apple.green : r.kind === 'Pod' && r.status !== 'Running' ? apple.orange : apple.gray}>{r.status}</Badge>}
-                        <ChevronRight style={{ width: 12, height: 12, color: apple.tertiaryLabel, flexShrink: 0 }} />
+                        {r.status && <Badge color={r.kind === 'Pod' && r.status === 'Running' ? tokens.green : r.kind === 'Pod' && r.status !== 'Running' ? tokens.orange : tokens.gray}>{r.status}</Badge>}
+                        <ChevronRight style={{ width: 12, height: 12, color: tokens.tertiaryLabel, flexShrink: 0 }} />
                       </div>
                     ))}
                   </div>
@@ -579,33 +579,33 @@ function StorageTab({ data }: { data: TopologyData }) {
   const namespaces = [...new Set(pvcs.map(p => p.namespace))].sort()
 
   const statusColor = (st: string) => {
-    if (st === 'Bound') return apple.green
-    if (st === 'Pending') return apple.orange
-    return apple.red
+    if (st === 'Bound') return tokens.green
+    if (st === 'Pending') return tokens.orange
+    return tokens.red
   }
 
-  const storageHealthColor = s.storage_health === 'critical' ? apple.red : s.storage_health === 'warning' ? apple.orange : apple.green
+  const storageHealthColor = s.storage_health === 'critical' ? tokens.red : s.storage_health === 'warning' ? tokens.orange : tokens.green
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-        <StatCard label="Total PVCs" value={s.total_pvcs ?? 0} sub="Cluster-wide" color={apple.blue} icon={HardDrive} />
-        <StatCard label="Bound" value={s.bound_pvcs ?? 0} sub="Ready" color={apple.green} icon={HardDrive} />
-        <StatCard label="Pending" value={s.pending_pvcs ?? 0} sub={s.pending_pvcs ? 'Action needed' : 'All good'} color={(s.pending_pvcs ?? 0) > 0 ? apple.orange : apple.green} icon={AlertTriangle} />
-        <StatCard label="Total Capacity" value={`${(s.total_storage_gb ?? 0).toFixed(1)} GB`} sub="Provisioned" color={apple.purple} icon={HardDrive} />
-        <StatCard label="PVs" value={pvs.length} sub="Cluster-wide" color={apple.gray} icon={Layers} />
+        <StatCard label="Total PVCs" value={s.total_pvcs ?? 0} sub="Cluster-wide" color={tokens.blue} icon={HardDrive} />
+        <StatCard label="Bound" value={s.bound_pvcs ?? 0} sub="Ready" color={tokens.green} icon={HardDrive} />
+        <StatCard label="Pending" value={s.pending_pvcs ?? 0} sub={s.pending_pvcs ? 'Action needed' : 'All good'} color={(s.pending_pvcs ?? 0) > 0 ? tokens.orange : tokens.green} icon={AlertTriangle} />
+        <StatCard label="Total Capacity" value={`${(s.total_storage_gb ?? 0).toFixed(1)} GB`} sub="Provisioned" color={tokens.purple} icon={HardDrive} />
+        <StatCard label="PVs" value={pvs.length} sub="Cluster-wide" color={tokens.gray} icon={Layers} />
       </div>
 
       {/* Storage health banner */}
       {(s.pending_pvcs ?? 0) > 0 && (
-        <div style={{ background: apple.orange + '0d', border: `0.5px solid ${apple.orange}40`, borderRadius: apple.radius.lg, padding: '14px 18px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          <AlertTriangle style={{ width: 16, height: 16, color: apple.orange, flexShrink: 0, marginTop: 1 }} />
+        <div style={{ background: tokens.orange + '0d', border: `0.5px solid ${tokens.orange}40`, borderRadius: tokens.radius.lg, padding: '14px 18px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <AlertTriangle style={{ width: 16, height: 16, color: tokens.orange, flexShrink: 0, marginTop: 1 }} />
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: apple.orange, marginBottom: 4 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: tokens.orange, marginBottom: 4 }}>
               {s.pending_pvcs} PVC{(s.pending_pvcs ?? 0) > 1 ? 's' : ''} in Pending state
             </div>
-            <div style={{ fontSize: 12, color: apple.secondaryLabel }}>
+            <div style={{ fontSize: 12, color: tokens.secondaryLabel }}>
               Pending PVCs block pod scheduling. Common causes: no matching StorageClass, PV capacity exhausted, or NetApp volume at capacity. Check NetApp volume utilization alerts for this cluster.
             </div>
           </div>
@@ -613,19 +613,19 @@ function StorageTab({ data }: { data: TopologyData }) {
       )}
 
       {/* PVC table */}
-      <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <HardDrive style={{ width: 16, height: 16, color: storageHealthColor }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: apple.label, flex: 1 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label, flex: 1 }}>
             Persistent Volume Claims ({filtered.length})
           </span>
           <select value={nsFilter} onChange={e => setNsFilter(e.target.value)}
-            style={{ padding: '4px 8px', borderRadius: 6, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 12, cursor: 'pointer' }}>
+            style={{ padding: '4px 8px', borderRadius: 6, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 12, cursor: 'pointer' }}>
             <option value="">All namespaces</option>
             {namespaces.map(ns => <option key={ns} value={ns}>{ns}</option>)}
           </select>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-            style={{ padding: '4px 8px', borderRadius: 6, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 12, cursor: 'pointer' }}>
+            style={{ padding: '4px 8px', borderRadius: 6, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 12, cursor: 'pointer' }}>
             <option value="">All statuses</option>
             <option value="Bound">Bound</option>
             <option value="Pending">Pending</option>
@@ -634,38 +634,38 @@ function StorageTab({ data }: { data: TopologyData }) {
         </div>
 
         {filtered.length === 0 ? (
-          <div style={{ padding: '32px 18px', textAlign: 'center', color: apple.tertiaryLabel, fontSize: 13 }}>
+          <div style={{ padding: '32px 18px', textAlign: 'center', color: tokens.tertiaryLabel, fontSize: 13 }}>
             No PVCs found
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
-                <tr style={{ background: apple.fill }}>
+                <tr style={{ background: tokens.fill }}>
                   {['Name', 'Namespace', 'Status', 'Volume', 'Requested', 'Capacity', 'Access', 'Storage Class'].map(h => (
-                    <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: apple.tertiaryLabel, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: `0.5px solid ${apple.separator}`, whiteSpace: 'nowrap' }}>{h}</th>
+                    <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: tokens.tertiaryLabel, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: `0.5px solid ${tokens.separator}`, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((pvc, i) => (
                   <tr key={`${pvc.namespace}/${pvc.name}`}
-                    style={{ background: i % 2 === 0 ? 'transparent' : apple.fill + '80', borderBottom: `0.5px solid ${apple.separator}` }}>
-                    <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: apple.label, fontWeight: 500 }}>{pvc.name}</td>
-                    <td style={{ padding: '8px 14px', color: apple.secondaryLabel }}>{pvc.namespace}</td>
+                    style={{ background: i % 2 === 0 ? 'transparent' : tokens.fill + '80', borderBottom: `0.5px solid ${tokens.separator}` }}>
+                    <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: tokens.label, fontWeight: 500 }}>{pvc.name}</td>
+                    <td style={{ padding: '8px 14px', color: tokens.secondaryLabel }}>{pvc.namespace}</td>
                     <td style={{ padding: '8px 14px' }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 4, background: statusColor(pvc.status) + '18', color: statusColor(pvc.status), fontSize: 11, fontWeight: 600 }}>
                         {pvc.status === 'Pending' && <AlertTriangle style={{ width: 10, height: 10 }} />}
                         {pvc.status}
                       </span>
                     </td>
-                    <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: apple.secondaryLabel, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pvc.volume_name || '—'}</td>
-                    <td style={{ padding: '8px 14px', color: apple.label, fontWeight: 500 }}>{pvc.requested_gb > 0 ? `${pvc.requested_gb.toFixed(1)} GB` : '—'}</td>
-                    <td style={{ padding: '8px 14px', color: pvc.capacity_gb > 0 ? apple.label : apple.tertiaryLabel, fontWeight: pvc.capacity_gb > 0 ? 500 : 400 }}>
+                    <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: tokens.secondaryLabel, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pvc.volume_name || '—'}</td>
+                    <td style={{ padding: '8px 14px', color: tokens.label, fontWeight: 500 }}>{pvc.requested_gb > 0 ? `${pvc.requested_gb.toFixed(1)} GB` : '—'}</td>
+                    <td style={{ padding: '8px 14px', color: pvc.capacity_gb > 0 ? tokens.label : tokens.tertiaryLabel, fontWeight: pvc.capacity_gb > 0 ? 500 : 400 }}>
                       {pvc.capacity_gb > 0 ? `${pvc.capacity_gb.toFixed(1)} GB` : '—'}
                     </td>
-                    <td style={{ padding: '8px 14px', color: apple.secondaryLabel, fontSize: 11 }}>{(pvc.access_modes ?? []).join(', ')}</td>
-                    <td style={{ padding: '8px 14px', color: apple.secondaryLabel, fontFamily: 'monospace', fontSize: 11 }}>{pvc.storage_class || '—'}</td>
+                    <td style={{ padding: '8px 14px', color: tokens.secondaryLabel, fontSize: 11 }}>{(pvc.access_modes ?? []).join(', ')}</td>
+                    <td style={{ padding: '8px 14px', color: tokens.secondaryLabel, fontFamily: 'monospace', fontSize: 11 }}>{pvc.storage_class || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -676,32 +676,32 @@ function StorageTab({ data }: { data: TopologyData }) {
 
       {/* PV table */}
       {pvs.length > 0 && (
-        <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Layers style={{ width: 16, height: 16, color: apple.purple }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Persistent Volumes ({pvs.length})</span>
+        <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Layers style={{ width: 16, height: 16, color: tokens.purple }} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Persistent Volumes ({pvs.length})</span>
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
-                <tr style={{ background: apple.fill }}>
+                <tr style={{ background: tokens.fill }}>
                   {['Name', 'Capacity', 'Status', 'Claim', 'Reclaim Policy', 'Storage Class', 'Access'].map(h => (
-                    <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: apple.tertiaryLabel, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: `0.5px solid ${apple.separator}`, whiteSpace: 'nowrap' }}>{h}</th>
+                    <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: tokens.tertiaryLabel, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: `0.5px solid ${tokens.separator}`, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {pvs.map((pv, i) => (
-                  <tr key={pv.name} style={{ background: i % 2 === 0 ? 'transparent' : apple.fill + '80', borderBottom: `0.5px solid ${apple.separator}` }}>
-                    <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: apple.label, fontWeight: 500 }}>{pv.name}</td>
-                    <td style={{ padding: '8px 14px', color: apple.label, fontWeight: 500 }}>{pv.capacity_gb > 0 ? `${pv.capacity_gb.toFixed(1)} GB` : '—'}</td>
+                  <tr key={pv.name} style={{ background: i % 2 === 0 ? 'transparent' : tokens.fill + '80', borderBottom: `0.5px solid ${tokens.separator}` }}>
+                    <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: tokens.label, fontWeight: 500 }}>{pv.name}</td>
+                    <td style={{ padding: '8px 14px', color: tokens.label, fontWeight: 500 }}>{pv.capacity_gb > 0 ? `${pv.capacity_gb.toFixed(1)} GB` : '—'}</td>
                     <td style={{ padding: '8px 14px' }}>
                       <span style={{ padding: '2px 8px', borderRadius: 4, background: statusColor(pv.status) + '18', color: statusColor(pv.status), fontSize: 11, fontWeight: 600 }}>{pv.status}</span>
                     </td>
-                    <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: apple.secondaryLabel, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pv.claim_ref || '—'}</td>
-                    <td style={{ padding: '8px 14px', color: apple.secondaryLabel }}>{pv.reclaim_policy}</td>
-                    <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: apple.secondaryLabel, fontSize: 11 }}>{pv.storage_class || '—'}</td>
-                    <td style={{ padding: '8px 14px', color: apple.secondaryLabel, fontSize: 11 }}>{(pv.access_modes ?? []).join(', ')}</td>
+                    <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: tokens.secondaryLabel, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pv.claim_ref || '—'}</td>
+                    <td style={{ padding: '8px 14px', color: tokens.secondaryLabel }}>{pv.reclaim_policy}</td>
+                    <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: tokens.secondaryLabel, fontSize: 11 }}>{pv.storage_class || '—'}</td>
+                    <td style={{ padding: '8px 14px', color: tokens.secondaryLabel, fontSize: 11 }}>{(pv.access_modes ?? []).join(', ')}</td>
                   </tr>
                 ))}
               </tbody>
@@ -738,9 +738,9 @@ function OverviewTab({ data, events, onResourceClick }: { data: TopologyData; ev
   }, [data.pods, data.deployments])
 
   const allUnhealthy: { key: string; label: string; badge: React.ReactNode; extraBadge: React.ReactNode; icon: React.ReactNode; resource: SelectedResource }[] = [
-    ...unhealthyNodes.map(n => ({ key: n.name, label: `Node: ${n.name}`, badge: <Badge color={apple.red}>NotReady</Badge>, extraBadge: null, icon: <XCircle style={{ width: 14, height: 14, color: apple.red }} />, resource: { kind: 'Node' as const, name: n.name, cluster: data.cluster } })),
-    ...unhealthyDeps.map(d => ({ key: `dep-${d.namespace}/${d.name}`, label: `Deployment: ${d.namespace}/${d.name}`, badge: <Badge color={apple.orange}>{d.ready_replicas}/{d.replicas} ready</Badge>, extraBadge: null, icon: <AlertTriangle style={{ width: 14, height: 14, color: apple.orange }} />, resource: { kind: 'Deployment' as const, name: d.name, namespace: d.namespace, cluster: data.cluster } })),
-    ...unhealthyPods.map(p => ({ key: `pod-${p.namespace}/${p.name}`, label: `Pod: ${p.namespace}/${p.name}`, badge: <PhaseBadge phase={p.phase} />, extraBadge: p.restarts > 0 ? <Badge color={apple.orange}>{p.restarts}r</Badge> : null, icon: <AlertCircle style={{ width: 14, height: 14, color: p.phase === 'Pending' ? apple.orange : apple.red }} />, resource: { kind: 'Pod' as const, name: p.name, namespace: p.namespace, cluster: data.cluster } })),
+    ...unhealthyNodes.map(n => ({ key: n.name, label: `Node: ${n.name}`, badge: <Badge color={tokens.red}>NotReady</Badge>, extraBadge: null, icon: <XCircle style={{ width: 14, height: 14, color: tokens.red }} />, resource: { kind: 'Node' as const, name: n.name, cluster: data.cluster } })),
+    ...unhealthyDeps.map(d => ({ key: `dep-${d.namespace}/${d.name}`, label: `Deployment: ${d.namespace}/${d.name}`, badge: <Badge color={tokens.orange}>{d.ready_replicas}/{d.replicas} ready</Badge>, extraBadge: null, icon: <AlertTriangle style={{ width: 14, height: 14, color: tokens.orange }} />, resource: { kind: 'Deployment' as const, name: d.name, namespace: d.namespace, cluster: data.cluster } })),
+    ...unhealthyPods.map(p => ({ key: `pod-${p.namespace}/${p.name}`, label: `Pod: ${p.namespace}/${p.name}`, badge: <PhaseBadge phase={p.phase} />, extraBadge: p.restarts > 0 ? <Badge color={tokens.orange}>{p.restarts}r</Badge> : null, icon: <AlertCircle style={{ width: 14, height: 14, color: p.phase === 'Pending' ? tokens.orange : tokens.red }} />, resource: { kind: 'Pod' as const, name: p.name, namespace: p.namespace, cluster: data.cluster } })),
   ]
   const displayedUnhealthy = showAllUnhealthy ? allUnhealthy : allUnhealthy.slice(0, 10)
 
@@ -748,44 +748,44 @@ function OverviewTab({ data, events, onResourceClick }: { data: TopologyData; ev
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Stat grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-        <StatCard label="Nodes" value={`${s.ready_nodes}/${s.nodes}`} sub="Ready" color={s.ready_nodes === s.nodes ? apple.green : apple.orange} icon={Server} />
-        <StatCard label="Pods" value={`${s.running_pods}/${s.pods}`} sub="Running" color={s.running_pods === s.pods ? apple.green : apple.orange} icon={Box} />
-        <StatCard label="Deployments" value={`${s.healthy_deployments}/${s.deployments}`} sub="Healthy" color={s.healthy_deployments === s.deployments ? apple.green : apple.orange} icon={GitBranch} />
-        <StatCard label="Services" value={s.services} sub="Total" color={apple.blue} icon={Network} />
-        <StatCard label="Ingresses" value={s.ingresses} sub="Total" color={apple.purple} icon={Globe} />
-        <StatCard label="Namespaces" value={s.namespaces} sub="Active" color={apple.gray} icon={Layers} />
+        <StatCard label="Nodes" value={`${s.ready_nodes}/${s.nodes}`} sub="Ready" color={s.ready_nodes === s.nodes ? tokens.green : tokens.orange} icon={Server} />
+        <StatCard label="Pods" value={`${s.running_pods}/${s.pods}`} sub="Running" color={s.running_pods === s.pods ? tokens.green : tokens.orange} icon={Box} />
+        <StatCard label="Deployments" value={`${s.healthy_deployments}/${s.deployments}`} sub="Healthy" color={s.healthy_deployments === s.deployments ? tokens.green : tokens.orange} icon={GitBranch} />
+        <StatCard label="Services" value={s.services} sub="Total" color={tokens.blue} icon={Network} />
+        <StatCard label="Ingresses" value={s.ingresses} sub="Total" color={tokens.purple} icon={Globe} />
+        <StatCard label="Namespaces" value={s.namespaces} sub="Active" color={tokens.gray} icon={Layers} />
         <StatCard
           label="Storage"
           value={`${s.bound_pvcs ?? 0}/${s.total_pvcs ?? 0}`}
           sub={`PVCs Bound · ${((s.total_storage_gb ?? 0)).toFixed(1)} GB`}
-          color={s.storage_health === 'critical' ? apple.red : s.storage_health === 'warning' ? apple.orange : apple.green}
+          color={s.storage_health === 'critical' ? tokens.red : s.storage_health === 'warning' ? tokens.orange : tokens.green}
           icon={HardDrive}
         />
       </div>
 
       {/* Storage warning banner */}
       {(s.pending_pvcs ?? 0) > 0 && (
-        <div style={{ background: apple.orange + '0d', border: `0.5px solid ${apple.orange}40`, borderRadius: apple.radius.lg, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <AlertTriangle style={{ width: 15, height: 15, color: apple.orange, flexShrink: 0 }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: apple.orange }}>
+        <div style={{ background: tokens.orange + '0d', border: `0.5px solid ${tokens.orange}40`, borderRadius: tokens.radius.lg, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <AlertTriangle style={{ width: 15, height: 15, color: tokens.orange, flexShrink: 0 }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: tokens.orange }}>
             {s.pending_pvcs} PVC{(s.pending_pvcs ?? 0) > 1 ? 's' : ''} pending — storage may be unavailable for affected pods.
-            {' '}<span style={{ fontWeight: 400, color: apple.secondaryLabel }}>Check the Storage tab for details.</span>
+            {' '}<span style={{ fontWeight: 400, color: tokens.secondaryLabel }}>Check the Storage tab for details.</span>
           </span>
         </div>
       )}
 
       {/* Dead services warning */}
       {deadServices.length > 0 && (
-        <div style={{ background: apple.red + '0d', border: `0.5px solid ${apple.red}30`, borderRadius: apple.radius.lg, padding: '12px 18px' }}>
+        <div style={{ background: tokens.red + '0d', border: `0.5px solid ${tokens.red}30`, borderRadius: tokens.radius.lg, padding: '12px 18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <AlertTriangle style={{ width: 15, height: 15, color: apple.red }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: apple.red }}>{deadServices.length} Service(s) with No Healthy Endpoints</span>
+            <AlertTriangle style={{ width: 15, height: 15, color: tokens.red }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: tokens.red }}>{deadServices.length} Service(s) with No Healthy Endpoints</span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {deadServices.map(s => (
               <span key={`${s.namespace}/${s.name}`}
                 onClick={() => onResourceClick?.({ kind: 'Service', name: s.name, namespace: s.namespace, cluster: data.cluster })}
-                style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: apple.red + '18', color: apple.red, fontFamily: 'monospace', cursor: onResourceClick ? 'pointer' : 'default', textDecoration: onResourceClick ? 'underline dotted' : 'none' }}>
+                style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: tokens.red + '18', color: tokens.red, fontFamily: 'monospace', cursor: onResourceClick ? 'pointer' : 'default', textDecoration: onResourceClick ? 'underline dotted' : 'none' }}>
                 {s.namespace}/{s.name}
               </span>
             ))}
@@ -795,24 +795,24 @@ function OverviewTab({ data, events, onResourceClick }: { data: TopologyData; ev
 
       {/* Unhealthy Resources */}
       {allUnhealthy.length > 0 && (
-        <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <AlertTriangle style={{ width: 16, height: 16, color: apple.orange }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Unhealthy Resources</span>
-            <Badge color={apple.orange}>{allUnhealthy.length}</Badge>
+        <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AlertTriangle style={{ width: 16, height: 16, color: tokens.orange }} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Unhealthy Resources</span>
+            <Badge color={tokens.orange}>{allUnhealthy.length}</Badge>
           </div>
           <div style={{ padding: '4px 0' }}>
             {displayedUnhealthy.map(item => (
               <div key={item.key}
                 onClick={() => onResourceClick?.(item.resource)}
-                style={{ padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: `0.5px solid ${apple.separator}`, cursor: onResourceClick ? 'pointer' : 'default' }}
-                onMouseEnter={e => { if (onResourceClick) e.currentTarget.style.background = apple.fill }}
+                style={{ padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: `0.5px solid ${tokens.separator}`, cursor: onResourceClick ? 'pointer' : 'default' }}
+                onMouseEnter={e => { if (onResourceClick) e.currentTarget.style.background = tokens.fill }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                 {item.icon}
-                <span style={{ fontSize: 12, color: apple.label, flex: 1, fontFamily: 'monospace' }}>{item.label}</span>
+                <span style={{ fontSize: 12, color: tokens.label, flex: 1, fontFamily: 'monospace' }}>{item.label}</span>
                 {item.badge}
                 {item.extraBadge}
-                {onResourceClick && <ChevronRight style={{ width: 12, height: 12, color: apple.tertiaryLabel, flexShrink: 0 }} />}
+                {onResourceClick && <ChevronRight style={{ width: 12, height: 12, color: tokens.tertiaryLabel, flexShrink: 0 }} />}
               </div>
             ))}
           </div>
@@ -826,23 +826,23 @@ function OverviewTab({ data, events, onResourceClick }: { data: TopologyData; ev
 
       {/* Top crashing pods */}
       {topCrashPods.length > 0 && (
-        <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <RefreshCw style={{ width: 16, height: 16, color: apple.orange }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Top Restarting Pods</span>
+        <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <RefreshCw style={{ width: 16, height: 16, color: tokens.orange }} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Top Restarting Pods</span>
           </div>
           <div style={{ padding: '4px 0' }}>
             {topCrashPods.map((p, i) => (
               <div key={`${p.namespace}/${p.name}`}
                 onClick={() => onResourceClick?.({ kind: 'Pod', name: p.name, namespace: p.namespace, cluster: data.cluster })}
-                style={{ padding: '8px 18px', display: 'grid', gridTemplateColumns: '24px 2fr 1.5fr 1fr 80px', gap: 10, alignItems: 'center', borderBottom: i < topCrashPods.length - 1 ? `0.5px solid ${apple.separator}` : 'none', fontSize: 12, cursor: onResourceClick ? 'pointer' : 'default' }}
-                onMouseEnter={e => { if (onResourceClick) e.currentTarget.style.background = apple.fill }}
+                style={{ padding: '8px 18px', display: 'grid', gridTemplateColumns: '24px 2fr 1.5fr 1fr 80px', gap: 10, alignItems: 'center', borderBottom: i < topCrashPods.length - 1 ? `0.5px solid ${tokens.separator}` : 'none', fontSize: 12, cursor: onResourceClick ? 'pointer' : 'default' }}
+                onMouseEnter={e => { if (onResourceClick) e.currentTarget.style.background = tokens.fill }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
-                <span style={{ color: apple.tertiaryLabel, fontWeight: 600 }}>#{i + 1}</span>
-                <span style={{ fontFamily: 'monospace', color: apple.label, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                <span style={{ color: apple.secondaryLabel }}>{p.namespace}</span>
+                <span style={{ color: tokens.tertiaryLabel, fontWeight: 600 }}>#{i + 1}</span>
+                <span style={{ fontFamily: 'monospace', color: tokens.label, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                <span style={{ color: tokens.secondaryLabel }}>{p.namespace}</span>
                 <PhaseBadge phase={p.phase} />
-                <Badge color={p.restarts >= 10 ? apple.red : apple.orange}>{p.restarts} restarts</Badge>
+                <Badge color={p.restarts >= 10 ? tokens.red : tokens.orange}>{p.restarts} restarts</Badge>
               </div>
             ))}
           </div>
@@ -851,24 +851,24 @@ function OverviewTab({ data, events, onResourceClick }: { data: TopologyData; ev
 
       {/* Namespace health grid */}
       {Object.keys(nsHealthMap).length > 0 && (
-        <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Layers style={{ width: 16, height: 16, color: apple.blue }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Namespace Health</span>
+        <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Layers style={{ width: 16, height: 16, color: tokens.blue }} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Namespace Health</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 0 }}>
             {Object.entries(nsHealthMap).sort(([, a], [, b]) => a.score - b.score).map(([ns, h]) => {
               const nsPodCount = data.pods.filter(p => p.namespace === ns).length
               return (
-                <div key={ns} style={{ padding: '12px 16px', borderRight: `0.5px solid ${apple.separator}`, borderBottom: `0.5px solid ${apple.separator}` }}>
+                <div key={ns} style={{ padding: '12px 16px', borderRight: `0.5px solid ${tokens.separator}`, borderBottom: `0.5px solid ${tokens.separator}` }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: apple.label, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>{ns}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: tokens.label, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>{ns}</span>
                     <span style={{ fontSize: 16, fontWeight: 800, color: h.color }}>{h.grade}</span>
                   </div>
-                  <div style={{ height: 4, borderRadius: 2, background: apple.fill, overflow: 'hidden', marginBottom: 4 }}>
+                  <div style={{ height: 4, borderRadius: 2, background: tokens.fill, overflow: 'hidden', marginBottom: 4 }}>
                     <div style={{ height: '100%', width: `${h.score}%`, background: h.color, borderRadius: 2 }} />
                   </div>
-                  <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>{h.score}% healthy · {nsPodCount} pod{nsPodCount !== 1 ? 's' : ''}</span>
+                  <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>{h.score}% healthy · {nsPodCount} pod{nsPodCount !== 1 ? 's' : ''}</span>
                 </div>
               )
             })}
@@ -878,27 +878,27 @@ function OverviewTab({ data, events, onResourceClick }: { data: TopologyData; ev
 
       {/* Recent warnings */}
       {warnEvents.length > 0 && (
-        <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <AlertTriangle style={{ width: 16, height: 16, color: apple.yellow }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Recent Warnings</span>
+        <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AlertTriangle style={{ width: 16, height: 16, color: tokens.yellow }} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Recent Warnings</span>
           </div>
           {warnEvents.map((ev, i) => (
-            <div key={i} style={{ padding: '10px 18px', borderBottom: i < warnEvents.length - 1 ? `0.5px solid ${apple.separator}` : 'none', display: 'grid', gridTemplateColumns: '90px 100px 130px 1fr', gap: 10, alignItems: 'start' }}>
-              <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>{new Date(ev.last_timestamp).toLocaleTimeString()}</span>
-              <span style={{ fontSize: 11, color: apple.orange, fontWeight: 600 }}>{ev.reason}</span>
-              <span style={{ fontSize: 11, color: apple.secondaryLabel, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.involved_object.kind}/{truncate(ev.involved_object.name, 18)}</span>
-              <span style={{ fontSize: 12, color: apple.label }}>{truncate(ev.message, 100)}</span>
+            <div key={i} style={{ padding: '10px 18px', borderBottom: i < warnEvents.length - 1 ? `0.5px solid ${tokens.separator}` : 'none', display: 'grid', gridTemplateColumns: '90px 100px 130px 1fr', gap: 10, alignItems: 'start' }}>
+              <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>{new Date(ev.last_timestamp).toLocaleTimeString()}</span>
+              <span style={{ fontSize: 11, color: tokens.orange, fontWeight: 600 }}>{ev.reason}</span>
+              <span style={{ fontSize: 11, color: tokens.secondaryLabel, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.involved_object.kind}/{truncate(ev.involved_object.name, 18)}</span>
+              <span style={{ fontSize: 12, color: tokens.label }}>{truncate(ev.message, 100)}</span>
             </div>
           ))}
         </div>
       )}
 
       {allUnhealthy.length === 0 && deadServices.length === 0 && topCrashPods.length === 0 && (
-        <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, padding: '32px 24px', textAlign: 'center' }}>
-          <CheckCircle style={{ width: 36, height: 36, color: apple.green, marginBottom: 10 }} />
-          <div style={{ fontSize: 15, fontWeight: 600, color: apple.label }}>All resources healthy</div>
-          <div style={{ fontSize: 13, color: apple.secondaryLabel, marginTop: 4 }}>No issues detected in this cluster</div>
+        <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, padding: '32px 24px', textAlign: 'center' }}>
+          <CheckCircle style={{ width: 36, height: 36, color: tokens.green, marginBottom: 10 }} />
+          <div style={{ fontSize: 15, fontWeight: 600, color: tokens.label }}>All resources healthy</div>
+          <div style={{ fontSize: 13, color: tokens.secondaryLabel, marginTop: 4 }}>No issues detected in this cluster</div>
         </div>
       )}
     </div>
@@ -937,18 +937,18 @@ function WorkloadsTab({ data, nsFilter, onGetLogs, onResourceClick }: { data: To
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Deployments */}
-      <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <GitBranch style={{ width: 16, height: 16, color: apple.orange }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Deployments</span>
-          <Badge color={apple.gray}>{deps.length}</Badge>
+      <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <GitBranch style={{ width: 16, height: 16, color: tokens.orange }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Deployments</span>
+          <Badge color={tokens.gray}>{deps.length}</Badge>
         </div>
         <div style={{ padding: '12px 18px 0' }}>
           <SearchInput value={depSearch} onChange={setDepSearch} placeholder="Search deployments…" />
         </div>
         {deps.length === 0 ? <EmptyState icon={GitBranch} text="No deployments found" /> : (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 80px 2fr 80px 100px', padding: '8px 18px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 80px 2fr 80px 100px', padding: '8px 18px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               <div>Name</div><div>Namespace</div><div>Ready</div><div>Image</div><div>Age</div><div>Status</div>
             </div>
             {deps.slice(0, depsShown).map((d, i) => {
@@ -957,15 +957,15 @@ function WorkloadsTab({ data, nsFilter, onGetLogs, onResourceClick }: { data: To
               return (
                 <div key={`${d.namespace}/${d.name}`}
                   onClick={() => onResourceClick?.({ kind: 'Deployment', name: d.name, namespace: d.namespace, cluster: data.cluster })}
-                  style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 80px 2fr 80px 100px', padding: '10px 18px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 13, alignItems: 'center', cursor: onResourceClick ? 'pointer' : 'default' }}
-                  onMouseEnter={e => { if (onResourceClick) e.currentTarget.style.background = apple.fill }}
+                  style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 80px 2fr 80px 100px', padding: '10px 18px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 13, alignItems: 'center', cursor: onResourceClick ? 'pointer' : 'default' }}
+                  onMouseEnter={e => { if (onResourceClick) e.currentTarget.style.background = tokens.fill }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
-                  <div style={{ color: apple.label, fontWeight: 500, fontFamily: 'monospace', fontSize: 12 }}>{d.name}</div>
-                  <div style={{ color: apple.secondaryLabel }}>{d.namespace}</div>
-                  <div style={{ color: healthy ? apple.green : apple.orange, fontWeight: 600 }}>{d.ready_replicas}/{d.replicas}</div>
-                  <div style={{ color: apple.tertiaryLabel, fontSize: 11, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncate(img.split('/').pop() ?? img, 28)}</div>
-                  <div style={{ color: apple.tertiaryLabel }}>{relativeAge(d.created_at)}</div>
-                  <div><Badge color={healthy ? apple.green : apple.orange}>{healthy ? 'Healthy' : 'Degraded'}</Badge></div>
+                  <div style={{ color: tokens.label, fontWeight: 500, fontFamily: 'monospace', fontSize: 12 }}>{d.name}</div>
+                  <div style={{ color: tokens.secondaryLabel }}>{d.namespace}</div>
+                  <div style={{ color: healthy ? tokens.green : tokens.orange, fontWeight: 600 }}>{d.ready_replicas}/{d.replicas}</div>
+                  <div style={{ color: tokens.tertiaryLabel, fontSize: 11, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncate(img.split('/').pop() ?? img, 28)}</div>
+                  <div style={{ color: tokens.tertiaryLabel }}>{relativeAge(d.created_at)}</div>
+                  <div><Badge color={healthy ? tokens.green : tokens.orange}>{healthy ? 'Healthy' : 'Degraded'}</Badge></div>
                 </div>
               )
             })}
@@ -978,13 +978,13 @@ function WorkloadsTab({ data, nsFilter, onGetLogs, onResourceClick }: { data: To
       </div>
 
       {/* Pods */}
-      <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+      <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Box style={{ width: 16, height: 16, color: apple.green }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Pods</span>
-            <Badge color={apple.gray}>{data.pods.filter(p => nsFilter === '' || p.namespace === nsFilter).length} total</Badge>
-            {phaseFilter !== 'all' && <Badge color={apple.blue}>{pods.length} shown</Badge>}
+            <Box style={{ width: 16, height: 16, color: tokens.green }} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Pods</span>
+            <Badge color={tokens.gray}>{data.pods.filter(p => nsFilter === '' || p.namespace === nsFilter).length} total</Badge>
+            {phaseFilter !== 'all' && <Badge color={tokens.blue}>{pods.length} shown</Badge>}
           </div>
           {/* Phase filter pills */}
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -995,7 +995,7 @@ function WorkloadsTab({ data, nsFilter, onGetLogs, onResourceClick }: { data: To
                   ? data.pods.filter(p => (nsFilter === '' || p.namespace === nsFilter) && (p.phase !== 'Running' || !p.ready || p.restarts >= 3)).length
                   : data.pods.filter(p => (nsFilter === '' || p.namespace === nsFilter) && p.phase === f).length
               return (
-                <button key={f} onClick={() => setPhaseFilter(f)} style={{ padding: '3px 10px', fontSize: 11, borderRadius: 20, border: `0.5px solid ${phaseFilter === f ? apple.blue : apple.separator}`, background: phaseFilter === f ? apple.blue : apple.fill, color: phaseFilter === f ? '#fff' : apple.secondaryLabel, cursor: 'pointer', fontWeight: 500 }}>
+                <button key={f} onClick={() => setPhaseFilter(f)} style={{ padding: '3px 10px', fontSize: 11, borderRadius: 20, border: `0.5px solid ${phaseFilter === f ? tokens.blue : tokens.separator}`, background: phaseFilter === f ? tokens.blue : tokens.fill, color: phaseFilter === f ? '#fff' : tokens.secondaryLabel, cursor: 'pointer', fontWeight: 500 }}>
                   {f === 'all' ? `All ${count}` : f === 'unhealthy' ? `⚠ Unhealthy ${count}` : `${f} ${count}`}
                 </button>
               )
@@ -1007,7 +1007,7 @@ function WorkloadsTab({ data, nsFilter, onGetLogs, onResourceClick }: { data: To
         </div>
         {pods.length === 0 ? <EmptyState icon={Box} text="No pods found" /> : (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1.5fr 90px 70px 40px 60px 130px', padding: '8px 18px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1.5fr 90px 70px 40px 60px 130px', padding: '8px 18px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               <div>Name</div><div>Namespace</div><div>Node</div><div>Phase</div><div>Restarts</div><div>Ctr</div><div>Age</div><div>Actions</div>
             </div>
             {pods.slice(0, podsShown).map((p) => {
@@ -1015,59 +1015,59 @@ function WorkloadsTab({ data, nsFilter, onGetLogs, onResourceClick }: { data: To
               return (
                 <div key={key}>
                   <div
-                    style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1.5fr 90px 70px 40px 60px 130px', padding: '9px 18px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 12, alignItems: 'center', cursor: 'pointer', background: expandedPod === key ? apple.fill : 'transparent' }}
+                    style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1.5fr 90px 70px 40px 60px 130px', padding: '9px 18px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 12, alignItems: 'center', cursor: 'pointer', background: expandedPod === key ? tokens.fill : 'transparent' }}
                     onClick={() => setExpandedPod(expandedPod === key ? null : key)}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {expandedPod === key ? <ChevronUp style={{ width: 12, height: 12, color: apple.gray }} /> : <ChevronRight style={{ width: 12, height: 12, color: apple.gray }} />}
-                      <span style={{ color: apple.label, fontWeight: 500, fontFamily: 'monospace', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncate(p.name, 36)}</span>
+                      {expandedPod === key ? <ChevronUp style={{ width: 12, height: 12, color: tokens.gray }} /> : <ChevronRight style={{ width: 12, height: 12, color: tokens.gray }} />}
+                      <span style={{ color: tokens.label, fontWeight: 500, fontFamily: 'monospace', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncate(p.name, 36)}</span>
                     </div>
-                    <div style={{ color: apple.secondaryLabel }}>{p.namespace}</div>
-                    <div style={{ color: apple.tertiaryLabel, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncate(p.node_name ?? '—', 22)}</div>
+                    <div style={{ color: tokens.secondaryLabel }}>{p.namespace}</div>
+                    <div style={{ color: tokens.tertiaryLabel, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncate(p.node_name ?? '—', 22)}</div>
                     <div><PhaseBadge phase={p.phase} /></div>
-                    <div style={{ color: p.restarts > 0 ? (p.restarts >= 5 ? apple.red : apple.orange) : apple.tertiaryLabel, fontWeight: p.restarts > 0 ? 700 : 400 }}>{p.restarts}</div>
-                    <div style={{ color: apple.tertiaryLabel }}>{p.containers?.length ?? 0}</div>
-                    <div style={{ color: apple.tertiaryLabel }}>{relativeAge(p.created_at)}</div>
+                    <div style={{ color: p.restarts > 0 ? (p.restarts >= 5 ? tokens.red : tokens.orange) : tokens.tertiaryLabel, fontWeight: p.restarts > 0 ? 700 : 400 }}>{p.restarts}</div>
+                    <div style={{ color: tokens.tertiaryLabel }}>{p.containers?.length ?? 0}</div>
+                    <div style={{ color: tokens.tertiaryLabel }}>{relativeAge(p.created_at)}</div>
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button onClick={e => { e.stopPropagation(); onGetLogs(p.namespace, p.name) }}
-                        style={{ padding: '3px 7px', fontSize: 11, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+                        style={{ padding: '3px 7px', fontSize: 11, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                         <Terminal style={{ width: 11, height: 11 }} /> Logs
                       </button>
                       {onResourceClick && (
                         <button onClick={e => { e.stopPropagation(); onResourceClick({ kind: 'Pod', name: p.name, namespace: p.namespace, cluster: data.cluster }) }}
-                          style={{ padding: '3px 7px', fontSize: 11, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.blue}44`, background: apple.blue + '12', color: apple.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+                          style={{ padding: '3px 7px', fontSize: 11, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.blue}44`, background: tokens.blue + '12', color: tokens.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                           <Info style={{ width: 11, height: 11 }} />
                         </button>
                       )}
                     </div>
                   </div>
                   {expandedPod === key && (
-                    <div style={{ background: apple.tertiaryFill, padding: '12px 36px 14px', borderBottom: `0.5px solid ${apple.separator}` }}>
+                    <div style={{ background: tokens.tertiaryFill, padding: '12px 36px 14px', borderBottom: `0.5px solid ${tokens.separator}` }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         <div>
-                          <div style={{ fontSize: 11, color: apple.tertiaryLabel, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Containers</div>
+                          <div style={{ fontSize: 11, color: tokens.tertiaryLabel, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Containers</div>
                           {p.containers?.map(c => (
                             <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                              <Badge color={c.ready ? apple.green : apple.orange}>{c.ready ? '●' : '○'}</Badge>
-                              <span style={{ fontSize: 11, fontFamily: 'monospace', color: apple.label }}>{c.name}</span>
-                              <span style={{ fontSize: 10, color: apple.tertiaryLabel, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncate(c.image.split('/').pop() ?? c.image, 32)}</span>
+                              <Badge color={c.ready ? tokens.green : tokens.orange}>{c.ready ? '●' : '○'}</Badge>
+                              <span style={{ fontSize: 11, fontFamily: 'monospace', color: tokens.label }}>{c.name}</span>
+                              <span style={{ fontSize: 10, color: tokens.tertiaryLabel, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncate(c.image.split('/').pop() ?? c.image, 32)}</span>
                             </div>
                           ))}
                         </div>
                         <div>
                           {p.labels && Object.keys(p.labels).length > 0 && (
                             <>
-                              <div style={{ fontSize: 11, color: apple.tertiaryLabel, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Labels</div>
+                              <div style={{ fontSize: 11, color: tokens.tertiaryLabel, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Labels</div>
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                                 {Object.entries(p.labels).slice(0, 10).map(([k, v]) => (
-                                  <span key={k} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: apple.blue + '15', color: apple.blue, fontFamily: 'monospace' }}>{k}={v}</span>
+                                  <span key={k} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: tokens.blue + '15', color: tokens.blue, fontFamily: 'monospace' }}>{k}={v}</span>
                                 ))}
                               </div>
                             </>
                           )}
                           <div style={{ marginTop: 10 }}>
                             {autoDiagnose(p).map((issue, ii) => (
-                              <div key={ii} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: issue.severity === 'error' ? apple.red : issue.severity === 'warning' ? apple.orange : apple.green, marginBottom: 3 }}>
+                              <div key={ii} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: issue.severity === 'error' ? tokens.red : issue.severity === 'warning' ? tokens.orange : tokens.green, marginBottom: 3 }}>
                                 {issue.severity === 'error' ? <XCircle style={{ width: 11, height: 11 }} /> : issue.severity === 'warning' ? <AlertTriangle style={{ width: 11, height: 11 }} /> : <CheckCircle style={{ width: 11, height: 11 }} />}
                                 {issue.title}
                               </div>
@@ -1126,16 +1126,16 @@ function NetworkTab({ data, nsFilter, onResourceClick }: { data: TopologyData; n
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Services */}
-      <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Network style={{ width: 16, height: 16, color: apple.blue }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Services</span>
-            <Badge color={apple.gray}>{svcs.length}</Badge>
-            {deadSvcIds.size > 0 && <Badge color={apple.red}>{deadSvcIds.size} dead endpoints</Badge>}
+            <Network style={{ width: 16, height: 16, color: tokens.blue }} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Services</span>
+            <Badge color={tokens.gray}>{svcs.length}</Badge>
+            {deadSvcIds.size > 0 && <Badge color={tokens.red}>{deadSvcIds.size} dead endpoints</Badge>}
           </div>
           {deadSvcIds.size > 0 && (
-            <button onClick={() => setShowDeadOnly(v => !v)} style={{ padding: '4px 10px', fontSize: 11, borderRadius: apple.radius.sm, border: `0.5px solid ${showDeadOnly ? apple.red : apple.separator}`, background: showDeadOnly ? apple.red + '18' : apple.fill, color: showDeadOnly ? apple.red : apple.label, cursor: 'pointer', fontWeight: 500 }}>
+            <button onClick={() => setShowDeadOnly(v => !v)} style={{ padding: '4px 10px', fontSize: 11, borderRadius: tokens.radius.sm, border: `0.5px solid ${showDeadOnly ? tokens.red : tokens.separator}`, background: showDeadOnly ? tokens.red + '18' : tokens.fill, color: showDeadOnly ? tokens.red : tokens.label, cursor: 'pointer', fontWeight: 500 }}>
               {showDeadOnly ? 'Show all' : 'Dead only'}
             </button>
           )}
@@ -1145,7 +1145,7 @@ function NetworkTab({ data, nsFilter, onResourceClick }: { data: TopologyData; n
         </div>
         {svcs.length === 0 ? <EmptyState icon={Network} text="No services found" /> : (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 100px 110px 1.5fr 1.5fr 60px', padding: '8px 18px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 100px 110px 1.5fr 1.5fr 60px', padding: '8px 18px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               <div>Name</div><div>Namespace</div><div>Type</div><div>Cluster IP</div><div>Ports</div><div>Selector</div><div>Age</div>
             </div>
             {svcs.slice(0, svcsShown).map((s, i) => {
@@ -1153,23 +1153,23 @@ function NetworkTab({ data, nsFilter, onResourceClick }: { data: TopologyData; n
               return (
                 <div key={`${s.namespace}/${s.name}`}
                   onClick={() => onResourceClick?.({ kind: 'Service', name: s.name, namespace: s.namespace, cluster: data.cluster })}
-                  style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 100px 110px 1.5fr 1.5fr 60px', padding: '10px 18px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 12, alignItems: 'center', background: isDead ? apple.red + '06' : 'transparent', cursor: onResourceClick ? 'pointer' : 'default' }}
-                  onMouseEnter={e => { if (onResourceClick) e.currentTarget.style.background = isDead ? apple.red + '0e' : apple.fill }}
-                  onMouseLeave={e => { e.currentTarget.style.background = isDead ? apple.red + '06' : 'transparent' }}>
+                  style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 100px 110px 1.5fr 1.5fr 60px', padding: '10px 18px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 12, alignItems: 'center', background: isDead ? tokens.red + '06' : 'transparent', cursor: onResourceClick ? 'pointer' : 'default' }}
+                  onMouseEnter={e => { if (onResourceClick) e.currentTarget.style.background = isDead ? tokens.red + '0e' : tokens.fill }}
+                  onMouseLeave={e => { e.currentTarget.style.background = isDead ? tokens.red + '06' : 'transparent' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {isDead && <AlertTriangle style={{ width: 11, height: 11, color: apple.red, flexShrink: 0 }} />}
-                    <span style={{ color: isDead ? apple.red : apple.label, fontWeight: 500, fontFamily: 'monospace', fontSize: 11 }}>{s.name}</span>
+                    {isDead && <AlertTriangle style={{ width: 11, height: 11, color: tokens.red, flexShrink: 0 }} />}
+                    <span style={{ color: isDead ? tokens.red : tokens.label, fontWeight: 500, fontFamily: 'monospace', fontSize: 11 }}>{s.name}</span>
                   </div>
-                  <div style={{ color: apple.secondaryLabel }}>{s.namespace}</div>
+                  <div style={{ color: tokens.secondaryLabel }}>{s.namespace}</div>
                   <div><TypeBadge type={s.type} /></div>
-                  <div style={{ color: apple.tertiaryLabel, fontFamily: 'monospace', fontSize: 11 }}>{s.cluster_ip}</div>
-                  <div style={{ color: apple.tertiaryLabel, fontSize: 11 }}>{(s.ports ?? []).map(p => `${p.port}/${p.protocol}`).join(', ') || '—'}</div>
+                  <div style={{ color: tokens.tertiaryLabel, fontFamily: 'monospace', fontSize: 11 }}>{s.cluster_ip}</div>
+                  <div style={{ color: tokens.tertiaryLabel, fontSize: 11 }}>{(s.ports ?? []).map(p => `${p.port}/${p.protocol}`).join(', ') || '—'}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                     {Object.entries(s.selector ?? {}).slice(0, 2).map(([k, v]) => (
-                      <span key={k} style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: apple.blue + '15', color: apple.blue, fontFamily: 'monospace' }}>{k}={v}</span>
+                      <span key={k} style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: tokens.blue + '15', color: tokens.blue, fontFamily: 'monospace' }}>{k}={v}</span>
                     ))}
                   </div>
-                  <div style={{ color: apple.tertiaryLabel }}>{relativeAge(s.created_at)}</div>
+                  <div style={{ color: tokens.tertiaryLabel }}>{relativeAge(s.created_at)}</div>
                 </div>
               )
             })}
@@ -1182,11 +1182,11 @@ function NetworkTab({ data, nsFilter, onResourceClick }: { data: TopologyData; n
       </div>
 
       {/* Ingresses */}
-      <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Globe style={{ width: 16, height: 16, color: apple.purple }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Ingresses</span>
-          <Badge color={apple.gray}>{ings.length}</Badge>
+      <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Globe style={{ width: 16, height: 16, color: tokens.purple }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Ingresses</span>
+          <Badge color={tokens.gray}>{ings.length}</Badge>
         </div>
         <div style={{ padding: '12px 18px 0' }}>
           <SearchInput value={ingSearch} onChange={setIngSearch} placeholder="Search ingresses, hosts…" />
@@ -1199,58 +1199,58 @@ function NetworkTab({ data, nsFilter, onResourceClick }: { data: TopologyData; n
               const expanded = expandedIng === key
               const chain = expanded ? getIngressChain(ing) : []
               return (
-                <div key={key} style={{ borderBottom: i < ings.length - 1 ? `0.5px solid ${apple.separator}` : 'none' }}>
+                <div key={key} style={{ borderBottom: i < ings.length - 1 ? `0.5px solid ${tokens.separator}` : 'none' }}>
                   <div style={{ padding: '12px 18px', cursor: 'pointer', display: 'grid', gridTemplateColumns: '2fr 1.2fr 2fr 80px 80px 40px', gap: 12, alignItems: 'center', fontSize: 12 }}
                     onClick={() => setExpandedIng(expanded ? null : key)}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {expanded ? <ChevronUp style={{ width: 12, height: 12, color: apple.gray }} /> : <ChevronRight style={{ width: 12, height: 12, color: apple.gray }} />}
-                      <span style={{ color: apple.label, fontWeight: 500, fontFamily: 'monospace', fontSize: 11 }}>{ing.name}</span>
+                      {expanded ? <ChevronUp style={{ width: 12, height: 12, color: tokens.gray }} /> : <ChevronRight style={{ width: 12, height: 12, color: tokens.gray }} />}
+                      <span style={{ color: tokens.label, fontWeight: 500, fontFamily: 'monospace', fontSize: 11 }}>{ing.name}</span>
                     </div>
-                    <div style={{ color: apple.secondaryLabel }}>{ing.namespace}</div>
-                    <div style={{ color: apple.tertiaryLabel, fontSize: 11 }}>{(ing.rules ?? []).map(r => r.host || '*').join(', ')}</div>
-                    <div>{hasTLS && <Badge color={apple.green}>TLS</Badge>}</div>
-                    <div style={{ color: apple.tertiaryLabel }}>{relativeAge(ing.created_at)}</div>
+                    <div style={{ color: tokens.secondaryLabel }}>{ing.namespace}</div>
+                    <div style={{ color: tokens.tertiaryLabel, fontSize: 11 }}>{(ing.rules ?? []).map(r => r.host || '*').join(', ')}</div>
+                    <div>{hasTLS && <Badge color={tokens.green}>TLS</Badge>}</div>
+                    <div style={{ color: tokens.tertiaryLabel }}>{relativeAge(ing.created_at)}</div>
                     <div>
                       {onResourceClick && (
                         <button onClick={e => { e.stopPropagation(); onResourceClick({ kind: 'Ingress', name: ing.name, namespace: ing.namespace, cluster: data.cluster }) }}
-                          style={{ padding: '3px 7px', fontSize: 11, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.pink}44`, background: apple.pink + '12', color: apple.pink, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                          style={{ padding: '3px 7px', fontSize: 11, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.pink}44`, background: tokens.pink + '12', color: tokens.pink, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                           <Info style={{ width: 11, height: 11 }} />
                         </button>
                       )}
                     </div>
                   </div>
                   {expanded && (
-                    <div style={{ background: apple.tertiaryFill, padding: '12px 36px 16px', borderTop: `0.5px solid ${apple.separator}` }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: apple.tertiaryLabel, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Routing Chain</div>
+                    <div style={{ background: tokens.tertiaryFill, padding: '12px 36px 16px', borderTop: `0.5px solid ${tokens.separator}` }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: tokens.tertiaryLabel, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Routing Chain</div>
                       {chain.map((c, ci) => (
                         <div key={ci} style={{ marginBottom: 10 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                            <Badge color={apple.pink}>Ingress</Badge>
-                            <span style={{ fontSize: 11, color: apple.secondaryLabel }}>{c.host || '*'}{c.path}</span>
-                            <span style={{ color: apple.tertiaryLabel, fontSize: 14 }}>→</span>
+                            <Badge color={tokens.pink}>Ingress</Badge>
+                            <span style={{ fontSize: 11, color: tokens.secondaryLabel }}>{c.host || '*'}{c.path}</span>
+                            <span style={{ color: tokens.tertiaryLabel, fontSize: 14 }}>→</span>
                             {c.svc ? (
                               <>
-                                <Badge color={apple.blue}>Service</Badge>
-                                <span style={{ fontSize: 11, color: apple.secondaryLabel, fontFamily: 'monospace' }}>{c.svc.name}:{(c.svc.ports?.[0]?.port) ?? '?'}</span>
-                                <span style={{ color: apple.tertiaryLabel, fontSize: 14 }}>→</span>
-                                <Badge color={c.pods.filter(p => p.ready).length > 0 ? apple.green : apple.red}>Pods</Badge>
-                                <span style={{ fontSize: 11, color: apple.secondaryLabel }}>{c.pods.filter(p => p.ready).length}/{c.pods.length} ready</span>
+                                <Badge color={tokens.blue}>Service</Badge>
+                                <span style={{ fontSize: 11, color: tokens.secondaryLabel, fontFamily: 'monospace' }}>{c.svc.name}:{(c.svc.ports?.[0]?.port) ?? '?'}</span>
+                                <span style={{ color: tokens.tertiaryLabel, fontSize: 14 }}>→</span>
+                                <Badge color={c.pods.filter(p => p.ready).length > 0 ? tokens.green : tokens.red}>Pods</Badge>
+                                <span style={{ fontSize: 11, color: tokens.secondaryLabel }}>{c.pods.filter(p => p.ready).length}/{c.pods.length} ready</span>
                               </>
                             ) : (
-                              <span style={{ fontSize: 11, color: apple.red }}>Service not found</span>
+                              <span style={{ fontSize: 11, color: tokens.red }}>Service not found</span>
                             )}
                           </div>
                           {c.pods.length > 0 && (
                             <div style={{ marginTop: 6, marginLeft: 28, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                               {c.pods.slice(0, 6).map(p => (
-                                <span key={p.name} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: (p.ready ? apple.green : apple.orange) + '18', color: p.ready ? apple.green : apple.orange, fontFamily: 'monospace' }}>{truncate(p.name, 24)}</span>
+                                <span key={p.name} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: (p.ready ? tokens.green : tokens.orange) + '18', color: p.ready ? tokens.green : tokens.orange, fontFamily: 'monospace' }}>{truncate(p.name, 24)}</span>
                               ))}
-                              {c.pods.length > 6 && <span style={{ fontSize: 10, color: apple.tertiaryLabel }}>+{c.pods.length - 6} more</span>}
+                              {c.pods.length > 6 && <span style={{ fontSize: 10, color: tokens.tertiaryLabel }}>+{c.pods.length - 6} more</span>}
                             </div>
                           )}
                         </div>
                       ))}
-                      {chain.length === 0 && <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>No routing rules</span>}
+                      {chain.length === 0 && <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>No routing rules</span>}
                     </div>
                   )}
                 </div>
@@ -1286,10 +1286,10 @@ function TopologyTab({ data, nsFilter }: { data: TopologyData; nsFilter: string 
 
   type GraphNode = { id: string; label: string; sub: string; kind: string; color: string; x: number; y: number }
   const nodes: GraphNode[] = []
-  ingNodes.forEach((n, i) => nodes.push({ id: `ing:${n.namespace}/${n.name}`, label: truncate(n.name, 12), sub: n.namespace, kind: 'Ingress', color: apple.pink, x: COL_X[0], y: 60 + i * rowHeight }))
-  svcNodes.forEach((n, i) => nodes.push({ id: `svc:${n.namespace}/${n.name}`, label: truncate(n.name, 12), sub: n.namespace, kind: 'Service', color: apple.blue, x: COL_X[1], y: 60 + i * rowHeight }))
-  depNodes.forEach((n, i) => nodes.push({ id: `dep:${n.namespace}/${n.name}`, label: truncate(n.name, 12), sub: n.namespace, kind: 'Deployment', color: apple.orange, x: COL_X[2], y: 60 + i * rowHeight }))
-  podNodes.forEach((n, i) => nodes.push({ id: `pod:${n.namespace}/${n.name}`, label: truncate(n.name, 12), sub: n.namespace, kind: 'Pod', color: n.phase === 'Running' ? apple.green : apple.orange, x: COL_X[3], y: 60 + i * rowHeight }))
+  ingNodes.forEach((n, i) => nodes.push({ id: `ing:${n.namespace}/${n.name}`, label: truncate(n.name, 12), sub: n.namespace, kind: 'Ingress', color: tokens.pink, x: COL_X[0], y: 60 + i * rowHeight }))
+  svcNodes.forEach((n, i) => nodes.push({ id: `svc:${n.namespace}/${n.name}`, label: truncate(n.name, 12), sub: n.namespace, kind: 'Service', color: tokens.blue, x: COL_X[1], y: 60 + i * rowHeight }))
+  depNodes.forEach((n, i) => nodes.push({ id: `dep:${n.namespace}/${n.name}`, label: truncate(n.name, 12), sub: n.namespace, kind: 'Deployment', color: tokens.orange, x: COL_X[2], y: 60 + i * rowHeight }))
+  podNodes.forEach((n, i) => nodes.push({ id: `pod:${n.namespace}/${n.name}`, label: truncate(n.name, 12), sub: n.namespace, kind: 'Pod', color: n.phase === 'Running' ? tokens.green : tokens.orange, x: COL_X[3], y: 60 + i * rowHeight }))
 
   type Edge = { from: string; to: string; dashed: boolean }
   const edges: Edge[] = []
@@ -1328,16 +1328,16 @@ function TopologyTab({ data, nsFilter }: { data: TopologyData; nsFilter: string 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         {(['graph', 'table'] as const).map(m => (
-          <button key={m} onClick={() => setViewMode(m)} style={{ padding: '5px 14px', fontSize: 12, borderRadius: apple.radius.sm, border: `0.5px solid ${viewMode === m ? apple.blue : apple.separator}`, background: viewMode === m ? apple.blue : apple.fill, color: viewMode === m ? '#fff' : apple.label, cursor: 'pointer', fontWeight: 500 }}>
+          <button key={m} onClick={() => setViewMode(m)} style={{ padding: '5px 14px', fontSize: 12, borderRadius: tokens.radius.sm, border: `0.5px solid ${viewMode === m ? tokens.blue : tokens.separator}`, background: viewMode === m ? tokens.blue : tokens.fill, color: viewMode === m ? '#fff' : tokens.label, cursor: 'pointer', fontWeight: 500 }}>
             {m === 'graph' ? 'Graph View' : 'Table View'}
           </button>
         ))}
-        {selected && <button onClick={() => setSelected(null)} style={{ fontSize: 12, color: apple.blue, background: 'none', border: 'none', cursor: 'pointer', marginLeft: 8 }}>Clear selection</button>}
+        {selected && <button onClick={() => setSelected(null)} style={{ fontSize: 12, color: tokens.blue, background: 'none', border: 'none', cursor: 'pointer', marginLeft: 8 }}>Clear selection</button>}
       </div>
 
       {/* Truncation warning */}
       {hasTruncation && viewMode === 'graph' && (
-        <div style={{ background: apple.orange + '12', border: `0.5px solid ${apple.orange}30`, borderRadius: apple.radius.sm, padding: '8px 14px', fontSize: 12, color: apple.orange, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <div style={{ background: tokens.orange + '12', border: `0.5px solid ${tokens.orange}30`, borderRadius: tokens.radius.sm, padding: '8px 14px', fontSize: 12, color: tokens.orange, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           <AlertTriangle style={{ width: 13, height: 13, flexShrink: 0 }} />
           Graph shows a subset of resources.
           {truncatedCounts.ing > 0 && <span>+{truncatedCounts.ing} ingresses</span>}
@@ -1345,22 +1345,22 @@ function TopologyTab({ data, nsFilter }: { data: TopologyData; nsFilter: string 
           {truncatedCounts.dep > 0 && <span>+{truncatedCounts.dep} deployments</span>}
           {truncatedCounts.pod > 0 && <span>+{truncatedCounts.pod} pods</span>}
           not shown.
-          <button onClick={() => setViewMode('table')} style={{ color: apple.blue, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Switch to Table View →</button>
+          <button onClick={() => setViewMode('table')} style={{ color: tokens.blue, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Switch to Table View →</button>
         </div>
       )}
 
       {viewMode === 'graph' ? (
-        <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
+        <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto', padding: '0 0 8px' }}>
             <svg width={W} height={H} style={{ display: 'block', minWidth: W }}>
               <defs>
-                <marker id="arrowBlue" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={apple.blue} /></marker>
-                <marker id="arrowGray" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={apple.gray} /></marker>
+                <marker id="arrowBlue" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={tokens.blue} /></marker>
+                <marker id="arrowGray" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={tokens.gray} /></marker>
               </defs>
-              {[{ x: COL_X[0], label: 'Ingresses', color: apple.pink, total: ingresses.length, shown: ingNodes.length },
-                { x: COL_X[1], label: 'Services', color: apple.blue, total: services.length, shown: svcNodes.length },
-                { x: COL_X[2], label: 'Deployments', color: apple.orange, total: deployments.length, shown: depNodes.length },
-                { x: COL_X[3], label: 'Pods', color: apple.green, total: pods.length, shown: podNodes.length },
+              {[{ x: COL_X[0], label: 'Ingresses', color: tokens.pink, total: ingresses.length, shown: ingNodes.length },
+                { x: COL_X[1], label: 'Services', color: tokens.blue, total: services.length, shown: svcNodes.length },
+                { x: COL_X[2], label: 'Deployments', color: tokens.orange, total: deployments.length, shown: depNodes.length },
+                { x: COL_X[3], label: 'Pods', color: tokens.green, total: pods.length, shown: podNodes.length },
               ].map(col => (
                 <g key={col.label}>
                   <rect x={col.x - 50} y={4} width={100} height={22} rx={5} fill={col.color + '18'} />
@@ -1374,7 +1374,7 @@ function TopologyTab({ data, nsFilter }: { data: TopologyData; nsFilter: string 
                 const isActive = !selected || (selected === edge.from || selected === edge.to)
                 return (
                   <line key={ei} x1={fromNode.x + NODE_R} y1={fromNode.y} x2={toNode.x - NODE_R} y2={toNode.y}
-                    stroke={isActive ? (edge.dashed ? apple.purple : apple.blue) : apple.gray}
+                    stroke={isActive ? (edge.dashed ? tokens.purple : tokens.blue) : tokens.gray}
                     strokeWidth={isActive ? 1.5 : 0.8} strokeDasharray={edge.dashed ? '5,4' : undefined}
                     opacity={isActive ? 1 : 0.12} markerEnd={isActive ? 'url(#arrowBlue)' : 'url(#arrowGray)'} />
                 )
@@ -1385,9 +1385,9 @@ function TopologyTab({ data, nsFilter }: { data: TopologyData; nsFilter: string 
                 return (
                   <g key={node.id} style={{ cursor: 'pointer' }} onClick={() => setSelected(isSel ? null : node.id)}>
                     <circle cx={node.x} cy={node.y} r={NODE_R + 4} fill={node.color + '18'} opacity={isDimmed ? 0.2 : 1} />
-                    <circle cx={node.x} cy={node.y} r={NODE_R} fill={node.color} opacity={isDimmed ? 0.2 : 1} stroke={isSel ? apple.label : 'none'} strokeWidth={isSel ? 2.5 : 0} />
+                    <circle cx={node.x} cy={node.y} r={NODE_R} fill={node.color} opacity={isDimmed ? 0.2 : 1} stroke={isSel ? tokens.label : 'none'} strokeWidth={isSel ? 2.5 : 0} />
                     <text x={node.x} y={node.y + 4} textAnchor="middle" fontSize={9} fontWeight={600} fill="white" opacity={isDimmed ? 0.4 : 1}>{node.label}</text>
-                    <text x={node.x} y={node.y + NODE_R + 13} textAnchor="middle" fontSize={9} fill={apple.tertiaryLabel} opacity={isDimmed ? 0.3 : 0.85}>{truncate(node.sub, 12)}</text>
+                    <text x={node.x} y={node.y + NODE_R + 13} textAnchor="middle" fontSize={9} fill={tokens.tertiaryLabel} opacity={isDimmed ? 0.3 : 0.85}>{truncate(node.sub, 12)}</text>
                   </g>
                 )
               })}
@@ -1398,27 +1398,27 @@ function TopologyTab({ data, nsFilter }: { data: TopologyData; nsFilter: string 
         /* Table View */
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {[
-            { label: 'Ingresses', icon: Globe, color: apple.pink, items: ingresses.map(i => ({ id: `${i.namespace}/${i.name}`, name: i.name, ns: i.namespace, extra: (i.rules ?? []).map(r => r.host).join(', ') })) },
-            { label: 'Services', icon: Network, color: apple.blue, items: services.map(s => ({ id: `${s.namespace}/${s.name}`, name: s.name, ns: s.namespace, extra: s.type })) },
-            { label: 'Deployments', icon: GitBranch, color: apple.orange, items: deployments.map(d => ({ id: `${d.namespace}/${d.name}`, name: d.name, ns: d.namespace, extra: `${d.ready_replicas}/${d.replicas} ready` })) },
-            { label: 'Pods', icon: Box, color: apple.green, items: pods.map(p => ({ id: `${p.namespace}/${p.name}`, name: p.name, ns: p.namespace, extra: p.phase, highlight: p.phase !== 'Running' ? apple.orange : undefined })) },
+            { label: 'Ingresses', icon: Globe, color: tokens.pink, items: ingresses.map(i => ({ id: `${i.namespace}/${i.name}`, name: i.name, ns: i.namespace, extra: (i.rules ?? []).map(r => r.host).join(', ') })) },
+            { label: 'Services', icon: Network, color: tokens.blue, items: services.map(s => ({ id: `${s.namespace}/${s.name}`, name: s.name, ns: s.namespace, extra: s.type })) },
+            { label: 'Deployments', icon: GitBranch, color: tokens.orange, items: deployments.map(d => ({ id: `${d.namespace}/${d.name}`, name: d.name, ns: d.namespace, extra: `${d.ready_replicas}/${d.replicas} ready` })) },
+            { label: 'Pods', icon: Box, color: tokens.green, items: pods.map(p => ({ id: `${p.namespace}/${p.name}`, name: p.name, ns: p.namespace, extra: p.phase, highlight: p.phase !== 'Running' ? tokens.orange : undefined })) },
           ].map(section => {
             const Icon = section.icon
             return (
-              <div key={section.label} style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-                <div style={{ padding: '12px 16px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div key={section.label} style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+                <div style={{ padding: '12px 16px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Icon style={{ width: 14, height: 14, color: section.color }} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: apple.label }}>{section.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: tokens.label }}>{section.label}</span>
                   <Badge color={section.color}>{section.items.length}</Badge>
                 </div>
                 <div style={{ maxHeight: 340, overflowY: 'auto' }}>
                   {section.items.map((item, i) => (
-                    <div key={item.id} style={{ padding: '7px 16px', borderBottom: i < section.items.length - 1 ? `0.5px solid ${apple.separator}` : 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div key={item.id} style={{ padding: '7px 16px', borderBottom: i < section.items.length - 1 ? `0.5px solid ${tokens.separator}` : 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 11, fontFamily: 'monospace', color: apple.label, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                        <div style={{ fontSize: 10, color: apple.tertiaryLabel }}>{item.ns}</div>
+                        <div style={{ fontSize: 11, fontFamily: 'monospace', color: tokens.label, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                        <div style={{ fontSize: 10, color: tokens.tertiaryLabel }}>{item.ns}</div>
                       </div>
-                      <span style={{ fontSize: 11, color: (item as any).highlight ?? apple.tertiaryLabel, flexShrink: 0 }}>{item.extra}</span>
+                      <span style={{ fontSize: 11, color: (item as any).highlight ?? tokens.tertiaryLabel, flexShrink: 0 }}>{item.extra}</span>
                     </div>
                   ))}
                 </div>
@@ -1457,16 +1457,16 @@ function NodesTab({ data, onResourceClick }: { data: TopologyData; onResourceCli
   }
 
   return (
-    <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-      <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+    <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Server style={{ width: 16, height: 16, color: apple.blue }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Nodes</span>
-          <Badge color={apple.gray}>{nodes.length}</Badge>
+          <Server style={{ width: 16, height: 16, color: tokens.blue }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Nodes</span>
+          <Badge color={tokens.gray}>{nodes.length}</Badge>
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
           {(['all', 'master', 'worker'] as const).map(r => (
-            <button key={r} onClick={() => setRoleFilter(r)} style={{ padding: '3px 10px', fontSize: 11, borderRadius: 20, border: `0.5px solid ${roleFilter === r ? apple.blue : apple.separator}`, background: roleFilter === r ? apple.blue : apple.fill, color: roleFilter === r ? '#fff' : apple.secondaryLabel, cursor: 'pointer', fontWeight: 500 }}>
+            <button key={r} onClick={() => setRoleFilter(r)} style={{ padding: '3px 10px', fontSize: 11, borderRadius: 20, border: `0.5px solid ${roleFilter === r ? tokens.blue : tokens.separator}`, background: roleFilter === r ? tokens.blue : tokens.fill, color: roleFilter === r ? '#fff' : tokens.secondaryLabel, cursor: 'pointer', fontWeight: 500 }}>
               {r === 'all' ? 'All' : r.charAt(0).toUpperCase() + r.slice(1)}
             </button>
           ))}
@@ -1477,7 +1477,7 @@ function NodesTab({ data, onResourceClick }: { data: TopologyData; onResourceCli
       </div>
       {nodes.length === 0 ? <EmptyState icon={Server} text="No nodes found" /> : (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 90px 100px 1.5fr 1fr 80px 60px 40px', padding: '8px 18px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 90px 100px 1.5fr 1fr 80px 60px 40px', padding: '8px 18px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             <div>Name</div><div>Status</div><div>Roles</div><div>OS / Version</div><div>Pods (run/total)</div><div>Restarts</div><div>Details</div><div></div>
           </div>
           {nodes.map((n, i) => {
@@ -1485,56 +1485,56 @@ function NodesTab({ data, onResourceClick }: { data: TopologyData; onResourceCli
             const key = n.name
             const expanded = expandedNode === key
             return (
-              <div key={key} style={{ borderBottom: i < nodes.length - 1 ? `0.5px solid ${apple.separator}` : 'none' }}>
+              <div key={key} style={{ borderBottom: i < nodes.length - 1 ? `0.5px solid ${tokens.separator}` : 'none' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 90px 100px 1.5fr 1fr 80px 60px 40px', padding: '10px 18px', fontSize: 12, alignItems: 'center', cursor: 'pointer' }}
                   onClick={() => setExpandedNode(expanded ? null : key)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    {expanded ? <ChevronUp style={{ width: 12, height: 12, color: apple.gray }} /> : <ChevronRight style={{ width: 12, height: 12, color: apple.gray }} />}
-                    <span style={{ color: apple.label, fontWeight: 500, fontFamily: 'monospace', fontSize: 11 }}>{n.name}</span>
+                    {expanded ? <ChevronUp style={{ width: 12, height: 12, color: tokens.gray }} /> : <ChevronRight style={{ width: 12, height: 12, color: tokens.gray }} />}
+                    <span style={{ color: tokens.label, fontWeight: 500, fontFamily: 'monospace', fontSize: 11 }}>{n.name}</span>
                   </div>
-                  <div><Badge color={n.ready ? apple.green : apple.red}>{n.status}</Badge></div>
+                  <div><Badge color={n.ready ? tokens.green : tokens.red}>{n.status}</Badge></div>
                   <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                    {(n.roles ?? []).map(r => <Badge key={r} color={r === 'master' || r === 'control-plane' ? apple.purple : apple.gray}>{r}</Badge>)}
+                    {(n.roles ?? []).map(r => <Badge key={r} color={r === 'master' || r === 'control-plane' ? tokens.purple : tokens.gray}>{r}</Badge>)}
                   </div>
-                  <div style={{ color: apple.tertiaryLabel, fontSize: 11 }}>{truncate(n.os ?? '—', 20)} / {n.version ?? '—'}</div>
-                  <div style={{ color: stats.running < stats.total ? apple.orange : apple.green, fontWeight: 500 }}>{stats.running}/{stats.total}</div>
-                  <div style={{ color: stats.restartTotal > 0 ? apple.orange : apple.tertiaryLabel }}>{stats.restartTotal}</div>
+                  <div style={{ color: tokens.tertiaryLabel, fontSize: 11 }}>{truncate(n.os ?? '—', 20)} / {n.version ?? '—'}</div>
+                  <div style={{ color: stats.running < stats.total ? tokens.orange : tokens.green, fontWeight: 500 }}>{stats.running}/{stats.total}</div>
+                  <div style={{ color: stats.restartTotal > 0 ? tokens.orange : tokens.tertiaryLabel }}>{stats.restartTotal}</div>
                   <div>
                     <button onClick={e => { e.stopPropagation(); setExpandedNode(expanded ? null : key) }}
-                      style={{ padding: '3px 8px', fontSize: 11, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, cursor: 'pointer' }}>
+                      style={{ padding: '3px 8px', fontSize: 11, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, cursor: 'pointer' }}>
                       {expanded ? 'Hide' : 'Pods'}
                     </button>
                   </div>
                   <div>
                     {onResourceClick && (
                       <button onClick={e => { e.stopPropagation(); onResourceClick({ kind: 'Node', name: n.name, cluster: data.cluster }) }}
-                        style={{ padding: '3px 7px', fontSize: 11, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.purple}44`, background: apple.purple + '12', color: apple.purple, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        style={{ padding: '3px 7px', fontSize: 11, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.purple}44`, background: tokens.purple + '12', color: tokens.purple, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         <Info style={{ width: 11, height: 11 }} />
                       </button>
                     )}
                   </div>
                 </div>
                 {expanded && (
-                  <div style={{ background: apple.tertiaryFill, padding: '10px 36px 14px', borderTop: `0.5px solid ${apple.separator}` }}>
-                    <div style={{ fontSize: 11, color: apple.tertiaryLabel, marginBottom: 8 }}>Pods on {n.name} ({stats.total})</div>
+                  <div style={{ background: tokens.tertiaryFill, padding: '10px 36px 14px', borderTop: `0.5px solid ${tokens.separator}` }}>
+                    <div style={{ fontSize: 11, color: tokens.tertiaryLabel, marginBottom: 8 }}>Pods on {n.name} ({stats.total})</div>
                     {stats.total === 0 ? (
-                      <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>No pods scheduled</span>
+                      <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>No pods scheduled</span>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {getNodePods(n.name).map(p => (
                           <div key={`${p.namespace}/${p.name}`} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: 11, fontFamily: 'monospace', color: apple.label, minWidth: 220 }}>{p.namespace}/{p.name}</span>
+                            <span style={{ fontSize: 11, fontFamily: 'monospace', color: tokens.label, minWidth: 220 }}>{p.namespace}/{p.name}</span>
                             <PhaseBadge phase={p.phase} />
-                            {p.restarts > 0 && <Badge color={apple.orange}>{p.restarts}r</Badge>}
+                            {p.restarts > 0 && <Badge color={tokens.orange}>{p.restarts}r</Badge>}
                           </div>
                         ))}
                       </div>
                     )}
                     <div style={{ marginTop: 12 }}>
-                      <div style={{ fontSize: 11, color: apple.tertiaryLabel, marginBottom: 6 }}>Node Labels</div>
+                      <div style={{ fontSize: 11, color: tokens.tertiaryLabel, marginBottom: 6 }}>Node Labels</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                         {Object.entries(n.labels ?? {}).slice(0, 12).map(([k, v]) => (
-                          <span key={k} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: apple.purple + '15', color: apple.purple, fontFamily: 'monospace' }}>{k}={v}</span>
+                          <span key={k} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: tokens.purple + '15', color: tokens.purple, fontFamily: 'monospace' }}>{k}={v}</span>
                         ))}
                       </div>
                     </div>
@@ -1580,51 +1580,51 @@ function EventsTab({ clusterName, events, onRefresh }: { clusterName: string; ev
         </div>
         <div style={{ display: 'flex', gap: 5 }}>
           {([['all', `All ${events.length}`], ['warning', `⚠ Warnings ${warnCount}`], ['normal', `Normal ${normalCount}`]] as const).map(([f, label]) => (
-            <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 12px', fontSize: 12, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: filter === f ? apple.blue : apple.fill, color: filter === f ? '#fff' : apple.label, cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</button>
+            <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 12px', fontSize: 12, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: filter === f ? tokens.blue : tokens.fill, color: filter === f ? '#fff' : tokens.label, cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</button>
           ))}
         </div>
-        <button onClick={onRefresh} style={{ padding: '6px 12px', fontSize: 12, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+        <button onClick={onRefresh} style={{ padding: '6px 12px', fontSize: 12, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
           <RefreshCw style={{ width: 12, height: 12 }} /> Refresh
         </button>
       </div>
 
       {/* Namespace + Kind filters */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <select value={nsFilter} onChange={e => setNsFilter(e.target.value)} style={{ padding: '5px 10px', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 12, outline: 'none', cursor: 'pointer' }}>
+        <select value={nsFilter} onChange={e => setNsFilter(e.target.value)} style={{ padding: '5px 10px', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 12, outline: 'none', cursor: 'pointer' }}>
           <option value="">All namespaces</option>
           {namespaces.map(ns => <option key={ns} value={ns}>{ns}</option>)}
         </select>
-        <select value={kindFilter} onChange={e => setKindFilter(e.target.value)} style={{ padding: '5px 10px', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 12, outline: 'none', cursor: 'pointer' }}>
+        <select value={kindFilter} onChange={e => setKindFilter(e.target.value)} style={{ padding: '5px 10px', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 12, outline: 'none', cursor: 'pointer' }}>
           <option value="">All kinds</option>
           {kinds.map(k => <option key={k} value={k}>{k}</option>)}
         </select>
         {(nsFilter || kindFilter || search || filter !== 'all') && (
-          <button onClick={() => { setNsFilter(''); setKindFilter(''); setSearch(''); setFilter('all') }} style={{ padding: '5px 10px', fontSize: 12, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.orange}40`, background: apple.orange + '12', color: apple.orange, cursor: 'pointer' }}>
+          <button onClick={() => { setNsFilter(''); setKindFilter(''); setSearch(''); setFilter('all') }} style={{ padding: '5px 10px', fontSize: 12, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.orange}40`, background: tokens.orange + '12', color: tokens.orange, cursor: 'pointer' }}>
             Clear filters
           </button>
         )}
-        <span style={{ fontSize: 12, color: apple.tertiaryLabel, alignSelf: 'center' }}>
+        <span style={{ fontSize: 12, color: tokens.tertiaryLabel, alignSelf: 'center' }}>
           {filtered.length} event{filtered.length !== 1 ? 's' : ''}
         </span>
       </div>
 
-      <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
+      <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
         {filtered.length === 0 ? <EmptyState icon={Activity} text="No events found" /> : (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '110px 80px 110px 90px 200px 1fr', padding: '8px 18px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '110px 80px 110px 90px 200px 1fr', padding: '8px 18px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               <div>Time</div><div>Type</div><div>Reason</div><div>Count</div><div>Object</div><div>Message</div>
             </div>
             {filtered.slice(0, eventsShown).map((ev, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '110px 80px 110px 90px 200px 1fr', padding: '9px 18px', borderBottom: i < Math.min(eventsShown, filtered.length) - 1 ? `0.5px solid ${apple.separator}` : 'none', fontSize: 12, alignItems: 'start', background: ev.type === 'Warning' ? apple.orange + '04' : 'transparent' }}>
-                <div style={{ color: apple.tertiaryLabel }}>{new Date(ev.last_timestamp).toLocaleTimeString()}</div>
-                <div><Badge color={ev.type === 'Warning' ? apple.orange : apple.blue}>{ev.type}</Badge></div>
-                <div style={{ color: ev.type === 'Warning' ? apple.orange : apple.label, fontWeight: 500 }}>{ev.reason}</div>
-                <div style={{ color: apple.tertiaryLabel }}>{ev.count ?? 1}×</div>
-                <div style={{ color: apple.secondaryLabel, fontSize: 11, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '110px 80px 110px 90px 200px 1fr', padding: '9px 18px', borderBottom: i < Math.min(eventsShown, filtered.length) - 1 ? `0.5px solid ${tokens.separator}` : 'none', fontSize: 12, alignItems: 'start', background: ev.type === 'Warning' ? tokens.orange + '04' : 'transparent' }}>
+                <div style={{ color: tokens.tertiaryLabel }}>{new Date(ev.last_timestamp).toLocaleTimeString()}</div>
+                <div><Badge color={ev.type === 'Warning' ? tokens.orange : tokens.blue}>{ev.type}</Badge></div>
+                <div style={{ color: ev.type === 'Warning' ? tokens.orange : tokens.label, fontWeight: 500 }}>{ev.reason}</div>
+                <div style={{ color: tokens.tertiaryLabel }}>{ev.count ?? 1}×</div>
+                <div style={{ color: tokens.secondaryLabel, fontSize: 11, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {ev.involved_object.kind}/{truncate(ev.involved_object.name, 22)}
-                  {ev.involved_object.namespace && <div style={{ color: apple.tertiaryLabel }}>{ev.involved_object.namespace}</div>}
+                  {ev.involved_object.namespace && <div style={{ color: tokens.tertiaryLabel }}>{ev.involved_object.namespace}</div>}
                 </div>
-                <div style={{ color: apple.label, fontSize: 12 }}>{truncate(ev.message, 120)}</div>
+                <div style={{ color: tokens.label, fontSize: 12 }}>{truncate(ev.message, 120)}</div>
               </div>
             ))}
             <ShowMoreFooter shown={Math.min(eventsShown, filtered.length)} total={filtered.length} increment={50}
@@ -1682,7 +1682,7 @@ function NsScanPanel({ data, events, clusterName }: { data: TopologyData; events
     if (scanNs) { setScanComplete(false); setPodLogMap({}); runScan(scanNs) }
   }, [scanNs])
 
-  const inputStyle: React.CSSProperties = { width: '100%', padding: '7px 10px', boxSizing: 'border-box', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 13, outline: 'none', cursor: 'pointer' }
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '7px 10px', boxSizing: 'border-box', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 13, outline: 'none', cursor: 'pointer' }
 
   const toggleLog = (podName: string) => {
     setPodLogMap(prev => ({ ...prev, [podName]: { ...prev[podName], expanded: !prev[podName]?.expanded } }))
@@ -1693,14 +1693,14 @@ function NsScanPanel({ data, events, clusterName }: { data: TopologyData; events
       {/* NS selector */}
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <label style={{ fontSize: 12, fontWeight: 500, color: apple.secondaryLabel, display: 'block', marginBottom: 4 }}>Namespace to diagnose</label>
+          <label style={{ fontSize: 12, fontWeight: 500, color: tokens.secondaryLabel, display: 'block', marginBottom: 4 }}>Namespace to diagnose</label>
           <select value={scanNs} onChange={e => setScanNs(e.target.value)} style={inputStyle}>
             <option value="">Select namespace…</option>
             {availableNs.map(ns => <option key={ns} value={ns}>{ns}</option>)}
           </select>
         </div>
         {scanNs && (
-          <button onClick={() => runScan(scanNs)} disabled={scanRunning} style={{ padding: '7px 16px', borderRadius: apple.radius.sm, border: 'none', background: apple.blue, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: scanRunning ? 0.6 : 1 }}>
+          <button onClick={() => runScan(scanNs)} disabled={scanRunning} style={{ padding: '7px 16px', borderRadius: tokens.radius.sm, border: 'none', background: tokens.blue, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: scanRunning ? 0.6 : 1 }}>
             {scanRunning ? <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} /> : <Zap style={{ width: 14, height: 14 }} />}
             {scanRunning ? 'Scanning…' : 'Re-scan'}
           </button>
@@ -1708,7 +1708,7 @@ function NsScanPanel({ data, events, clusterName }: { data: TopologyData; events
       </div>
 
       {!scanNs && (
-        <div style={{ textAlign: 'center', padding: '32px 0', color: apple.tertiaryLabel, fontSize: 13 }}>
+        <div style={{ textAlign: 'center', padding: '32px 0', color: tokens.tertiaryLabel, fontSize: 13 }}>
           Select a namespace to auto-run a full SRE diagnostic scan
         </div>
       )}
@@ -1717,39 +1717,39 @@ function NsScanPanel({ data, events, clusterName }: { data: TopologyData; events
         <>
           {/* Health Summary */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
-            <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${nsHealth.color}30`, borderRadius: apple.radius.lg, padding: '14px 16px', textAlign: 'center' }}>
+            <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${nsHealth.color}30`, borderRadius: tokens.radius.lg, padding: '14px 16px', textAlign: 'center' }}>
               <div style={{ fontSize: 36, fontWeight: 800, color: nsHealth.color }}>{nsHealth.grade}</div>
-              <div style={{ fontSize: 12, color: apple.secondaryLabel }}>{nsHealth.score}% healthy</div>
-              <div style={{ fontSize: 11, color: apple.tertiaryLabel }}>Health score</div>
+              <div style={{ fontSize: 12, color: tokens.secondaryLabel }}>{nsHealth.score}% healthy</div>
+              <div style={{ fontSize: 11, color: tokens.tertiaryLabel }}>Health score</div>
             </div>
-            <StatCard label="Total Pods" value={nsPods.length} sub={`${nsPods.filter(p => p.phase === 'Running' && p.ready).length} running & ready`} color={apple.green} icon={Box} />
-            <StatCard label="Deployments" value={nsDeployments.length} sub={`${nsDeployments.filter(d => d.ready_replicas >= d.replicas && d.replicas > 0).length} healthy`} color={apple.orange} icon={GitBranch} />
-            <StatCard label="Services" value={nsServices.length} sub={deadSvcs.length > 0 ? `${deadSvcs.length} dead endpoints` : 'all healthy'} color={deadSvcs.length > 0 ? apple.red : apple.blue} icon={Network} />
+            <StatCard label="Total Pods" value={nsPods.length} sub={`${nsPods.filter(p => p.phase === 'Running' && p.ready).length} running & ready`} color={tokens.green} icon={Box} />
+            <StatCard label="Deployments" value={nsDeployments.length} sub={`${nsDeployments.filter(d => d.ready_replicas >= d.replicas && d.replicas > 0).length} healthy`} color={tokens.orange} icon={GitBranch} />
+            <StatCard label="Services" value={nsServices.length} sub={deadSvcs.length > 0 ? `${deadSvcs.length} dead endpoints` : 'all healthy'} color={deadSvcs.length > 0 ? tokens.red : tokens.blue} icon={Network} />
           </div>
 
           {/* Issues */}
           {unhealthyPods.length > 0 && (
-            <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-              <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AlertTriangle style={{ width: 16, height: 16, color: apple.orange }} />
-                <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Pods Needing Attention ({unhealthyPods.length})</span>
-                {scanRunning && <Loader2 style={{ width: 13, height: 13, color: apple.blue, animation: 'spin 1s linear infinite', marginLeft: 4 }} />}
-                {scanComplete && !scanRunning && <Badge color={apple.green}>Logs fetched</Badge>}
+            <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <AlertTriangle style={{ width: 16, height: 16, color: tokens.orange }} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Pods Needing Attention ({unhealthyPods.length})</span>
+                {scanRunning && <Loader2 style={{ width: 13, height: 13, color: tokens.blue, animation: 'spin 1s linear infinite', marginLeft: 4 }} />}
+                {scanComplete && !scanRunning && <Badge color={tokens.green}>Logs fetched</Badge>}
               </div>
               {unhealthyPods.map((p, i) => {
                 const logState = podLogMap[p.name]
                 const diagIssues = autoDiagnose(p)
                 return (
-                  <div key={p.name} style={{ borderBottom: i < unhealthyPods.length - 1 ? `0.5px solid ${apple.separator}` : 'none' }}>
+                  <div key={p.name} style={{ borderBottom: i < unhealthyPods.length - 1 ? `0.5px solid ${tokens.separator}` : 'none' }}>
                     <div style={{ padding: '12px 18px' }}>
                       {/* Pod header */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600, color: apple.label }}>{p.name}</span>
+                        <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600, color: tokens.label }}>{p.name}</span>
                         <PhaseBadge phase={p.phase} />
-                        {p.restarts > 0 && <Badge color={p.restarts >= 5 ? apple.red : apple.orange}>{p.restarts} restarts</Badge>}
-                        {!p.ready && p.phase === 'Running' && <Badge color={apple.orange}>Not Ready</Badge>}
+                        {p.restarts > 0 && <Badge color={p.restarts >= 5 ? tokens.red : tokens.orange}>{p.restarts} restarts</Badge>}
+                        {!p.ready && p.phase === 'Running' && <Badge color={tokens.orange}>Not Ready</Badge>}
                         {logState && (
-                          <button onClick={() => toggleLog(p.name)} style={{ marginLeft: 'auto', padding: '3px 10px', fontSize: 11, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <button onClick={() => toggleLog(p.name)} style={{ marginLeft: 'auto', padding: '3px 10px', fontSize: 11, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                             <FileText style={{ width: 11, height: 11 }} />
                             {logState.expanded ? 'Hide logs' : 'Show logs'}
                             {logState.loading && <Loader2 style={{ width: 10, height: 10, animation: 'spin 1s linear infinite' }} />}
@@ -1764,13 +1764,13 @@ function NsScanPanel({ data, events, clusterName }: { data: TopologyData; events
                       {logState?.expanded && (
                         <div style={{ marginTop: 8 }}>
                           {logState.error ? (
-                            <div style={{ padding: '8px 12px', borderRadius: apple.radius.sm, background: apple.red + '12', color: apple.red, fontSize: 12 }}>{logState.error}</div>
+                            <div style={{ padding: '8px 12px', borderRadius: tokens.radius.sm, background: tokens.red + '12', color: tokens.red, fontSize: 12 }}>{logState.error}</div>
                           ) : logState.loading ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: apple.tertiaryLabel, fontSize: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: tokens.tertiaryLabel, fontSize: 12 }}>
                               <Loader2 style={{ width: 13, height: 13, animation: 'spin 1s linear infinite' }} /> Fetching logs…
                             </div>
                           ) : (
-                            <pre style={{ background: '#0d1117', color: '#c9d1d9', padding: 12, borderRadius: apple.radius.md, fontSize: 10, fontFamily: '"SF Mono", monospace', overflowX: 'auto', overflowY: 'auto', maxHeight: 280, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.5 }}>
+                            <pre style={{ background: '#0d1117', color: '#c9d1d9', padding: 12, borderRadius: tokens.radius.md, fontSize: 10, fontFamily: '"SF Mono", monospace', overflowX: 'auto', overflowY: 'auto', maxHeight: 280, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.5 }}>
                               {logState.logs || '(no log output)'}
                             </pre>
                           )}
@@ -1785,10 +1785,10 @@ function NsScanPanel({ data, events, clusterName }: { data: TopologyData; events
 
           {/* Dead services */}
           {deadSvcs.length > 0 && (
-            <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.red}30`, borderRadius: apple.radius.lg, padding: '14px 18px' }}>
+            <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.red}30`, borderRadius: tokens.radius.lg, padding: '14px 18px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <Network style={{ width: 15, height: 15, color: apple.red }} />
-                <span style={{ fontSize: 13, fontWeight: 600, color: apple.red }}>Services with No Healthy Endpoints ({deadSvcs.length})</span>
+                <Network style={{ width: 15, height: 15, color: tokens.red }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: tokens.red }}>Services with No Healthy Endpoints ({deadSvcs.length})</span>
               </div>
               {deadSvcs.map(s => (
                 <div key={s.name} style={{ marginBottom: 6 }}>
@@ -1800,49 +1800,49 @@ function NsScanPanel({ data, events, clusterName }: { data: TopologyData; events
 
           {/* Deployment issues */}
           {nsDeployments.filter(d => d.ready_replicas < d.replicas).length > 0 && (
-            <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-              <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <GitBranch style={{ width: 15, height: 15, color: apple.orange }} />
-                <span style={{ fontSize: 13, fontWeight: 600, color: apple.label }}>Degraded Deployments</span>
+            <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <GitBranch style={{ width: 15, height: 15, color: tokens.orange }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: tokens.label }}>Degraded Deployments</span>
               </div>
               {nsDeployments.filter(d => d.ready_replicas < d.replicas).map(d => (
-                <div key={d.name} style={{ padding: '10px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 10, fontSize: 12 }}>
-                  <AlertTriangle style={{ width: 13, height: 13, color: apple.orange }} />
-                  <span style={{ fontFamily: 'monospace', color: apple.label, flex: 1 }}>{d.name}</span>
-                  <Badge color={apple.orange}>{d.ready_replicas}/{d.replicas} ready</Badge>
-                  {d.ready_replicas === 0 && <Badge color={apple.red}>No pods</Badge>}
+                <div key={d.name} style={{ padding: '10px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 10, fontSize: 12 }}>
+                  <AlertTriangle style={{ width: 13, height: 13, color: tokens.orange }} />
+                  <span style={{ fontFamily: 'monospace', color: tokens.label, flex: 1 }}>{d.name}</span>
+                  <Badge color={tokens.orange}>{d.ready_replicas}/{d.replicas} ready</Badge>
+                  {d.ready_replicas === 0 && <Badge color={tokens.red}>No pods</Badge>}
                 </div>
               ))}
             </div>
           )}
 
           {/* Namespace Events */}
-          <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-            <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Activity style={{ width: 15, height: 15, color: apple.blue }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: apple.label }}>Namespace Events</span>
-              <Badge color={apple.gray}>{nsEvents.length}</Badge>
-              {recentWarnings.length > 0 && <Badge color={apple.orange}>{recentWarnings.length} warnings</Badge>}
+          <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Activity style={{ width: 15, height: 15, color: tokens.blue }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: tokens.label }}>Namespace Events</span>
+              <Badge color={tokens.gray}>{nsEvents.length}</Badge>
+              {recentWarnings.length > 0 && <Badge color={tokens.orange}>{recentWarnings.length} warnings</Badge>}
             </div>
             {nsEvents.length === 0 ? (
-              <div style={{ padding: '16px 18px', color: apple.tertiaryLabel, fontSize: 13 }}>No events in this namespace</div>
+              <div style={{ padding: '16px 18px', color: tokens.tertiaryLabel, fontSize: 13 }}>No events in this namespace</div>
             ) : (
               nsEvents.slice(0, 12).map((ev, i) => (
-                <div key={i} style={{ padding: '8px 18px', borderBottom: i < Math.min(12, nsEvents.length) - 1 ? `0.5px solid ${apple.separator}` : 'none', display: 'grid', gridTemplateColumns: '90px 80px 110px 1fr', gap: 10, fontSize: 12, background: ev.type === 'Warning' ? apple.orange + '05' : 'transparent' }}>
-                  <span style={{ color: apple.tertiaryLabel }}>{new Date(ev.last_timestamp).toLocaleTimeString()}</span>
-                  <Badge color={ev.type === 'Warning' ? apple.orange : apple.blue}>{ev.type}</Badge>
-                  <span style={{ color: ev.type === 'Warning' ? apple.orange : apple.label, fontWeight: 500 }}>{ev.reason}</span>
-                  <span style={{ color: apple.secondaryLabel }}>{truncate(ev.message, 100)}</span>
+                <div key={i} style={{ padding: '8px 18px', borderBottom: i < Math.min(12, nsEvents.length) - 1 ? `0.5px solid ${tokens.separator}` : 'none', display: 'grid', gridTemplateColumns: '90px 80px 110px 1fr', gap: 10, fontSize: 12, background: ev.type === 'Warning' ? tokens.orange + '05' : 'transparent' }}>
+                  <span style={{ color: tokens.tertiaryLabel }}>{new Date(ev.last_timestamp).toLocaleTimeString()}</span>
+                  <Badge color={ev.type === 'Warning' ? tokens.orange : tokens.blue}>{ev.type}</Badge>
+                  <span style={{ color: ev.type === 'Warning' ? tokens.orange : tokens.label, fontWeight: 500 }}>{ev.reason}</span>
+                  <span style={{ color: tokens.secondaryLabel }}>{truncate(ev.message, 100)}</span>
                 </div>
               ))
             )}
           </div>
 
           {/* kubectl commands for NS */}
-          <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-            <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Terminal style={{ width: 15, height: 15, color: apple.green }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: apple.label }}>kubectl Commands for {scanNs}</span>
+          <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Terminal style={{ width: 15, height: 15, color: tokens.green }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: tokens.label }}>kubectl Commands for {scanNs}</span>
             </div>
             <div style={{ padding: 14 }}>
               <KubectlPanel namespace={scanNs} clusterContext={clusterName} />
@@ -1850,10 +1850,10 @@ function NsScanPanel({ data, events, clusterName }: { data: TopologyData; events
           </div>
 
           {unhealthyPods.length === 0 && deadSvcs.length === 0 && nsDeployments.filter(d => d.ready_replicas < d.replicas).length === 0 && (
-            <div style={{ background: apple.green + '0d', border: `0.5px solid ${apple.green}30`, borderRadius: apple.radius.lg, padding: '24px', textAlign: 'center' }}>
-              <CheckCircle style={{ width: 32, height: 32, color: apple.green, marginBottom: 8 }} />
-              <div style={{ fontSize: 14, fontWeight: 600, color: apple.green }}>Namespace "{scanNs}" looks healthy</div>
-              <div style={{ fontSize: 12, color: apple.secondaryLabel, marginTop: 4 }}>All pods running, all services have endpoints, all deployments at desired replicas</div>
+            <div style={{ background: tokens.green + '0d', border: `0.5px solid ${tokens.green}30`, borderRadius: tokens.radius.lg, padding: '24px', textAlign: 'center' }}>
+              <CheckCircle style={{ width: 32, height: 32, color: tokens.green, marginBottom: 8 }} />
+              <div style={{ fontSize: 14, fontWeight: 600, color: tokens.green }}>Namespace "{scanNs}" looks healthy</div>
+              <div style={{ fontSize: 12, color: tokens.secondaryLabel, marginTop: 4 }}>All pods running, all services have endpoints, all deployments at desired replicas</div>
             </div>
           )}
         </>
@@ -1923,9 +1923,9 @@ function TroubleshootTab({ data, events, clusterName, initialPodNs, initialPodNa
   const notReadyPods = data.pods.filter(p => p.phase === 'Running' && !p.ready)
   const allDeadSvcs = getServicesWithNoEndpoints(data.services, data.pods)
 
-  const inputStyle: React.CSSProperties = { width: '100%', padding: '7px 10px', boxSizing: 'border-box', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 13, outline: 'none' }
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '7px 10px', boxSizing: 'border-box', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 13, outline: 'none' }
   const selectStyle: React.CSSProperties = { ...inputStyle, cursor: 'pointer' }
-  const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: apple.secondaryLabel, display: 'block', marginBottom: 4 }
+  const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: tokens.secondaryLabel, display: 'block', marginBottom: 4 }
 
   const sections: { key: TroubleshootSection; label: string; icon: React.ComponentType<any>; badge?: number }[] = [
     { key: 'ns-scan', label: 'NS Auto-Scan', icon: Zap },
@@ -1935,25 +1935,25 @@ function TroubleshootTab({ data, events, clusterName, initialPodNs, initialPodNa
   ]
 
   const checklistCards = [
-    { title: 'CrashLoop / High Restarts', count: crashPods.length, color: apple.red, icon: XCircle, items: crashPods.map(p => ({ label: `${p.namespace}/${p.name}`, extra: `${p.restarts} restarts`, color: p.restarts >= 10 ? apple.red : apple.orange })) },
-    { title: 'Pods Failing', count: failedPods.length, color: apple.red, icon: AlertCircle, items: failedPods.map(p => ({ label: `${p.namespace}/${p.name}`, extra: p.phase, color: apple.red })) },
-    { title: 'Pending Pods', count: pendingPods.length, color: apple.orange, icon: Clock, items: pendingPods.map(p => ({ label: `${p.namespace}/${p.name}`, extra: relativeAge(p.created_at), color: apple.orange })) },
-    { title: 'Running But Not Ready', count: notReadyPods.length, color: apple.orange, icon: AlertTriangle, items: notReadyPods.map(p => ({ label: `${p.namespace}/${p.name}`, extra: `${p.containers?.filter(c => !c.ready).length ?? 0} ctrs unready`, color: apple.orange })) },
-    { title: 'Nodes Not Ready', count: notReadyNodes.length, color: apple.red, icon: Server, items: notReadyNodes.map(n => ({ label: n.name, extra: n.status, color: apple.red })) },
-    { title: 'Deployments — 0 Ready', count: zeroReadyDeps.length, color: apple.red, icon: GitBranch, items: zeroReadyDeps.map(d => ({ label: `${d.namespace}/${d.name}`, extra: `0/${d.replicas}`, color: apple.red })) },
-    { title: 'Services — No Endpoints', count: allDeadSvcs.length, color: apple.red, icon: Network, items: allDeadSvcs.map(s => ({ label: `${s.namespace}/${s.name}`, extra: s.type, color: apple.red })) },
-    { title: 'Moderate Restarts (1-4)', count: highRestartPods.length, color: apple.orange, icon: RefreshCw, items: highRestartPods.map(p => ({ label: `${p.namespace}/${p.name}`, extra: `${p.restarts}r`, color: apple.orange })) },
+    { title: 'CrashLoop / High Restarts', count: crashPods.length, color: tokens.red, icon: XCircle, items: crashPods.map(p => ({ label: `${p.namespace}/${p.name}`, extra: `${p.restarts} restarts`, color: p.restarts >= 10 ? tokens.red : tokens.orange })) },
+    { title: 'Pods Failing', count: failedPods.length, color: tokens.red, icon: AlertCircle, items: failedPods.map(p => ({ label: `${p.namespace}/${p.name}`, extra: p.phase, color: tokens.red })) },
+    { title: 'Pending Pods', count: pendingPods.length, color: tokens.orange, icon: Clock, items: pendingPods.map(p => ({ label: `${p.namespace}/${p.name}`, extra: relativeAge(p.created_at), color: tokens.orange })) },
+    { title: 'Running But Not Ready', count: notReadyPods.length, color: tokens.orange, icon: AlertTriangle, items: notReadyPods.map(p => ({ label: `${p.namespace}/${p.name}`, extra: `${p.containers?.filter(c => !c.ready).length ?? 0} ctrs unready`, color: tokens.orange })) },
+    { title: 'Nodes Not Ready', count: notReadyNodes.length, color: tokens.red, icon: Server, items: notReadyNodes.map(n => ({ label: n.name, extra: n.status, color: tokens.red })) },
+    { title: 'Deployments — 0 Ready', count: zeroReadyDeps.length, color: tokens.red, icon: GitBranch, items: zeroReadyDeps.map(d => ({ label: `${d.namespace}/${d.name}`, extra: `0/${d.replicas}`, color: tokens.red })) },
+    { title: 'Services — No Endpoints', count: allDeadSvcs.length, color: tokens.red, icon: Network, items: allDeadSvcs.map(s => ({ label: `${s.namespace}/${s.name}`, extra: s.type, color: tokens.red })) },
+    { title: 'Moderate Restarts (1-4)', count: highRestartPods.length, color: tokens.orange, icon: RefreshCw, items: highRestartPods.map(p => ({ label: `${p.namespace}/${p.name}`, extra: `${p.restarts}r`, color: tokens.orange })) },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Sub-nav */}
-      <div style={{ display: 'flex', gap: 4, borderBottom: `0.5px solid ${apple.separator}`, paddingBottom: 0 }}>
+      <div style={{ display: 'flex', gap: 4, borderBottom: `0.5px solid ${tokens.separator}`, paddingBottom: 0 }}>
         {sections.map(s => (
-          <button key={s.key} onClick={() => setSection(s.key)} style={{ padding: '9px 14px', fontSize: 13, fontWeight: section === s.key ? 600 : 400, border: 'none', borderBottom: section === s.key ? `2px solid ${apple.blue}` : '2px solid transparent', background: 'transparent', color: section === s.key ? apple.blue : apple.secondaryLabel, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', transition: 'all 0.12s', marginBottom: -1 }}>
+          <button key={s.key} onClick={() => setSection(s.key)} style={{ padding: '9px 14px', fontSize: 13, fontWeight: section === s.key ? 600 : 400, border: 'none', borderBottom: section === s.key ? `2px solid ${tokens.blue}` : '2px solid transparent', background: 'transparent', color: section === s.key ? tokens.blue : tokens.secondaryLabel, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', transition: 'all 0.12s', marginBottom: -1 }}>
             <s.icon style={{ width: 13, height: 13 }} />
             {s.label}
-            {s.badge && s.badge > 0 ? <Badge color={apple.red}>{s.badge}</Badge> : null}
+            {s.badge && s.badge > 0 ? <Badge color={tokens.red}>{s.badge}</Badge> : null}
           </button>
         ))}
       </div>
@@ -1966,10 +1966,10 @@ function TroubleshootTab({ data, events, clusterName, initialPodNs, initialPodNa
       {/* Pod Logs */}
       {section === 'pod-logs' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-            <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Terminal style={{ width: 16, height: 16, color: apple.green }} />
-              <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Pod Log Viewer</span>
+          <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Terminal style={{ width: 16, height: 16, color: tokens.green }} />
+              <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Pod Log Viewer</span>
             </div>
             <div style={{ padding: 18 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 80px auto', gap: 10, alignItems: 'end', marginBottom: 12 }}>
@@ -2001,7 +2001,7 @@ function TroubleshootTab({ data, events, clusterName, initialPodNs, initialPodNa
                   </select>
                 </div>
                 <button onClick={fetchLogs} disabled={!logPod || logLoading}
-                  style={{ padding: '7px 16px', borderRadius: apple.radius.sm, border: 'none', background: apple.blue, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: (!logPod || logLoading) ? 0.5 : 1 }}>
+                  style={{ padding: '7px 16px', borderRadius: tokens.radius.sm, border: 'none', background: tokens.blue, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: (!logPod || logLoading) ? 0.5 : 1 }}>
                   {logLoading ? <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} /> : <Terminal style={{ width: 14, height: 14 }} />}
                   Fetch
                 </button>
@@ -2014,27 +2014,27 @@ function TroubleshootTab({ data, events, clusterName, initialPodNs, initialPodNa
                 </div>
               )}
 
-              {logError && <div style={{ background: apple.red + '15', border: `0.5px solid ${apple.red}30`, borderRadius: apple.radius.sm, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: apple.red }}>{logError}</div>}
+              {logError && <div style={{ background: tokens.red + '15', border: `0.5px solid ${tokens.red}30`, borderRadius: tokens.radius.sm, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: tokens.red }}>{logError}</div>}
 
               {logOutput && (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <span style={{ fontSize: 11, color: apple.tertiaryLabel, fontFamily: 'monospace' }}>
+                    <span style={{ fontSize: 11, color: tokens.tertiaryLabel, fontFamily: 'monospace' }}>
                       {logPod}{logContainer ? `:${logContainer}` : ''} — last {tailLines} lines
                     </span>
-                    <button onClick={copyLogs} style={{ padding: '4px 10px', fontSize: 11, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {copied ? <ClipboardCheck style={{ width: 12, height: 12, color: apple.green }} /> : <Copy style={{ width: 12, height: 12 }} />}
+                    <button onClick={copyLogs} style={{ padding: '4px 10px', fontSize: 11, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {copied ? <ClipboardCheck style={{ width: 12, height: 12, color: tokens.green }} /> : <Copy style={{ width: 12, height: 12 }} />}
                       {copied ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
-                  <pre style={{ background: '#0d1117', color: '#c9d1d9', padding: 16, borderRadius: apple.radius.md, fontSize: 11, fontFamily: '"SF Mono", "Monaco", monospace', overflowX: 'auto', overflowY: 'auto', maxHeight: 480, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.5 }}>
+                  <pre style={{ background: '#0d1117', color: '#c9d1d9', padding: 16, borderRadius: tokens.radius.md, fontSize: 11, fontFamily: '"SF Mono", "Monaco", monospace', overflowX: 'auto', overflowY: 'auto', maxHeight: 480, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.5 }}>
                     {logOutput}
                   </pre>
                 </div>
               )}
 
               {!logOutput && !logError && !logLoading && (
-                <div style={{ textAlign: 'center', padding: '24px 0', color: apple.tertiaryLabel, fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: '24px 0', color: tokens.tertiaryLabel, fontSize: 13 }}>
                   Select namespace, pod and click Fetch to view logs
                 </div>
               )}
@@ -2046,10 +2046,10 @@ function TroubleshootTab({ data, events, clusterName, initialPodNs, initialPodNa
       {/* kubectl Commands */}
       {section === 'kubectl' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-            <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Play style={{ width: 16, height: 16, color: apple.blue }} />
-              <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>kubectl Command Generator</span>
+          <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Play style={{ width: 16, height: 16, color: tokens.blue }} />
+              <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>kubectl Command Generator</span>
             </div>
             <div style={{ padding: 18 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12, marginBottom: 16 }}>
@@ -2071,7 +2071,7 @@ function TroubleshootTab({ data, events, clusterName, initialPodNs, initialPodNa
               {logNs ? (
                 <KubectlPanel pod={selectedPodData} namespace={logNs} clusterContext={clusterName} />
               ) : (
-                <div style={{ textAlign: 'center', padding: '24px 0', color: apple.tertiaryLabel, fontSize: 13 }}>Select a namespace to generate kubectl commands</div>
+                <div style={{ textAlign: 'center', padding: '24px 0', color: tokens.tertiaryLabel, fontSize: 13 }}>Select a namespace to generate kubectl commands</div>
               )}
             </div>
           </div>
@@ -2087,31 +2087,31 @@ function TroubleshootTab({ data, events, clusterName, initialPodNs, initialPodNa
               const displayedItems = isExpanded ? card.items : card.items.slice(0, 5)
               const Icon = card.icon
               return (
-                <div key={card.title} style={{ background: apple.secondaryBackground, border: `0.5px solid ${card.count > 0 ? card.color + '40' : apple.separator}`, borderRadius: apple.radius.lg, padding: '14px 16px' }}>
+                <div key={card.title} style={{ background: tokens.secondaryBackground, border: `0.5px solid ${card.count > 0 ? card.color + '40' : tokens.separator}`, borderRadius: tokens.radius.lg, padding: '14px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <Icon style={{ width: 15, height: 15, color: card.count > 0 ? card.color : apple.green }} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: apple.label, flex: 1 }}>{card.title}</span>
+                    <Icon style={{ width: 15, height: 15, color: card.count > 0 ? card.color : tokens.green }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: tokens.label, flex: 1 }}>{card.title}</span>
                     {card.count > 0 && <Badge color={card.color}>{card.count}</Badge>}
                   </div>
                   {card.count > 0 ? (
                     <>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         {displayedItems.map((item, ii) => (
-                          <div key={ii} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 6px', borderRadius: apple.radius.sm, background: apple.fill }}>
-                            <span style={{ fontSize: 11, fontFamily: 'monospace', color: apple.label, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+                          <div key={ii} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 6px', borderRadius: tokens.radius.sm, background: tokens.fill }}>
+                            <span style={{ fontSize: 11, fontFamily: 'monospace', color: tokens.label, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
                             <span style={{ fontSize: 10, color: item.color, fontWeight: 600, flexShrink: 0 }}>{item.extra}</span>
                           </div>
                         ))}
                       </div>
                       {card.items.length > 5 && (
                         <button onClick={() => setShowExpanded(prev => ({ ...prev, [card.title]: !isExpanded }))}
-                          style={{ marginTop: 6, width: '100%', padding: '5px 0', fontSize: 11, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: 'transparent', color: apple.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontWeight: 500 }}>
+                          style={{ marginTop: 6, width: '100%', padding: '5px 0', fontSize: 11, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: 'transparent', color: tokens.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontWeight: 500 }}>
                           {isExpanded ? <><ChevronUp style={{ width: 11, height: 11 }} /> Collapse</> : <><ChevronDown style={{ width: 11, height: 11 }} /> Show {card.items.length - 5} more</>}
                         </button>
                       )}
                     </>
                   ) : (
-                    <div style={{ fontSize: 12, color: apple.green, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ fontSize: 12, color: tokens.green, display: 'flex', alignItems: 'center', gap: 5 }}>
                       <CheckCircle style={{ width: 12, height: 12 }} /> No issues
                     </div>
                   )}
@@ -2149,36 +2149,36 @@ function HomeScreen({ clusters, allTopologies, allEvents, busyClusters, onSelect
     <div style={{ maxWidth: 1080, margin: '0 auto', padding: '8px 0 40px' }}>
       <div style={{ textAlign: 'center', padding: '28px 0 32px' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-          <div style={{ width: 60, height: 60, borderRadius: apple.radius.lg, background: apple.blue + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Cloud style={{ width: 30, height: 30, color: apple.blue }} />
+          <div style={{ width: 60, height: 60, borderRadius: tokens.radius.lg, background: tokens.blue + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Cloud style={{ width: 30, height: 30, color: tokens.blue }} />
           </div>
         </div>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: apple.label, margin: '0 0 10px' }}>Kubernetes Intelligence</h1>
-        <p style={{ fontSize: 14, color: apple.secondaryLabel, margin: 0 }}>Multi-cluster visibility · Real-time SRE diagnostics · Click any resource for details</p>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: tokens.label, margin: '0 0 10px' }}>Kubernetes Intelligence</h1>
+        <p style={{ fontSize: 14, color: tokens.secondaryLabel, margin: 0 }}>Multi-cluster visibility · Real-time SRE diagnostics · Click any resource for details</p>
       </div>
 
       {totalLoaded > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 32 }}>
-          <StatCard label="Total Pods" value={`${globalStats.runningPods}/${globalStats.totalPods}`} sub={`${totalLoaded} cluster${totalLoaded !== 1 ? 's' : ''} loaded`} color={globalStats.runningPods === globalStats.totalPods ? apple.green : apple.orange} icon={Box} />
-          <StatCard label="Nodes" value={`${globalStats.readyNodes}/${globalStats.totalNodes}`} sub="Ready" color={globalStats.readyNodes === globalStats.totalNodes ? apple.green : apple.orange} icon={Server} />
-          <StatCard label="Deployments" value={`${globalStats.healthyDeps}/${globalStats.totalDeps}`} sub="Healthy" color={globalStats.healthyDeps === globalStats.totalDeps ? apple.green : apple.orange} icon={GitBranch} />
-          <StatCard label="Active Warnings" value={globalStats.totalWarnings} sub="Last 60 minutes" color={globalStats.totalWarnings > 0 ? apple.orange : apple.green} icon={AlertTriangle} />
+          <StatCard label="Total Pods" value={`${globalStats.runningPods}/${globalStats.totalPods}`} sub={`${totalLoaded} cluster${totalLoaded !== 1 ? 's' : ''} loaded`} color={globalStats.runningPods === globalStats.totalPods ? tokens.green : tokens.orange} icon={Box} />
+          <StatCard label="Nodes" value={`${globalStats.readyNodes}/${globalStats.totalNodes}`} sub="Ready" color={globalStats.readyNodes === globalStats.totalNodes ? tokens.green : tokens.orange} icon={Server} />
+          <StatCard label="Deployments" value={`${globalStats.healthyDeps}/${globalStats.totalDeps}`} sub="Healthy" color={globalStats.healthyDeps === globalStats.totalDeps ? tokens.green : tokens.orange} icon={GitBranch} />
+          <StatCard label="Active Warnings" value={globalStats.totalWarnings} sub="Last 60 minutes" color={globalStats.totalWarnings > 0 ? tokens.orange : tokens.green} icon={AlertTriangle} />
         </div>
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>Clusters</span>
-        <Badge color={apple.gray}>{clusters.length}</Badge>
+        <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>Clusters</span>
+        <Badge color={tokens.gray}>{clusters.length}</Badge>
         {busyClusters.size > 0 && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: apple.tertiaryLabel }}>
-            <Loader2 style={{ width: 12, height: 12, animation: 'spin 1s linear infinite', color: apple.blue }} />
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: tokens.tertiaryLabel }}>
+            <Loader2 style={{ width: 12, height: 12, animation: 'spin 1s linear infinite', color: tokens.blue }} />
             Fetching {busyClusters.size} cluster{busyClusters.size !== 1 ? 's' : ''}…
           </span>
         )}
       </div>
 
       {clusters.length === 0 ? (
-        <div style={{ background: apple.orange + '15', border: `0.5px solid ${apple.orange}30`, borderRadius: apple.radius.md, padding: '20px 24px', fontSize: 13, color: apple.orange, textAlign: 'center' }}>
+        <div style={{ background: tokens.orange + '15', border: `0.5px solid ${tokens.orange}30`, borderRadius: tokens.radius.md, padding: '20px 24px', fontSize: 13, color: tokens.orange, textAlign: 'center' }}>
           No clusters configured. Add clusters via the K8s Cluster management API.
         </div>
       ) : (
@@ -2192,23 +2192,23 @@ function HomeScreen({ clusters, allTopologies, allEvents, busyClusters, onSelect
             const deadSvcCount = topo ? getServicesWithNoEndpoints(topo.services, topo.pods).length : 0
             return (
               <div key={cluster.name} onClick={() => onSelectCluster(cluster.name)}
-                style={{ background: apple.secondaryBackground, border: `0.5px solid ${health ? health.color + '40' : apple.separator}`, borderRadius: apple.radius.lg, padding: '16px 18px', cursor: 'pointer', transition: 'box-shadow 0.15s, border-color 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,122,255,0.14)'; e.currentTarget.style.borderColor = apple.blue + '60' }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = health ? health.color + '40' : apple.separator }}>
+                style={{ background: tokens.secondaryBackground, border: `0.5px solid ${health ? health.color + '40' : tokens.separator}`, borderRadius: tokens.radius.lg, padding: '16px 18px', cursor: 'pointer', transition: 'box-shadow 0.15s, border-color 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,122,255,0.14)'; e.currentTarget.style.borderColor = tokens.blue + '60' }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = health ? health.color + '40' : tokens.separator }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: apple.label, fontFamily: 'monospace', marginBottom: 5 }}>{cluster.name}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: tokens.label, fontFamily: 'monospace', marginBottom: 5 }}>{cluster.name}</div>
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {cluster.environment && <Badge color={apple.blue}>{cluster.environment}</Badge>}
-                      {cluster.region && <Badge color={apple.gray}>{cluster.region}</Badge>}
+                      {cluster.environment && <Badge color={tokens.blue}>{cluster.environment}</Badge>}
+                      {cluster.region && <Badge color={tokens.gray}>{cluster.region}</Badge>}
                     </div>
                   </div>
                   {health && <span style={{ fontSize: 26, fontWeight: 800, color: health.color, lineHeight: 1 }}>{health.grade}</span>}
-                  {isBusy && !topo && <Loader2 style={{ width: 20, height: 20, color: apple.blue, animation: 'spin 1s linear infinite' }} />}
+                  {isBusy && !topo && <Loader2 style={{ width: 20, height: 20, color: tokens.blue, animation: 'spin 1s linear infinite' }} />}
                 </div>
                 {topo ? (
                   <>
-                    <div style={{ height: 4, borderRadius: 2, background: apple.fill, overflow: 'hidden', marginBottom: 10 }}>
+                    <div style={{ height: 4, borderRadius: 2, background: tokens.fill, overflow: 'hidden', marginBottom: 10 }}>
                       <div style={{ height: '100%', width: `${health!.score}%`, background: health!.color, borderRadius: 2, transition: 'width 0.4s ease' }} />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
@@ -2218,23 +2218,23 @@ function HomeScreen({ clusters, allTopologies, allEvents, busyClusters, onSelect
                         { label: 'Deps', val: `${topo.summary.healthy_deployments}/${topo.summary.deployments}`, ok: topo.summary.healthy_deployments === topo.summary.deployments },
                         { label: 'Warns', val: String(warnings), ok: warnings === 0 },
                       ].map(({ label, val, ok }) => (
-                        <div key={label} style={{ textAlign: 'center', background: apple.fill, borderRadius: apple.radius.sm, padding: '6px 4px' }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: ok ? apple.green : apple.orange }}>{val}</div>
-                          <div style={{ fontSize: 10, color: apple.tertiaryLabel }}>{label}</div>
+                        <div key={label} style={{ textAlign: 'center', background: tokens.fill, borderRadius: tokens.radius.sm, padding: '6px 4px' }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: ok ? tokens.green : tokens.orange }}>{val}</div>
+                          <div style={{ fontSize: 10, color: tokens.tertiaryLabel }}>{label}</div>
                         </div>
                       ))}
                     </div>
                     {deadSvcCount > 0 && (
-                      <div style={{ marginTop: 8, fontSize: 11, color: apple.red, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <div style={{ marginTop: 8, fontSize: 11, color: tokens.red, display: 'flex', alignItems: 'center', gap: 4 }}>
                         <AlertTriangle style={{ width: 11, height: 11 }} />
                         {deadSvcCount} service{deadSvcCount !== 1 ? 's' : ''} with no endpoints
                       </div>
                     )}
                   </>
                 ) : isBusy ? (
-                  <div style={{ fontSize: 12, color: apple.tertiaryLabel, marginTop: 4 }}>Loading cluster data…</div>
+                  <div style={{ fontSize: 12, color: tokens.tertiaryLabel, marginTop: 4 }}>Loading cluster data…</div>
                 ) : (
-                  <div style={{ fontSize: 12, color: apple.tertiaryLabel, marginTop: 4 }}>Click to load</div>
+                  <div style={{ fontSize: 12, color: tokens.tertiaryLabel, marginTop: 4 }}>Click to load</div>
                 )}
               </div>
             )
@@ -2243,14 +2243,14 @@ function HomeScreen({ clusters, allTopologies, allEvents, busyClusters, onSelect
       )}
 
       {totalLoaded > 0 && (
-        <div style={{ marginTop: 28, background: apple.blue + '0d', border: `0.5px solid ${apple.blue}25`, borderRadius: apple.radius.lg, padding: '14px 20px', display: 'flex', gap: 28, flexWrap: 'wrap' }}>
+        <div style={{ marginTop: 28, background: tokens.blue + '0d', border: `0.5px solid ${tokens.blue}25`, borderRadius: tokens.radius.lg, padding: '14px 20px', display: 'flex', gap: 28, flexWrap: 'wrap' }}>
           {[
             { icon: Search, tip: '⌘K — Global search across all clusters' },
             { icon: Zap, tip: 'Troubleshoot → NS Auto-Scan for instant diagnostics' },
             { icon: Info, tip: 'Click any resource row to view full details' },
           ].map(({ icon: Icon, tip }) => (
-            <div key={tip} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: apple.secondaryLabel }}>
-              <Icon style={{ width: 13, height: 13, color: apple.blue, flexShrink: 0 }} />
+            <div key={tip} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: tokens.secondaryLabel }}>
+              <Icon style={{ width: 13, height: 13, color: tokens.blue, flexShrink: 0 }} />
               {tip}
             </div>
           ))}
@@ -2305,8 +2305,8 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
     finally { setLogsLoading(false) }
   }
 
-  const kindColor: Record<string, string> = { Pod: apple.green, Service: apple.blue, Deployment: apple.orange, Node: apple.purple, Ingress: apple.pink }
-  const color = kindColor[resource.kind] ?? apple.gray
+  const kindColor: Record<string, string> = { Pod: tokens.green, Service: tokens.blue, Deployment: tokens.orange, Node: tokens.purple, Ingress: tokens.pink }
+  const color = kindColor[resource.kind] ?? tokens.gray
 
   const panelTabs: { key: PanelTab; label: string }[] = resource.kind === 'Pod' ? [
     { key: 'summary', label: 'Summary' }, { key: 'logs', label: 'Logs' },
@@ -2327,14 +2327,14 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
   ]
 
   const fieldBlock = (label: string, content: React.ReactNode) => (
-    <div style={{ background: apple.fill, borderRadius: apple.radius.sm, padding: '10px 12px' }}>
-      <div style={{ fontSize: 10, color: apple.tertiaryLabel, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
+    <div style={{ background: tokens.fill, borderRadius: tokens.radius.sm, padding: '10px 12px' }}>
+      <div style={{ fontSize: 10, color: tokens.tertiaryLabel, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
       {content}
     </div>
   )
 
   const sectionLabel = (text: string) => (
-    <div style={{ fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>{text}</div>
+    <div style={{ fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>{text}</div>
   )
 
   return (
@@ -2343,11 +2343,11 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
       <motion.div
         initial={{ x: 560 }} animate={{ x: 0 }} exit={{ x: 560 }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: 540, zIndex: 901, background: apple.background, borderLeft: `0.5px solid ${apple.separator}`, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 32px rgba(0,0,0,0.18)' }}
+        style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: 540, zIndex: 901, background: tokens.background, borderLeft: `0.5px solid ${tokens.separator}`, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 32px rgba(0,0,0,0.18)' }}
       >
         {/* Header */}
-        <div style={{ padding: '14px 20px', borderBottom: `0.5px solid ${apple.separator}`, background: apple.secondaryBackground, display: 'flex', alignItems: 'flex-start', gap: 12, flexShrink: 0 }}>
-          <div style={{ width: 36, height: 36, borderRadius: apple.radius.sm, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ padding: '14px 20px', borderBottom: `0.5px solid ${tokens.separator}`, background: tokens.secondaryBackground, display: 'flex', alignItems: 'flex-start', gap: 12, flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: tokens.radius.sm, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             {resource.kind === 'Pod' && <Box style={{ width: 18, height: 18, color }} />}
             {resource.kind === 'Service' && <Network style={{ width: 18, height: 18, color }} />}
             {resource.kind === 'Deployment' && <GitBranch style={{ width: 18, height: 18, color }} />}
@@ -2357,19 +2357,19 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
               <Badge color={color}>{resource.kind}</Badge>
-              {resource.namespace && <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>{resource.namespace}</span>}
-              <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>· {resource.cluster}</span>
+              {resource.namespace && <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>{resource.namespace}</span>}
+              <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>· {resource.cluster}</span>
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: apple.label, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resource.name}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: tokens.label, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resource.name}</div>
           </div>
-          <button onClick={onClose} style={{ padding: 6, borderRadius: apple.radius.sm, border: 'none', background: apple.fill, color: apple.secondaryLabel, cursor: 'pointer', flexShrink: 0, display: 'flex' }}>
+          <button onClick={onClose} style={{ padding: 6, borderRadius: tokens.radius.sm, border: 'none', background: tokens.fill, color: tokens.secondaryLabel, cursor: 'pointer', flexShrink: 0, display: 'flex' }}>
             <XCircle style={{ width: 16, height: 16 }} />
           </button>
         </div>
         {/* Tab bar */}
-        <div style={{ display: 'flex', borderBottom: `0.5px solid ${apple.separator}`, background: apple.secondaryBackground, flexShrink: 0, overflowX: 'auto' }}>
+        <div style={{ display: 'flex', borderBottom: `0.5px solid ${tokens.separator}`, background: tokens.secondaryBackground, flexShrink: 0, overflowX: 'auto' }}>
           {panelTabs.map(t => (
-            <button key={t.key} onClick={() => setPanelTab(t.key as PanelTab)} style={{ padding: '9px 16px', fontSize: 12, fontWeight: panelTab === t.key ? 600 : 400, border: 'none', borderBottom: panelTab === t.key ? `2px solid ${apple.blue}` : '2px solid transparent', background: 'transparent', color: panelTab === t.key ? apple.blue : apple.secondaryLabel, cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: -1 }}>
+            <button key={t.key} onClick={() => setPanelTab(t.key as PanelTab)} style={{ padding: '9px 16px', fontSize: 12, fontWeight: panelTab === t.key ? 600 : 400, border: 'none', borderBottom: panelTab === t.key ? `2px solid ${tokens.blue}` : '2px solid transparent', background: 'transparent', color: panelTab === t.key ? tokens.blue : tokens.secondaryLabel, cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: -1 }}>
               {t.label}
             </button>
           ))}
@@ -2386,23 +2386,23 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
                   <>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                       {fieldBlock('Phase', <PhaseBadge phase={pod.phase} />)}
-                      {fieldBlock('Restarts', <span style={{ fontSize: 15, fontWeight: 700, color: pod.restarts >= 5 ? apple.red : pod.restarts > 0 ? apple.orange : apple.green }}>{pod.restarts}</span>)}
-                      {fieldBlock('Ready', <span style={{ fontSize: 15, fontWeight: 700, color: pod.ready ? apple.green : apple.orange }}>{pod.ready ? 'Yes' : 'No'}</span>)}
+                      {fieldBlock('Restarts', <span style={{ fontSize: 15, fontWeight: 700, color: pod.restarts >= 5 ? tokens.red : pod.restarts > 0 ? tokens.orange : tokens.green }}>{pod.restarts}</span>)}
+                      {fieldBlock('Ready', <span style={{ fontSize: 15, fontWeight: 700, color: pod.ready ? tokens.green : tokens.orange }}>{pod.ready ? 'Yes' : 'No'}</span>)}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                      {fieldBlock('Node', <span style={{ fontSize: 12, fontFamily: 'monospace', color: apple.label }}>{pod.node_name ?? '—'}</span>)}
-                      {fieldBlock('Age', <span style={{ fontSize: 12, color: apple.label }}>{relativeAge(pod.created_at)}</span>)}
+                      {fieldBlock('Node', <span style={{ fontSize: 12, fontFamily: 'monospace', color: tokens.label }}>{pod.node_name ?? '—'}</span>)}
+                      {fieldBlock('Age', <span style={{ fontSize: 12, color: tokens.label }}>{relativeAge(pod.created_at)}</span>)}
                     </div>
                     <div>{sectionLabel('Diagnosis')}{diagIssues.map((issue, i) => <DiagnosisCard key={i} issue={issue} />)}</div>
                     <div>
                       {sectionLabel(`Containers (${pod.containers?.length ?? 0})`)}
                       {(pod.containers ?? []).map(c => (
-                        <div key={c.name} style={{ padding: '10px 12px', borderRadius: apple.radius.sm, background: apple.fill, marginBottom: 6, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                          <Badge color={c.ready ? apple.green : apple.orange}>{c.ready ? '●' : '○'}</Badge>
+                        <div key={c.name} style={{ padding: '10px 12px', borderRadius: tokens.radius.sm, background: tokens.fill, marginBottom: 6, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                          <Badge color={c.ready ? tokens.green : tokens.orange}>{c.ready ? '●' : '○'}</Badge>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: apple.label }}>{c.name}</div>
-                            <div style={{ fontSize: 10, color: apple.tertiaryLabel, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>{c.image}</div>
-                            {(c.ports ?? []).length > 0 && <div style={{ fontSize: 10, color: apple.secondaryLabel, marginTop: 2 }}>Ports: {c.ports.map(p => p.container_port).join(', ')}</div>}
+                            <div style={{ fontSize: 12, fontWeight: 600, color: tokens.label }}>{c.name}</div>
+                            <div style={{ fontSize: 10, color: tokens.tertiaryLabel, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>{c.image}</div>
+                            {(c.ports ?? []).length > 0 && <div style={{ fontSize: 10, color: tokens.secondaryLabel, marginTop: 2 }}>Ports: {c.ports.map(p => p.container_port).join(', ')}</div>}
                           </div>
                         </div>
                       ))}
@@ -2411,7 +2411,7 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
                       <div>
                         {sectionLabel('Labels')}
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                          {Object.entries(pod.labels ?? {}).map(([k, v]) => <span key={k} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: apple.blue + '15', color: apple.blue, fontFamily: 'monospace' }}>{k}={v}</span>)}
+                          {Object.entries(pod.labels ?? {}).map(([k, v]) => <span key={k} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: tokens.blue + '15', color: tokens.blue, fontFamily: 'monospace' }}>{k}={v}</span>)}
                         </div>
                       </div>
                     )}
@@ -2427,35 +2427,35 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
                   <>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                       {fieldBlock('Type', <TypeBadge type={service.type} />)}
-                      {fieldBlock('Cluster IP', <span style={{ fontSize: 12, fontFamily: 'monospace', color: apple.label }}>{service.cluster_ip || '—'}</span>)}
+                      {fieldBlock('Cluster IP', <span style={{ fontSize: 12, fontFamily: 'monospace', color: tokens.label }}>{service.cluster_ip || '—'}</span>)}
                     </div>
                     {isDead && (
-                      <div style={{ background: apple.red + '12', border: `0.5px solid ${apple.red}30`, borderRadius: apple.radius.sm, padding: '10px 14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: apple.red, marginBottom: 4 }}>
+                      <div style={{ background: tokens.red + '12', border: `0.5px solid ${tokens.red}30`, borderRadius: tokens.radius.sm, padding: '10px 14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: tokens.red, marginBottom: 4 }}>
                           <AlertTriangle style={{ width: 13, height: 13 }} /> No healthy endpoints
                         </div>
-                        <div style={{ fontSize: 12, color: apple.secondaryLabel }}>Selector matches {matchingPods.length} pod{matchingPods.length !== 1 ? 's' : ''}, {readyPods.length} ready. Traffic will fail.</div>
+                        <div style={{ fontSize: 12, color: tokens.secondaryLabel }}>Selector matches {matchingPods.length} pod{matchingPods.length !== 1 ? 's' : ''}, {readyPods.length} ready. Traffic will fail.</div>
                       </div>
                     )}
                     <div>
                       {sectionLabel('Ports')}
-                      {(service.ports ?? []).length === 0 ? <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>No ports</span> :
+                      {(service.ports ?? []).length === 0 ? <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>No ports</span> :
                         (service.ports ?? []).map((p, i) => (
-                          <div key={i} style={{ display: 'flex', gap: 10, fontSize: 12, padding: '6px 10px', borderRadius: apple.radius.sm, background: apple.fill, marginBottom: 4, alignItems: 'center' }}>
-                            <span style={{ color: apple.label, fontFamily: 'monospace', fontWeight: 600 }}>{p.port}</span>
-                            <span style={{ color: apple.tertiaryLabel }}>→ {p.target_port}</span>
-                            <Badge color={apple.gray}>{p.protocol}</Badge>
-                            {p.name && <span style={{ color: apple.secondaryLabel }}>{p.name}</span>}
+                          <div key={i} style={{ display: 'flex', gap: 10, fontSize: 12, padding: '6px 10px', borderRadius: tokens.radius.sm, background: tokens.fill, marginBottom: 4, alignItems: 'center' }}>
+                            <span style={{ color: tokens.label, fontFamily: 'monospace', fontWeight: 600 }}>{p.port}</span>
+                            <span style={{ color: tokens.tertiaryLabel }}>→ {p.target_port}</span>
+                            <Badge color={tokens.gray}>{p.protocol}</Badge>
+                            {p.name && <span style={{ color: tokens.secondaryLabel }}>{p.name}</span>}
                           </div>
                         ))}
                     </div>
                     <div>
                       {sectionLabel('Selector')}
                       {Object.keys(service.selector ?? {}).length === 0
-                        ? <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>No selector (headless or external)</span>
-                        : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>{Object.entries(service.selector ?? {}).map(([k, v]) => <span key={k} style={{ fontSize: 11, padding: '2px 7px', borderRadius: 4, background: apple.blue + '15', color: apple.blue, fontFamily: 'monospace' }}>{k}={v}</span>)}</div>}
+                        ? <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>No selector (headless or external)</span>
+                        : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>{Object.entries(service.selector ?? {}).map(([k, v]) => <span key={k} style={{ fontSize: 11, padding: '2px 7px', borderRadius: 4, background: tokens.blue + '15', color: tokens.blue, fontFamily: 'monospace' }}>{k}={v}</span>)}</div>}
                     </div>
-                    <div style={{ fontSize: 11, color: apple.tertiaryLabel }}>Age: {relativeAge(service.created_at)}</div>
+                    <div style={{ fontSize: 11, color: tokens.tertiaryLabel }}>Age: {relativeAge(service.created_at)}</div>
                   </>
                 )
               })()}
@@ -2465,26 +2465,26 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
                 return (
                   <>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                      {fieldBlock('Desired', <span style={{ fontSize: 15, fontWeight: 700, color: apple.label }}>{deployment.replicas}</span>)}
-                      {fieldBlock('Ready', <span style={{ fontSize: 15, fontWeight: 700, color: healthy ? apple.green : apple.orange }}>{deployment.ready_replicas}</span>)}
-                      {fieldBlock('Status', <Badge color={healthy ? apple.green : apple.orange}>{healthy ? 'Healthy' : 'Degraded'}</Badge>)}
+                      {fieldBlock('Desired', <span style={{ fontSize: 15, fontWeight: 700, color: tokens.label }}>{deployment.replicas}</span>)}
+                      {fieldBlock('Ready', <span style={{ fontSize: 15, fontWeight: 700, color: healthy ? tokens.green : tokens.orange }}>{deployment.ready_replicas}</span>)}
+                      {fieldBlock('Status', <Badge color={healthy ? tokens.green : tokens.orange}>{healthy ? 'Healthy' : 'Degraded'}</Badge>)}
                     </div>
                     <div>
                       {sectionLabel('Containers')}
                       {(deployment.containers ?? []).map(c => (
-                        <div key={c.name} style={{ padding: '8px 12px', borderRadius: apple.radius.sm, background: apple.fill, marginBottom: 5 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: apple.label }}>{c.name}</div>
-                          <div style={{ fontSize: 10, color: apple.tertiaryLabel, fontFamily: 'monospace', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.image}</div>
+                        <div key={c.name} style={{ padding: '8px 12px', borderRadius: tokens.radius.sm, background: tokens.fill, marginBottom: 5 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: tokens.label }}>{c.name}</div>
+                          <div style={{ fontSize: 10, color: tokens.tertiaryLabel, fontFamily: 'monospace', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.image}</div>
                         </div>
                       ))}
                     </div>
                     <div>
                       {sectionLabel('Selector')}
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                        {Object.entries(deployment.selector ?? {}).map(([k, v]) => <span key={k} style={{ fontSize: 11, padding: '2px 7px', borderRadius: 4, background: apple.orange + '18', color: apple.orange, fontFamily: 'monospace' }}>{k}={v}</span>)}
+                        {Object.entries(deployment.selector ?? {}).map(([k, v]) => <span key={k} style={{ fontSize: 11, padding: '2px 7px', borderRadius: 4, background: tokens.orange + '18', color: tokens.orange, fontFamily: 'monospace' }}>{k}={v}</span>)}
                       </div>
                     </div>
-                    <div style={{ fontSize: 11, color: apple.tertiaryLabel }}>Age: {relativeAge(deployment.created_at)}</div>
+                    <div style={{ fontSize: 11, color: tokens.tertiaryLabel }}>Age: {relativeAge(deployment.created_at)}</div>
                   </>
                 )
               })()}
@@ -2496,20 +2496,20 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
                 return (
                   <>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                      {fieldBlock('Status', <Badge color={node.ready ? apple.green : apple.red}>{node.status}</Badge>)}
-                      {fieldBlock('Schedulable', <span style={{ fontSize: 13, color: node.schedulable !== false ? apple.green : apple.orange }}>{node.schedulable !== false ? 'Yes' : 'No'}</span>)}
-                      {fieldBlock('Pods', <span style={{ fontSize: 13, fontWeight: 700, color: runningPods === nodePods.length ? apple.green : apple.orange }}>{runningPods}/{nodePods.length}</span>)}
-                      {fieldBlock('Total Restarts', <span style={{ fontSize: 13, fontWeight: 700, color: totalRestarts > 0 ? apple.orange : apple.green }}>{totalRestarts}</span>)}
+                      {fieldBlock('Status', <Badge color={node.ready ? tokens.green : tokens.red}>{node.status}</Badge>)}
+                      {fieldBlock('Schedulable', <span style={{ fontSize: 13, color: node.schedulable !== false ? tokens.green : tokens.orange }}>{node.schedulable !== false ? 'Yes' : 'No'}</span>)}
+                      {fieldBlock('Pods', <span style={{ fontSize: 13, fontWeight: 700, color: runningPods === nodePods.length ? tokens.green : tokens.orange }}>{runningPods}/{nodePods.length}</span>)}
+                      {fieldBlock('Total Restarts', <span style={{ fontSize: 13, fontWeight: 700, color: totalRestarts > 0 ? tokens.orange : tokens.green }}>{totalRestarts}</span>)}
                     </div>
                     <div>
                       {sectionLabel('Roles')}
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {(node.roles ?? []).map(r => <Badge key={r} color={r === 'master' || r === 'control-plane' ? apple.purple : apple.gray}>{r}</Badge>)}
+                        {(node.roles ?? []).map(r => <Badge key={r} color={r === 'master' || r === 'control-plane' ? tokens.purple : tokens.gray}>{r}</Badge>)}
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <div style={{ fontSize: 11, color: apple.tertiaryLabel }}>OS: {node.os ?? '—'}</div>
-                      <div style={{ fontSize: 11, color: apple.tertiaryLabel }}>K8s Version: {node.version ?? '—'}</div>
+                      <div style={{ fontSize: 11, color: tokens.tertiaryLabel }}>OS: {node.os ?? '—'}</div>
+                      <div style={{ fontSize: 11, color: tokens.tertiaryLabel }}>K8s Version: {node.version ?? '—'}</div>
                     </div>
                   </>
                 )
@@ -2521,22 +2521,22 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
                 return (
                   <>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                      {fieldBlock('TLS', <Badge color={hasTLS ? apple.green : apple.gray}>{hasTLS ? 'Enabled' : 'None'}</Badge>)}
-                      {fieldBlock('Rules', <span style={{ fontSize: 14, fontWeight: 700, color: apple.label }}>{(ingress.rules ?? []).length}</span>)}
+                      {fieldBlock('TLS', <Badge color={hasTLS ? tokens.green : tokens.gray}>{hasTLS ? 'Enabled' : 'None'}</Badge>)}
+                      {fieldBlock('Rules', <span style={{ fontSize: 14, fontWeight: 700, color: tokens.label }}>{(ingress.rules ?? []).length}</span>)}
                     </div>
                     <div>
                       {sectionLabel('Hosts')}
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                        {hosts.map((h, i) => <span key={i} style={{ fontSize: 12, fontFamily: 'monospace', color: apple.label, padding: '2px 8px', borderRadius: 4, background: apple.pink + '15' }}>{h}</span>)}
+                        {hosts.map((h, i) => <span key={i} style={{ fontSize: 12, fontFamily: 'monospace', color: tokens.label, padding: '2px 8px', borderRadius: 4, background: tokens.pink + '15' }}>{h}</span>)}
                       </div>
                     </div>
-                    <div style={{ fontSize: 11, color: apple.tertiaryLabel }}>Age: {relativeAge(ingress.created_at)}</div>
+                    <div style={{ fontSize: 11, color: tokens.tertiaryLabel }}>Age: {relativeAge(ingress.created_at)}</div>
                   </>
                 )
               })()}
 
               {!pod && !service && !deployment && !node && !ingress && (
-                <div style={{ color: apple.tertiaryLabel, fontSize: 13 }}>Resource not found in current topology</div>
+                <div style={{ color: tokens.tertiaryLabel, fontSize: 13 }}>Resource not found in current topology</div>
               )}
             </div>
           )}
@@ -2546,28 +2546,28 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, color: apple.tertiaryLabel, display: 'block', marginBottom: 3 }}>Container</label>
-                  <select value={logContainer} onChange={e => setLogContainer(e.target.value)} style={{ width: '100%', padding: '7px 10px', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 12, outline: 'none', cursor: 'pointer' }}>
+                  <label style={{ fontSize: 12, color: tokens.tertiaryLabel, display: 'block', marginBottom: 3 }}>Container</label>
+                  <select value={logContainer} onChange={e => setLogContainer(e.target.value)} style={{ width: '100%', padding: '7px 10px', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 12, outline: 'none', cursor: 'pointer' }}>
                     {(pod.containers ?? []).map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                   </select>
                 </div>
-                <button onClick={fetchLogs} disabled={logsLoading} style={{ padding: '7px 16px', borderRadius: apple.radius.sm, border: 'none', background: apple.blue, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, opacity: logsLoading ? 0.6 : 1 }}>
+                <button onClick={fetchLogs} disabled={logsLoading} style={{ padding: '7px 16px', borderRadius: tokens.radius.sm, border: 'none', background: tokens.blue, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, opacity: logsLoading ? 0.6 : 1 }}>
                   {logsLoading ? <Loader2 style={{ width: 13, height: 13, animation: 'spin 1s linear infinite' }} /> : <Terminal style={{ width: 13, height: 13 }} />}
                   Fetch
                 </button>
                 {logs && (
-                  <button onClick={() => { navigator.clipboard.writeText(logs); setLogsCopied(true); setTimeout(() => setLogsCopied(false), 2000) }} style={{ padding: '7px 12px', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {logsCopied ? <ClipboardCheck style={{ width: 13, height: 13, color: apple.green }} /> : <Copy style={{ width: 13, height: 13 }} />}
+                  <button onClick={() => { navigator.clipboard.writeText(logs); setLogsCopied(true); setTimeout(() => setLogsCopied(false), 2000) }} style={{ padding: '7px 12px', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {logsCopied ? <ClipboardCheck style={{ width: 13, height: 13, color: tokens.green }} /> : <Copy style={{ width: 13, height: 13 }} />}
                   </button>
                 )}
               </div>
-              {logsError && <div style={{ background: apple.red + '15', borderRadius: apple.radius.sm, padding: '10px 14px', fontSize: 12, color: apple.red }}>{logsError}</div>}
+              {logsError && <div style={{ background: tokens.red + '15', borderRadius: tokens.radius.sm, padding: '10px 14px', fontSize: 12, color: tokens.red }}>{logsError}</div>}
               {logs ? (
-                <pre style={{ background: '#0d1117', color: '#c9d1d9', padding: 14, borderRadius: apple.radius.md, fontSize: 10, fontFamily: '"SF Mono", monospace', overflowX: 'auto', overflowY: 'auto', maxHeight: 520, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.5 }}>
+                <pre style={{ background: '#0d1117', color: '#c9d1d9', padding: 14, borderRadius: tokens.radius.md, fontSize: 10, fontFamily: '"SF Mono", monospace', overflowX: 'auto', overflowY: 'auto', maxHeight: 520, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', lineHeight: 1.5 }}>
                   {logs}
                 </pre>
               ) : !logsLoading && !logsError && (
-                <div style={{ textAlign: 'center', padding: '28px 0', color: apple.tertiaryLabel, fontSize: 13 }}>Click "Fetch" to load container logs</div>
+                <div style={{ textAlign: 'center', padding: '28px 0', color: tokens.tertiaryLabel, fontSize: 13 }}>Click "Fetch" to load container logs</div>
               )}
             </div>
           )}
@@ -2576,16 +2576,16 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
           {panelTab === 'events' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {resourceEvents.length === 0
-                ? <div style={{ textAlign: 'center', padding: '28px 0', color: apple.tertiaryLabel, fontSize: 13 }}>No events found for this resource</div>
+                ? <div style={{ textAlign: 'center', padding: '28px 0', color: tokens.tertiaryLabel, fontSize: 13 }}>No events found for this resource</div>
                 : resourceEvents.map((ev, i) => (
-                  <div key={i} style={{ padding: '10px 14px', borderRadius: apple.radius.sm, background: ev.type === 'Warning' ? apple.orange + '0d' : apple.fill, border: `0.5px solid ${ev.type === 'Warning' ? apple.orange + '30' : apple.separator}`, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div key={i} style={{ padding: '10px 14px', borderRadius: tokens.radius.sm, background: ev.type === 'Warning' ? tokens.orange + '0d' : tokens.fill, border: `0.5px solid ${ev.type === 'Warning' ? tokens.orange + '30' : tokens.separator}`, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Badge color={ev.type === 'Warning' ? apple.orange : apple.blue}>{ev.type}</Badge>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: ev.type === 'Warning' ? apple.orange : apple.label }}>{ev.reason}</span>
-                      {ev.count && ev.count > 1 && <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>{ev.count}×</span>}
-                      <span style={{ fontSize: 11, color: apple.tertiaryLabel, marginLeft: 'auto' }}>{new Date(ev.last_timestamp).toLocaleTimeString()}</span>
+                      <Badge color={ev.type === 'Warning' ? tokens.orange : tokens.blue}>{ev.type}</Badge>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: ev.type === 'Warning' ? tokens.orange : tokens.label }}>{ev.reason}</span>
+                      {ev.count && ev.count > 1 && <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>{ev.count}×</span>}
+                      <span style={{ fontSize: 11, color: tokens.tertiaryLabel, marginLeft: 'auto' }}>{new Date(ev.last_timestamp).toLocaleTimeString()}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: apple.secondaryLabel }}>{ev.message}</div>
+                    <div style={{ fontSize: 12, color: tokens.secondaryLabel }}>{ev.message}</div>
                   </div>
                 ))
               }
@@ -2597,7 +2597,7 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
             pod ? <KubectlPanel pod={pod} namespace={pod.namespace} clusterContext={resource.cluster} /> :
             service ? <KubectlPanel namespace={service.namespace} clusterContext={resource.cluster} /> :
             deployment ? <KubectlPanel namespace={deployment.namespace} clusterContext={resource.cluster} /> :
-            <div style={{ textAlign: 'center', padding: '28px 0', color: apple.tertiaryLabel, fontSize: 13 }}>No kubectl commands available</div>
+            <div style={{ textAlign: 'center', padding: '28px 0', color: tokens.tertiaryLabel, fontSize: 13 }}>No kubectl commands available</div>
           )}
 
           {/* ── Endpoints ── */}
@@ -2606,23 +2606,23 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
             const readyPods = matchingPods.filter(p => p.ready && p.phase === 'Running')
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ padding: '10px 14px', borderRadius: apple.radius.sm, background: readyPods.length > 0 ? apple.green + '0d' : apple.red + '0d', border: `0.5px solid ${readyPods.length > 0 ? apple.green + '30' : apple.red + '30'}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {readyPods.length > 0 ? <CheckCircle style={{ width: 14, height: 14, color: apple.green }} /> : <AlertTriangle style={{ width: 14, height: 14, color: apple.red }} />}
-                  <span style={{ fontSize: 13, fontWeight: 600, color: readyPods.length > 0 ? apple.green : apple.red }}>{readyPods.length}/{matchingPods.length} pods ready</span>
+                <div style={{ padding: '10px 14px', borderRadius: tokens.radius.sm, background: readyPods.length > 0 ? tokens.green + '0d' : tokens.red + '0d', border: `0.5px solid ${readyPods.length > 0 ? tokens.green + '30' : tokens.red + '30'}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {readyPods.length > 0 ? <CheckCircle style={{ width: 14, height: 14, color: tokens.green }} /> : <AlertTriangle style={{ width: 14, height: 14, color: tokens.red }} />}
+                  <span style={{ fontSize: 13, fontWeight: 600, color: readyPods.length > 0 ? tokens.green : tokens.red }}>{readyPods.length}/{matchingPods.length} pods ready</span>
                 </div>
                 {matchingPods.length === 0
-                  ? <div style={{ padding: '12px 14px', borderRadius: apple.radius.sm, background: apple.orange + '0d', border: `0.5px solid ${apple.orange}30`, fontSize: 13, color: apple.orange }}>
+                  ? <div style={{ padding: '12px 14px', borderRadius: tokens.radius.sm, background: tokens.orange + '0d', border: `0.5px solid ${tokens.orange}30`, fontSize: 13, color: tokens.orange }}>
                       No pods match selector: {Object.entries(service.selector ?? {}).map(([k, v]) => `${k}=${v}`).join(', ')}
                     </div>
                   : matchingPods.map(p => (
-                    <div key={p.name} style={{ padding: '10px 14px', borderRadius: apple.radius.sm, background: apple.fill, display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.ready && p.phase === 'Running' ? apple.green : apple.orange, flexShrink: 0 }} />
+                    <div key={p.name} style={{ padding: '10px 14px', borderRadius: tokens.radius.sm, background: tokens.fill, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.ready && p.phase === 'Running' ? tokens.green : tokens.orange, flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontFamily: 'monospace', color: apple.label, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                        <div style={{ fontSize: 10, color: apple.tertiaryLabel }}>Node: {p.node_name ?? '—'}</div>
+                        <div style={{ fontSize: 12, fontFamily: 'monospace', color: tokens.label, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                        <div style={{ fontSize: 10, color: tokens.tertiaryLabel }}>Node: {p.node_name ?? '—'}</div>
                       </div>
                       <PhaseBadge phase={p.phase} />
-                      {p.restarts > 0 && <Badge color={apple.orange}>{p.restarts}r</Badge>}
+                      {p.restarts > 0 && <Badge color={tokens.orange}>{p.restarts}r</Badge>}
                     </div>
                   ))
                 }
@@ -2635,18 +2635,18 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
             const podList = deployment
               ? topology.pods.filter(p => p.namespace === deployment.namespace && labelsMatch(deployment.selector, p.labels))
               : topology.pods.filter(p => p.node_name === node!.name)
-            if (podList.length === 0) return <div style={{ textAlign: 'center', padding: '28px 0', color: apple.tertiaryLabel, fontSize: 13 }}>No pods found</div>
+            if (podList.length === 0) return <div style={{ textAlign: 'center', padding: '28px 0', color: tokens.tertiaryLabel, fontSize: 13 }}>No pods found</div>
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {podList.map(p => (
-                  <div key={p.name} style={{ padding: '10px 14px', borderRadius: apple.radius.sm, background: apple.fill, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.ready && p.phase === 'Running' ? apple.green : p.phase === 'Pending' ? apple.orange : apple.red, flexShrink: 0 }} />
+                  <div key={p.name} style={{ padding: '10px 14px', borderRadius: tokens.radius.sm, background: tokens.fill, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.ready && p.phase === 'Running' ? tokens.green : p.phase === 'Pending' ? tokens.orange : tokens.red, flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontFamily: 'monospace', color: apple.label, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                      <div style={{ fontSize: 10, color: apple.tertiaryLabel }}>{node ? p.namespace : `Node: ${p.node_name ?? '—'}`}</div>
+                      <div style={{ fontSize: 12, fontFamily: 'monospace', color: tokens.label, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                      <div style={{ fontSize: 10, color: tokens.tertiaryLabel }}>{node ? p.namespace : `Node: ${p.node_name ?? '—'}`}</div>
                     </div>
                     <PhaseBadge phase={p.phase} />
-                    {p.restarts > 0 && <Badge color={p.restarts >= 5 ? apple.red : apple.orange}>{p.restarts}r</Badge>}
+                    {p.restarts > 0 && <Badge color={p.restarts >= 5 ? tokens.red : tokens.orange}>{p.restarts}r</Badge>}
                   </div>
                 ))}
               </div>
@@ -2657,9 +2657,9 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
           {panelTab === 'labels' && node && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
               {Object.entries(node.labels ?? {}).map(([k, v]) => (
-                <span key={k} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: apple.purple + '15', color: apple.purple, fontFamily: 'monospace' }}>{k}={v}</span>
+                <span key={k} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: tokens.purple + '15', color: tokens.purple, fontFamily: 'monospace' }}>{k}={v}</span>
               ))}
-              {Object.keys(node.labels ?? {}).length === 0 && <span style={{ fontSize: 13, color: apple.tertiaryLabel }}>No labels</span>}
+              {Object.keys(node.labels ?? {}).length === 0 && <span style={{ fontSize: 13, color: tokens.tertiaryLabel }}>No labels</span>}
             </div>
           )}
 
@@ -2667,10 +2667,10 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
           {panelTab === 'routing' && ingress && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {(ingress.rules ?? []).length === 0
-                ? <div style={{ textAlign: 'center', padding: '28px 0', color: apple.tertiaryLabel, fontSize: 13 }}>No routing rules</div>
+                ? <div style={{ textAlign: 'center', padding: '28px 0', color: tokens.tertiaryLabel, fontSize: 13 }}>No routing rules</div>
                 : (ingress.rules ?? []).map((rule, ri) => (
                   <div key={ri}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: apple.pink, marginBottom: 8, fontFamily: 'monospace' }}>{rule.host || '*'}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: tokens.pink, marginBottom: 8, fontFamily: 'monospace' }}>{rule.host || '*'}</div>
                     {(rule.paths ?? []).map((path, pi) => {
                       const svc = topology.services.find(s => s.name === path.service_name && s.namespace === ingress.namespace)
                       const pods = svc ? topology.pods.filter(p => p.namespace === svc.namespace && labelsMatch(svc.selector, p.labels)) : []
@@ -2678,18 +2678,18 @@ function ResourceDetailPanel({ resource, topology, events, onClose }: {
                       return (
                         <div key={pi} style={{ marginLeft: 14, marginBottom: 10 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 5 }}>
-                            <span style={{ fontSize: 11, color: apple.secondaryLabel, fontFamily: 'monospace', background: apple.fill, padding: '2px 8px', borderRadius: 4 }}>{path.path}</span>
-                            <span style={{ color: apple.tertiaryLabel }}>→</span>
-                            <Badge color={apple.blue}>svc:{path.service_name}:{path.service_port}</Badge>
-                            <span style={{ color: apple.tertiaryLabel }}>→</span>
-                            <Badge color={readyPods.length > 0 ? apple.green : apple.red}>{readyPods.length}/{pods.length} pods</Badge>
+                            <span style={{ fontSize: 11, color: tokens.secondaryLabel, fontFamily: 'monospace', background: tokens.fill, padding: '2px 8px', borderRadius: 4 }}>{path.path}</span>
+                            <span style={{ color: tokens.tertiaryLabel }}>→</span>
+                            <Badge color={tokens.blue}>svc:{path.service_name}:{path.service_port}</Badge>
+                            <span style={{ color: tokens.tertiaryLabel }}>→</span>
+                            <Badge color={readyPods.length > 0 ? tokens.green : tokens.red}>{readyPods.length}/{pods.length} pods</Badge>
                           </div>
                           {pods.length > 0 && (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginLeft: 4 }}>
                               {pods.slice(0, 5).map(p => (
-                                <span key={p.name} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: (p.ready ? apple.green : apple.orange) + '18', color: p.ready ? apple.green : apple.orange, fontFamily: 'monospace' }}>{truncate(p.name, 22)}</span>
+                                <span key={p.name} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: (p.ready ? tokens.green : tokens.orange) + '18', color: p.ready ? tokens.green : tokens.orange, fontFamily: 'monospace' }}>{truncate(p.name, 22)}</span>
                               ))}
-                              {pods.length > 5 && <span style={{ fontSize: 10, color: apple.tertiaryLabel }}>+{pods.length - 5} more</span>}
+                              {pods.length > 5 && <span style={{ fontSize: 10, color: tokens.tertiaryLabel }}>+{pods.length - 5} more</span>}
                             </div>
                           )}
                         </div>
@@ -2727,48 +2727,48 @@ function Sidebar({
     { key: 'troubleshoot', label: 'Troubleshoot', icon: Wrench },
   ]
 
-  const selStyle: React.CSSProperties = { width: '100%', padding: '7px 10px', boxSizing: 'border-box', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 12, outline: 'none', cursor: 'pointer' }
+  const selStyle: React.CSSProperties = { width: '100%', padding: '7px 10px', boxSizing: 'border-box', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 12, outline: 'none', cursor: 'pointer' }
 
   return (
-    <div style={{ width: 240, flexShrink: 0, background: apple.secondaryBackground, borderRight: `0.5px solid ${apple.separator}`, display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
-      <div style={{ padding: '20px 16px 14px', borderBottom: `0.5px solid ${apple.separator}` }}>
+    <div style={{ width: 240, flexShrink: 0, background: tokens.secondaryBackground, borderRight: `0.5px solid ${tokens.separator}`, display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
+      <div style={{ padding: '20px 16px 14px', borderBottom: `0.5px solid ${tokens.separator}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Cloud style={{ width: 20, height: 20, color: apple.blue }} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: apple.label }}>K8s Intelligence</span>
+          <Cloud style={{ width: 20, height: 20, color: tokens.blue }} />
+          <span style={{ fontSize: 15, fontWeight: 700, color: tokens.label }}>K8s Intelligence</span>
         </div>
       </div>
 
-      <div style={{ padding: '14px 16px', borderBottom: `0.5px solid ${apple.separator}` }}>
-        <label style={{ fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Cluster</label>
+      <div style={{ padding: '14px 16px', borderBottom: `0.5px solid ${tokens.separator}` }}>
+        <label style={{ fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Cluster</label>
         <div style={{ position: 'relative' }}>
           <select value={selectedCluster} onChange={e => onSelectCluster(e.target.value)} style={selStyle}>
             <option value="">Select cluster…</option>
             {clusters.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
           </select>
-          <ChevronDown style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', width: 12, height: 12, color: apple.gray, pointerEvents: 'none' }} />
+          <ChevronDown style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', width: 12, height: 12, color: tokens.gray, pointerEvents: 'none' }} />
         </div>
         {selectedCluster && clusters.find(c => c.name === selectedCluster) && (
           <div style={{ marginTop: 6, display: 'flex', gap: 4 }}>
-            <Badge color={apple.blue}>{clusters.find(c => c.name === selectedCluster)?.environment ?? ''}</Badge>
-            <Badge color={apple.gray}>{clusters.find(c => c.name === selectedCluster)?.region ?? ''}</Badge>
+            <Badge color={tokens.blue}>{clusters.find(c => c.name === selectedCluster)?.environment ?? ''}</Badge>
+            <Badge color={tokens.gray}>{clusters.find(c => c.name === selectedCluster)?.region ?? ''}</Badge>
           </div>
         )}
       </div>
 
-      <div style={{ padding: '14px 16px', borderBottom: `0.5px solid ${apple.separator}` }}>
-        <label style={{ fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Namespace</label>
+      <div style={{ padding: '14px 16px', borderBottom: `0.5px solid ${tokens.separator}` }}>
+        <label style={{ fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Namespace</label>
         <div style={{ position: 'relative' }}>
           <select value={selectedNs} onChange={e => onSelectNs(e.target.value)} style={selStyle}>
             <option value="">All namespaces</option>
             {namespaces.map(ns => <option key={ns} value={ns}>{ns}</option>)}
           </select>
-          <ChevronDown style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', width: 12, height: 12, color: apple.gray, pointerEvents: 'none' }} />
+          <ChevronDown style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', width: 12, height: 12, color: tokens.gray, pointerEvents: 'none' }} />
         </div>
       </div>
 
       <nav style={{ padding: '10px 8px', flex: 1 }}>
         {tabs.map(tab => (
-          <button key={tab.key} onClick={() => onTabChange(tab.key)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 10px', borderRadius: apple.radius.sm, border: 'none', background: activeTab === tab.key ? apple.blue + '18' : 'transparent', color: activeTab === tab.key ? apple.blue : apple.label, fontSize: 13, fontWeight: activeTab === tab.key ? 600 : 400, cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s', marginBottom: 2 }}>
+          <button key={tab.key} onClick={() => onTabChange(tab.key)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 10px', borderRadius: tokens.radius.sm, border: 'none', background: activeTab === tab.key ? tokens.blue + '18' : 'transparent', color: activeTab === tab.key ? tokens.blue : tokens.label, fontSize: 13, fontWeight: activeTab === tab.key ? 600 : 400, cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s', marginBottom: 2 }}>
             <tab.icon style={{ width: 15, height: 15, flexShrink: 0 }} />
             {tab.label}
           </button>
@@ -2900,7 +2900,7 @@ const KubernetesManagementPage: React.FC = () => {
   ]
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: apple.background, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: tokens.background, overflow: 'hidden' }}>
       <style>{`
         @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
         * { box-sizing: border-box; }
@@ -2915,13 +2915,13 @@ const KubernetesManagementPage: React.FC = () => {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Header */}
-        <div style={{ padding: '12px 24px', borderBottom: `0.5px solid ${apple.separator}`, background: apple.secondaryBackground, display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+        <div style={{ padding: '12px 24px', borderBottom: `0.5px solid ${tokens.separator}`, background: tokens.secondaryBackground, display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
           <div style={{ minWidth: 160 }}>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: apple.label, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: tokens.label, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {selectedCluster || 'K8s Intelligence'}
             </h1>
             {lastRefreshed && (
-              <div style={{ fontSize: 10, color: apple.tertiaryLabel, marginTop: 1 }}>
+              <div style={{ fontSize: 10, color: tokens.tertiaryLabel, marginTop: 1 }}>
                 Refreshed {lastRefreshed.toLocaleTimeString()}
               </div>
             )}
@@ -2938,7 +2938,7 @@ const KubernetesManagementPage: React.FC = () => {
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             {selectedCluster && (
               <button onClick={() => { fetchTopology(selectedCluster); fetchEvents(selectedCluster) }} disabled={loading}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 13, fontWeight: 500, cursor: 'pointer', opacity: loading ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 13, fontWeight: 500, cursor: 'pointer', opacity: loading ? 0.6 : 1, whiteSpace: 'nowrap' }}>
                 <RefreshCw style={{ width: 13, height: 13, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
                 Refresh
               </button>
@@ -2948,20 +2948,20 @@ const KubernetesManagementPage: React.FC = () => {
 
         {/* Topology summary bar */}
         {topology && !loading && (
-          <div style={{ padding: '6px 24px', borderBottom: `0.5px solid ${apple.separator}`, background: apple.secondaryBackground, display: 'flex', gap: 16, alignItems: 'center', flexShrink: 0, overflowX: 'auto' }}>
+          <div style={{ padding: '6px 24px', borderBottom: `0.5px solid ${tokens.separator}`, background: tokens.secondaryBackground, display: 'flex', gap: 16, alignItems: 'center', flexShrink: 0, overflowX: 'auto' }}>
             {[
-              { label: 'Pods', value: `${topology.summary.running_pods}/${topology.summary.pods}`, ok: topology.summary.running_pods === topology.summary.pods, color: apple.green },
-              { label: 'Nodes', value: `${topology.summary.ready_nodes}/${topology.summary.nodes}`, ok: topology.summary.ready_nodes === topology.summary.nodes, color: apple.blue },
-              { label: 'Deploys', value: `${topology.summary.healthy_deployments}/${topology.summary.deployments}`, ok: topology.summary.healthy_deployments === topology.summary.deployments, color: apple.orange },
+              { label: 'Pods', value: `${topology.summary.running_pods}/${topology.summary.pods}`, ok: topology.summary.running_pods === topology.summary.pods, color: tokens.green },
+              { label: 'Nodes', value: `${topology.summary.ready_nodes}/${topology.summary.nodes}`, ok: topology.summary.ready_nodes === topology.summary.nodes, color: tokens.blue },
+              { label: 'Deploys', value: `${topology.summary.healthy_deployments}/${topology.summary.deployments}`, ok: topology.summary.healthy_deployments === topology.summary.deployments, color: tokens.orange },
             ].map(s => (
               <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: s.ok ? apple.green : apple.orange }} />
-                <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>{s.label}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: s.ok ? apple.green : apple.orange }}>{s.value}</span>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: s.ok ? tokens.green : tokens.orange }} />
+                <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>{s.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: s.ok ? tokens.green : tokens.orange }}>{s.value}</span>
               </div>
             ))}
-            <div style={{ width: 1, height: 14, background: apple.separator }} />
-            <span style={{ fontSize: 11, color: apple.tertiaryLabel, whiteSpace: 'nowrap' }}>
+            <div style={{ width: 1, height: 14, background: tokens.separator }} />
+            <span style={{ fontSize: 11, color: tokens.tertiaryLabel, whiteSpace: 'nowrap' }}>
               {events.filter(e => e.type === 'Warning').length} warnings in last 60m
             </span>
           </div>
@@ -2969,9 +2969,9 @@ const KubernetesManagementPage: React.FC = () => {
 
         {/* Tab bar */}
         {selectedCluster && topology && (
-          <div style={{ padding: '0 24px', borderBottom: `0.5px solid ${apple.separator}`, background: apple.secondaryBackground, display: 'flex', gap: 0, flexShrink: 0, overflowX: 'auto' }}>
+          <div style={{ padding: '0 24px', borderBottom: `0.5px solid ${tokens.separator}`, background: tokens.secondaryBackground, display: 'flex', gap: 0, flexShrink: 0, overflowX: 'auto' }}>
             {tabs.map(tab => (
-              <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{ padding: '10px 16px', fontSize: 13, fontWeight: activeTab === tab.key ? 600 : 400, border: 'none', borderBottom: activeTab === tab.key ? `2px solid ${apple.blue}` : '2px solid transparent', background: 'transparent', color: activeTab === tab.key ? apple.blue : apple.secondaryLabel, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.12s' }}>
+              <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{ padding: '10px 16px', fontSize: 13, fontWeight: activeTab === tab.key ? 600 : 400, border: 'none', borderBottom: activeTab === tab.key ? `2px solid ${tokens.blue}` : '2px solid transparent', background: 'transparent', color: activeTab === tab.key ? tokens.blue : tokens.secondaryLabel, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.12s' }}>
                 {tab.label}
               </button>
             ))}
@@ -2994,9 +2994,9 @@ const KubernetesManagementPage: React.FC = () => {
 
           {error && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              style={{ background: apple.red + '15', border: `0.5px solid ${apple.red}30`, borderRadius: apple.radius.md, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <XCircle style={{ width: 16, height: 16, color: apple.red, flexShrink: 0 }} />
-              <span style={{ fontSize: 13, color: apple.red }}>{error}</span>
+              style={{ background: tokens.red + '15', border: `0.5px solid ${tokens.red}30`, borderRadius: tokens.radius.md, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <XCircle style={{ width: 16, height: 16, color: tokens.red, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: tokens.red }}>{error}</span>
             </motion.div>
           )}
 

@@ -13,7 +13,7 @@ import {
   XCircle,
 } from 'lucide-react'
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -106,10 +106,10 @@ export function DeduplicationPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
             Alert Deduplication Rules
           </h1>
-          <p style={{ fontSize: 15, color: apple.secondaryLabel }}>
+          <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>
             Automatically merge duplicate alerts based on field matching
           </p>
         </div>
@@ -123,9 +123,9 @@ export function DeduplicationPage() {
             alignItems: 'center',
             gap: 8,
             padding: '10px 20px',
-            borderRadius: apple.radius.sm,
+            borderRadius: tokens.radius.sm,
             border: 'none',
-            background: apple.blue,
+            background: tokens.blue,
             color: '#fff',
             fontSize: 14,
             fontWeight: 500,
@@ -141,75 +141,75 @@ export function DeduplicationPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         <div style={{
           padding: 16,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.md,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.md,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: apple.blue }}>{rules.length}</div>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>Total Rules</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: tokens.blue }}>{rules.length}</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>Total Rules</div>
         </div>
         <div style={{
           padding: 16,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.md,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.md,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: apple.green }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: tokens.green }}>
             {rules.filter(r => r.enabled).length}
           </div>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>Active Rules</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>Active Rules</div>
         </div>
         <div style={{
           padding: 16,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.md,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.md,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: apple.purple }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: tokens.purple }}>
             {rules.reduce((sum, r) => sum + (r.dedup_count || 0), 0)}
           </div>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>Alerts Deduplicated</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>Alerts Deduplicated</div>
         </div>
         <div style={{
           padding: 16,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.md,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.md,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: apple.orange }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: tokens.orange }}>
             {Math.round((rules.reduce((sum, r) => sum + (r.dedup_count || 0), 0) / Math.max(1, rules.length)))}
           </div>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>Avg per Rule</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>Avg per Rule</div>
         </div>
       </div>
 
       {/* Rules Table */}
       <div style={{
-        background: apple.secondaryBackground,
-        borderRadius: apple.radius.lg,
-        border: `0.5px solid ${apple.separator}`,
+        background: tokens.secondaryBackground,
+        borderRadius: tokens.radius.lg,
+        border: `0.5px solid ${tokens.separator}`,
         overflow: 'hidden',
       }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: apple.tertiaryLabel }}>
+          <div style={{ padding: 40, textAlign: 'center', color: tokens.tertiaryLabel }}>
             Loading deduplication rules...
           </div>
         ) : rules.length === 0 ? (
           <div style={{ padding: 60, textAlign: 'center' }}>
-            <Fingerprint style={{ width: 48, height: 48, color: apple.tertiaryLabel, margin: '0 auto 16px' }} />
-            <h3 style={{ fontSize: 18, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+            <Fingerprint style={{ width: 48, height: 48, color: tokens.tertiaryLabel, margin: '0 auto 16px' }} />
+            <h3 style={{ fontSize: 18, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
               No deduplication rules yet
             </h3>
-            <p style={{ fontSize: 14, color: apple.secondaryLabel, marginBottom: 20 }}>
+            <p style={{ fontSize: 14, color: tokens.secondaryLabel, marginBottom: 20 }}>
               Create rules to automatically merge duplicate alerts
             </p>
             <button
               onClick={() => setShowModal(true)}
               style={{
                 padding: '10px 20px',
-                borderRadius: apple.radius.sm,
+                borderRadius: tokens.radius.sm,
                 border: 'none',
-                background: apple.blue,
+                background: tokens.blue,
                 color: '#fff',
                 fontSize: 14,
                 fontWeight: 500,
@@ -228,16 +228,16 @@ export function DeduplicationPage() {
                 animate={{ opacity: 1 }}
                 style={{
                   padding: 16,
-                  background: apple.fill,
-                  borderRadius: apple.radius.md,
-                  border: `0.5px solid ${apple.separator}`,
+                  background: tokens.fill,
+                  borderRadius: tokens.radius.md,
+                  border: `0.5px solid ${tokens.separator}`,
                   marginBottom: 12,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                      <h4 style={{ fontSize: 16, fontWeight: 600, color: apple.label, margin: 0 }}>
+                      <h4 style={{ fontSize: 16, fontWeight: 600, color: tokens.label, margin: 0 }}>
                         {rule.name}
                       </h4>
                       <button
@@ -246,7 +246,7 @@ export function DeduplicationPage() {
                           width: 40,
                           height: 20,
                           borderRadius: 10,
-                          background: rule.enabled ? apple.green : apple.tertiaryLabel,
+                          background: rule.enabled ? tokens.green : tokens.tertiaryLabel,
                           border: 'none',
                           cursor: 'pointer',
                           position: 'relative',
@@ -267,7 +267,7 @@ export function DeduplicationPage() {
                       </button>
                     </div>
                     
-                    <p style={{ fontSize: 13, color: apple.secondaryLabel, marginBottom: 12 }}>
+                    <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginBottom: 12 }}>
                       {rule.description}
                     </p>
 
@@ -277,30 +277,30 @@ export function DeduplicationPage() {
                         alignItems: 'center',
                         gap: 4,
                         padding: '4px 8px',
-                        borderRadius: apple.radius.sm,
-                        background: `${apple.purple}15`,
+                        borderRadius: tokens.radius.sm,
+                        background: `${tokens.purple}15`,
                         fontSize: 12,
-                        color: apple.purple,
+                        color: tokens.purple,
                       }}>
                         <Fingerprint style={{ width: 12, height: 12 }} />
                         Fields: {rule.fingerprint_fields.join(', ')}
                       </div>
                       <div style={{
                         padding: '4px 8px',
-                        borderRadius: apple.radius.sm,
-                        background: `${apple.orange}15`,
+                        borderRadius: tokens.radius.sm,
+                        background: `${tokens.orange}15`,
                         fontSize: 12,
-                        color: apple.orange,
+                        color: tokens.orange,
                       }}>
                         Window: {rule.time_window / 60}min
                       </div>
                       {rule.dedup_count && rule.dedup_count > 0 && (
                         <div style={{
                           padding: '4px 8px',
-                          borderRadius: apple.radius.sm,
-                          background: `${apple.green}15`,
+                          borderRadius: tokens.radius.sm,
+                          background: `${tokens.green}15`,
                           fontSize: 12,
-                          color: apple.green,
+                          color: tokens.green,
                         }}>
                           Merged: {rule.dedup_count} alerts
                         </div>
@@ -316,10 +316,10 @@ export function DeduplicationPage() {
                       }}
                       style={{
                         padding: 8,
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         border: 'none',
-                        background: apple.fill,
-                        color: apple.blue,
+                        background: tokens.fill,
+                        color: tokens.blue,
                         cursor: 'pointer',
                       }}
                     >
@@ -329,10 +329,10 @@ export function DeduplicationPage() {
                       onClick={() => deleteRule(rule.id)}
                       style={{
                         padding: 8,
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         border: 'none',
-                        background: `${apple.red}15`,
-                        color: apple.red,
+                        background: `${tokens.red}15`,
+                        color: tokens.red,
                         cursor: 'pointer',
                       }}
                     >
@@ -445,8 +445,8 @@ function DeduplicationRuleModal({
         animate={{ scale: 1 }}
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.lg,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.lg,
           padding: 24,
           width: '90%',
           maxWidth: 600,
@@ -455,18 +455,18 @@ function DeduplicationRuleModal({
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h3 style={{ fontSize: 20, fontWeight: 600, color: apple.label, margin: 0 }}>
+          <h3 style={{ fontSize: 20, fontWeight: 600, color: tokens.label, margin: 0 }}>
             {rule ? 'Edit' : 'Create'} Deduplication Rule
           </h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <X style={{ width: 20, height: 20, color: apple.secondaryLabel }} />
+            <X style={{ width: 20, height: 20, color: tokens.secondaryLabel }} />
           </button>
         </div>
 
         {/* Form */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: apple.secondaryLabel, marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel, marginBottom: 8 }}>
               Rule Name
             </label>
             <input
@@ -477,19 +477,19 @@ function DeduplicationRuleModal({
               style={{
                 width: '100%',
                 height: 40,
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
                 padding: '0 12px',
                 fontSize: 14,
-                color: apple.label,
+                color: tokens.label,
                 outline: 'none',
               }}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: apple.secondaryLabel, marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel, marginBottom: 8 }}>
               Description
             </label>
             <textarea
@@ -499,12 +499,12 @@ function DeduplicationRuleModal({
               rows={2}
               style={{
                 width: '100%',
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
                 padding: 12,
                 fontSize: 14,
-                color: apple.label,
+                color: tokens.label,
                 outline: 'none',
                 resize: 'vertical',
               }}
@@ -512,7 +512,7 @@ function DeduplicationRuleModal({
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: apple.secondaryLabel, marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel, marginBottom: 8 }}>
               Fingerprint Fields
             </label>
             <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
@@ -525,12 +525,12 @@ function DeduplicationRuleModal({
                 style={{
                   flex: 1,
                   height: 36,
-                  borderRadius: apple.radius.sm,
-                  border: `0.5px solid ${apple.separator}`,
-                  background: apple.fill,
+                  borderRadius: tokens.radius.sm,
+                  border: `0.5px solid ${tokens.separator}`,
+                  background: tokens.fill,
                   padding: '0 12px',
                   fontSize: 13,
-                  color: apple.label,
+                  color: tokens.label,
                   outline: 'none',
                 }}
               />
@@ -538,9 +538,9 @@ function DeduplicationRuleModal({
                 onClick={addField}
                 style={{
                   padding: '0 16px',
-                  borderRadius: apple.radius.sm,
+                  borderRadius: tokens.radius.sm,
                   border: 'none',
-                  background: apple.blue,
+                  background: tokens.blue,
                   color: '#fff',
                   fontSize: 13,
                   fontWeight: 500,
@@ -560,11 +560,11 @@ function DeduplicationRuleModal({
                     gap: 6,
                     padding: '4px 8px 4px 12px',
                     borderRadius: 12,
-                    background: `${apple.purple}15`,
-                    border: `0.5px solid ${apple.purple}30`,
+                    background: `${tokens.purple}15`,
+                    border: `0.5px solid ${tokens.purple}30`,
                   }}
                 >
-                  <span style={{ fontSize: 12, color: apple.purple, fontWeight: 500 }}>{field}</span>
+                  <span style={{ fontSize: 12, color: tokens.purple, fontWeight: 500 }}>{field}</span>
                   <button
                     onClick={() => removeField(field)}
                     style={{
@@ -575,19 +575,19 @@ function DeduplicationRuleModal({
                       display: 'flex',
                     }}
                   >
-                    <X style={{ width: 12, height: 12, color: apple.purple }} />
+                    <X style={{ width: 12, height: 12, color: tokens.purple }} />
                   </button>
                 </div>
               ))}
             </div>
-            <p style={{ fontSize: 11, color: apple.tertiaryLabel, marginTop: 6 }}>
+            <p style={{ fontSize: 11, color: tokens.tertiaryLabel, marginTop: 6 }}>
               Alerts with matching values for these fields will be merged
             </p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: apple.secondaryLabel, marginBottom: 8 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel, marginBottom: 8 }}>
                 Time Window
               </label>
               <select
@@ -596,12 +596,12 @@ function DeduplicationRuleModal({
                 style={{
                   width: '100%',
                   height: 40,
-                  borderRadius: apple.radius.sm,
-                  border: `0.5px solid ${apple.separator}`,
-                  background: apple.fill,
+                  borderRadius: tokens.radius.sm,
+                  border: `0.5px solid ${tokens.separator}`,
+                  background: tokens.fill,
                   padding: '0 12px',
                   fontSize: 14,
-                  color: apple.label,
+                  color: tokens.label,
                   outline: 'none',
                 }}
               >
@@ -615,7 +615,7 @@ function DeduplicationRuleModal({
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: apple.secondaryLabel, marginBottom: 8 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel, marginBottom: 8 }}>
                 Merge Strategy
               </label>
               <select
@@ -624,12 +624,12 @@ function DeduplicationRuleModal({
                 style={{
                   width: '100%',
                   height: 40,
-                  borderRadius: apple.radius.sm,
-                  border: `0.5px solid ${apple.separator}`,
-                  background: apple.fill,
+                  borderRadius: tokens.radius.sm,
+                  border: `0.5px solid ${tokens.separator}`,
+                  background: tokens.fill,
                   padding: '0 12px',
                   fontSize: 14,
-                  color: apple.label,
+                  color: tokens.label,
                   outline: 'none',
                 }}
               >
@@ -646,10 +646,10 @@ function DeduplicationRuleModal({
               style={{
                 flex: 1,
                 padding: '10px 16px',
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
-                color: apple.label,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
+                color: tokens.label,
                 fontSize: 14,
                 fontWeight: 500,
                 cursor: 'pointer',
@@ -663,9 +663,9 @@ function DeduplicationRuleModal({
               style={{
                 flex: 1,
                 padding: '10px 16px',
-                borderRadius: apple.radius.sm,
+                borderRadius: tokens.radius.sm,
                 border: 'none',
-                background: apple.blue,
+                background: tokens.blue,
                 color: '#fff',
                 fontSize: 14,
                 fontWeight: 500,

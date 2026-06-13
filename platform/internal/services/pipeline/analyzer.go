@@ -55,7 +55,7 @@ var dtProblemTypes = map[string]string{
 // internalNoise strips Dynatrace/internal infrastructure strings from descriptions
 // before they reach the LLM — prevents the model from hallucinating on internal IPs.
 var internalNoise = regexp.MustCompile(
-	`(?i)(neo4j|bolt://|\.cluster\.local|\.svc\.|\.internal\.apple\.com|10\.\d+\.\d+\.\d+:\d+|bolt\+s?://[^\s]+)`,
+	`(?i)(neo4j|bolt://|\.cluster\.local|\.svc\.|\.internal\.example.com|10\.\d+\.\d+\.\d+:\d+|bolt\+s?://[^\s]+)`,
 )
 
 // Analyze extracts structured findings from a raw alert.

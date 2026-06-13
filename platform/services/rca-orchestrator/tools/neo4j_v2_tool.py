@@ -8,7 +8,7 @@ from .base import BaseTool
 
 log = logging.getLogger(__name__)
 
-NEO4J_URL = os.getenv("NEO4J_URL", "bolt://neo4j.alert-engine-poc.svc.cluster.local:7687")
+NEO4J_URL = os.getenv("NEO4J_URL", "bolt://neo4j.aileron.svc.cluster.local:7687")
 
 
 def _neo4j_auth() -> tuple[str, str]:

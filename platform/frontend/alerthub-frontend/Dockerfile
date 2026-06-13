@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Use Apple internal npm registry (registry.npmjs.org not reachable from cluster)
+# Use internal npm registry (registry.npmjs.org not reachable from cluster)
 RUN npm config set registry https://npm.example.com --global
 
 # Ensure devDependencies are installed in the build stage

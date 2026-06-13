@@ -26,9 +26,9 @@ func CacheMiddleware(redisCache *cache.RedisCache) gin.HandlerFunc {
 			c.GetHeader("Upgrade") == "websocket" ||
 			strings.HasPrefix(c.Request.URL.Path, "/api/v1/admin") ||
 			strings.HasPrefix(c.Request.URL.Path, "/api/v1/auth") ||
-			// AI model responses depend on the Floodgate token — skip cache so each
-			// request can reach Floodgate with the user's current token.
-			(strings.HasPrefix(c.Request.URL.Path, "/api/v1/ai/models") && c.GetHeader("X-Floodgate-Token") != "") {
+			// AI model responses depend on the OIDC Provider token — skip cache so each
+			// request can reach OIDC Provider with the user's current token.
+			(strings.HasPrefix(c.Request.URL.Path, "/api/v1/ai/models") && c.GetHeader("X-OIDC Provider-Token") != "") {
 			c.Next()
 			return
 		}
@@ -149,7 +149,7 @@ func getCacheTTL(path string) time.Duration {
 	case strings.HasPrefix(path, "/api/v1/integrations"):
 		return 15 * time.Minute
 
-	// AI models - short cache (5 min) since results depend on Floodgate token validity
+	// AI models - short cache (5 min) since results depend on OIDC Provider token validity
 	case strings.HasPrefix(path, "/api/v1/ai/models"):
 		return 5 * time.Minute
 	case strings.HasPrefix(path, "/api/v1/ai/providers"):

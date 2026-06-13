@@ -101,11 +101,11 @@ func InitializeDatabase(db *sql.DB) error {
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_token_updated_at TIMESTAMP`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_auto_connect BOOLEAN DEFAULT false`,
 
-		// Add Floodgate hybrid authentication columns
+		// Add OIDC Provider hybrid authentication columns
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_source VARCHAR(50)`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS vpn_ip VARCHAR(45)`,
 
-		// Add indexes for Floodgate hybrid auth
+		// Add indexes for OIDC Provider hybrid auth
 		`CREATE INDEX IF NOT EXISTS idx_users_oauth_source ON users(oauth_source) WHERE oauth_source IS NOT NULL`,
 		`CREATE INDEX IF NOT EXISTS idx_users_oauth_token_updated ON users(oauth_token_updated_at) WHERE oauth_id_token IS NOT NULL`,
 
@@ -1059,7 +1059,7 @@ func InitializeDatabase(db *sql.DB) error {
 		`ALTER TABLE incidents ADD COLUMN IF NOT EXISTS timeline   JSONB        DEFAULT '[]'::jsonb`,
 		`ALTER TABLE incidents ADD COLUMN IF NOT EXISTS closed_at  TIMESTAMP`,
 
-		// DS-LDAP group role mappings (configurable via Admin UI without restart)
+		// LDAP group role mappings (configurable via Admin UI without restart)
 		`CREATE TABLE IF NOT EXISTS ldap_group_role_mappings (
 			id          UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
 			ldap_group  VARCHAR(255) NOT NULL UNIQUE,

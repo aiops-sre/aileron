@@ -2,12 +2,12 @@
 
 ## What Is AlertHub
 
-AlertHub Enterprise is an AIOps platform for Apple's infrastructure. It ingests alerts from monitoring
+AlertHub Enterprise is an AIOps platform for your organization's infrastructure. It ingests alerts from monitoring
 systems (Dynatrace, Prometheus, Grafana, Splunk), normalises them into a unified model, correlates them
 using a multi-strategy engine, automatically creates and evolves incidents, and runs AI-powered root
 cause analysis (RCA) investigations.
 
-**Target infrastructure:** 150+ bare-metal nodes across two Apple data-centre regions — Reno (rno) and
+**Target infrastructure:** 150+ bare-metal nodes across two Aileron data-centre regions — Reno (rno) and
 Maiden (mdn). Workloads run on CloudStack VMs, Kubernetes clusters (`example-cluster`, `mps-tooling-mdn`),
 and NetApp ONTAP storage.
 
@@ -74,7 +74,7 @@ and NetApp ONTAP storage.
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                     INCIDENT MANAGEMENT                                      │
 │  IncidentService · EvolutionEngine (merge/evolve) · IdempotentCreate         │
-│  Kentaurus (ticket creation) · Timeline events · RBAC-gated transitions      │
+│  IncidentManager (ticket creation) · Timeline events · RBAC-gated transitions      │
 └──────────────┬──────────────────────────────────────────────────────────────┘
                │ RCA trigger (HTTP + Kafka)
                ▼
@@ -95,7 +95,7 @@ and NetApp ONTAP storage.
 │  └─────────────────────────────────────────────────────────────────────┘    │
 │                                                                              │
 │  Tools: K8s · Dynatrace · CloudStack · Neo4j · Postgres · Temporal          │
-│  LLMs:  Ollama (qwen2.5:3b) · Floodgate (Claude) · Endor (Apple internal)  │
+│  LLMs:  Ollama (qwen2.5:3b) · OIDC Provider (Claude) · Endor (internal)  │
 └──────────────┬──────────────────────────────────────────────────────────────┘
                │ WebSocket stream
                ▼
@@ -103,7 +103,7 @@ and NetApp ONTAP storage.
 │                   FRONTEND  —  React + TypeScript + Vite                     │
 │  Dashboard · Alerts · Incidents · RCA Investigation · AI Chat                │
 │  Admin · Analytics · K8s Management · Topology · Workflows · On-Call        │
-│  Design: Apple HIG tokens (inline styles, CSS variables — no Tailwind)       │
+│  Design: Aileron HIG tokens (inline styles, CSS variables — no Tailwind)       │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -122,9 +122,9 @@ and NetApp ONTAP storage.
 | Message queue | Kafka |
 | Vector store | Weaviate (nomic-embed-text embeddings) |
 | Local LLM | Ollama (qwen2.5:3b default) |
-| Cloud LLM | Floodgate (Claude via Apple proxy) · Endor (Apple internal LLM gateway) |
+| Cloud LLM | OIDC Provider (Claude via Aileron proxy) · Endor (internal LLM gateway) |
 | Embedding service | Local BERT — all-MiniLM-L6-v2 · 384-dim · port 8766 |
-| Auth | Apple MAS/IdMS OAuth2 · DS-LDAP · JWT |
+| Auth | Aileron MAS/OIDC OAuth2 · LDAP · JWT |
 | Infrastructure | Kubernetes (example-cluster, mps-tooling-mdn) |
 | VM platform | CloudStack (rno + mdn regions) |
 | Storage | NetApp ONTAP |
@@ -144,7 +144,7 @@ alerthub-enterprise/
 │   │   ├── handlers/              # HTTP handlers — one file per domain
 │   │   │   ├── alerts.go          # Alert CRUD, ack, resolve, analyze
 │   │   │   ├── incidents.go       # Incident CRUD, ack, escalate, resolve, merge
-│   │   │   ├── hcl_incidents.go   # HCL ServiceNow incident CRUD via Kentaurus
+│   │   │   ├── external_incidents.go   # HCL ServiceNow incident CRUD via IncidentManager
 │   │   │   ├── webhooks.go        # Alert ingestion webhooks (Dynatrace, Prometheus, etc.)
 │   │   │   ├── auth.go            # Login, logout, token refresh
 │   │   │   ├── users.go           # User management (with real names + avatars)
@@ -183,9 +183,9 @@ alerthub-enterprise/
 │   │   ├── audit/                 # Audit log service
 │   │   ├── config/                # Runtime config management
 │   │   ├── correlation/           # 16-component correlation engine (see below)
-│   │   ├── dsldap/                # DS-LDAP (Apple Directory Service)
-│   │   ├── floodgate/             # Floodgate OAuth token helper
-│   │   ├── incidents/             # Incident CRUD, evolution, Kentaurus, idempotent create
+│   │   ├── ldap/                # LDAP (Aileron Directory Service)
+│   │   ├── oidc/             # OIDC Provider OAuth token helper
+│   │   ├── incidents/             # Incident CRUD, evolution, IncidentManager, idempotent create
 │   │   ├── integrations/          # Third-party integration registry
 │   │   ├── jwt/                   # JWT generation + validation (15 min / 7 day TTL)
 │   │   ├── maintenance/           # Maintenance window suppression
@@ -231,13 +231,13 @@ alerthub-enterprise/
 │       ├── pages/                 # One file per route (see Frontend section)
 │       ├── components/            # Shared UI — Layout, Header, AlertCard, etc.
 │       ├── stores/alertsStore.ts  # Zustand store — alerts, filters, WebSocket
-│       ├── services/              # KentaurusService, AIService, CorporateOAuthService, PagerDuty
+│       ├── services/              # IncidentManagerService, AIService, CorporateOAuthService, PagerDuty
 │       ├── hooks/                 # useBreakpoint, useKeyboard, useSound, useTheme, useWebSocket
 │       └── lib/
 │           ├── api.ts             # Base HTTP client
 │           ├── api-axios.ts       # Axios client with interceptors
-│           ├── apple-tokens.ts    # Design token object `c` (CSS variables)
-│           └── apple-design-system.ts
+│           ├── design-tokens.ts    # Design token object `c` (CSS variables)
+│           └── design-system.ts
 ├── database/
 │   ├── schema.sql                 # Full reference schema
 │   └── migrations/                # Individual migration SQL files
@@ -371,7 +371,7 @@ StagedPipeline
 7. PROBABILISTIC    ← 6-source softmax fusion:
          │           go_engine(0.40) + graph(0.25) + blast(0.15) + temporal(0.10) + domain(0.05) + historical(0.05)
          │
-8. LLM NARRATION    ← prose-only (qwen2.5:3b / Floodgate Claude). Cannot override deterministic scores.
+8. LLM NARRATION    ← prose-only (qwen2.5:3b / OIDC Provider Claude). Cannot override deterministic scores.
          │           Output: summary, causal_explanation, remediation_steps (3–5 concrete), confidence_assessment
          │
 9. FINALIZE         ← Persist to rca_investigations · stream via WebSocket to frontend
@@ -382,7 +382,7 @@ StagedPipeline
 - Multi-turn tool calling, max 3 rounds
 - Phases: context_gathering → hypothesis_formation → evidence_collection → root_cause_analysis → remediation_planning
 - RAG: Weaviate similar-incident search (top 3 injected into system prompt)
-- LLM options: Ollama (local) · Floodgate (Claude, Apple proxy) · Endor (Apple internal gateway, TOTP auth)
+- LLM options: Ollama (local) · OIDC Provider (Claude, Aileron proxy) · Endor (internal gateway, TOTP auth)
 
 ### RCA Tool Suite
 
@@ -443,7 +443,7 @@ Supported discovery files:
 ```
 Browser Request
       │
-      ├── MAS Ingress (Apple infrastructure) injects:
+      ├── MAS Ingress (Aileron infrastructure) injects:
       │     X-Forwarded-User:   username
       │     X-Forwarded-Mail:   email
       │     X-Forwarded-Groups: group1,group2,…
@@ -494,7 +494,7 @@ Subsequent Requests → auth.go Authenticate()
 ## Frontend
 
 **Stack:** React 18 · TypeScript · Vite · Zustand (state) · Axios (HTTP)
-**Design System:** Apple HIG tokens in `src/lib/apple-tokens.ts` as `c` object (inline styles, CSS variables — no Tailwind, no CSS modules)
+**Design System:** Aileron HIG tokens in `src/lib/design-tokens.ts` as `c` object (inline styles, CSS variables — no Tailwind, no CSS modules)
 
 ### Routes
 
@@ -518,7 +518,7 @@ Subsequent Requests → auth.go Authenticate()
 | `/host-vm-mapping` | HostVMMapping | BM → VM mapping viewer |
 | `/oauth/callback` | OAuthCallbackPage | OAuth2 callback handler |
 | `/login` | ManualLoginPage | Username/password fallback login |
-| `/floodgate-test` | FloodgateTestPage | Floodgate LLM test page |
+| `/oidc-test` | OIDC ProviderTestPage | OIDC Provider LLM test page |
 
 ### State
 
@@ -530,9 +530,9 @@ Subsequent Requests → auth.go Authenticate()
 |------|---------|
 | `src/lib/api.ts` | Base HTTP client (fetch) |
 | `src/lib/api-axios.ts` | Axios client with auth interceptors |
-| `services/KentaurusService.ts` | HCL / Kentaurus incident API calls |
+| `services/IncidentManagerService.ts` | HCL / IncidentManager incident API calls |
 | `services/AIService.ts` | AI summarise / investigate calls |
-| `services/CorporateOAuthService.ts` | MAS / IdMS OAuth flow |
+| `services/CorporateOAuthService.ts` | MAS / OIDC OAuth flow |
 | `services/PagerDutyService.ts` | PagerDuty integration |
 
 ---
@@ -643,13 +643,13 @@ POST   /api/v1/ai/recommend-actions       Get AI-recommended actions
 POST   /api/v1/ai/investigate             Start multi-turn investigation chat
 ```
 
-### HCL / Kentaurus
+### HCL / IncidentManager
 ```
-POST   /api/v1/hcl/incidents              Create HCL ServiceNow incident via Kentaurus
-GET    /api/v1/hcl/incidents              List HCL incidents
-GET    /api/v1/hcl/incidents/:id          Get HCL incident
-PUT    /api/v1/hcl/incidents/:id          Update HCL incident
-DELETE /api/v1/hcl/incidents/:id          Delete HCL incident
+POST   /api/v1/hcl/incidents              Create HCL ServiceNow incident via IncidentManager
+GET    /api/v1/hcl/incidents              List External incidents
+GET    /api/v1/hcl/incidents/:id          Get External incident
+PUT    /api/v1/hcl/incidents/:id          Update External incident
+DELETE /api/v1/hcl/incidents/:id          Delete External incident
 ```
 
 ### RCA (proxied to Python service)
@@ -693,7 +693,7 @@ GET    /metrics                           Prometheus metrics
 | `k8s_topology_snapshots` | Periodic topology snapshots (JSONB) |
 | `cloudstack_configs` / `netapp_configs` | Infrastructure API configuration |
 | `workflows` / `workflow_executions` | Workflow definitions + execution history |
-| `llm_configs` | LLM provider config (Ollama, Floodgate, Endor) |
+| `llm_configs` | LLM provider config (Ollama, OIDC Provider, Endor) |
 | `alert_sources` | Alert source registry |
 | `notification_channels` / `notification_rules` / `notification_log` | Notification subsystem |
 | `api_request_log` | Full async audit trail of all API calls |
@@ -716,7 +716,7 @@ git push to branch
 Buildkit PreSync Job  (CI)
   ├─ Build Go backend   → Docker image (CGO_ENABLED=0 linux/amd64)
   ├─ Build React SPA    → Docker image (nginx)
-  └─ Push to Apple internal container registry
+  └─ Push to internal container registry
       │
       ▼
 ArgoCD  (helm-revision CMP plugin)
@@ -773,7 +773,7 @@ python bert_service.py   # port 8766
 | `REDIS_HOST/PORT/PASSWORD` | Redis connection | — |
 | `NEO4J_URL` | Neo4j Bolt URL | `bolt://neo4j.aileron.svc:7687` |
 | `JWT_SECRET` / `JWT_REFRESH_SECRET` | Token signing keys | openssl rand -base64 32 |
-| `OAUTH_CLIENT_ID` | IDMS OAuth app ID | `961469` |
+| `OAUTH_CLIENT_ID` | OIDC OAuth app ID | `961469` |
 | `DYNATRACE_URL` / `DYNATRACE_API_TOKEN` | Dynatrace API | `mps-dynatrace-hybrid.k.example.com` |
 | `OLLAMA_URL` / `OLLAMA_MODEL` | Local LLM | `qwen2.5:3b` |
 | `WEAVIATE_URL` | Weaviate vector store | — |
@@ -784,7 +784,7 @@ python bert_service.py   # port 8766
 | `RCA_V2` | Use V2 deterministic RCA | `true` |
 | `INVESTIGATION_TIMEOUT_SECONDS` | Max RCA duration | `900` |
 | `CLOUDSTACK_RNO_URL` / `_MDN_URL` | CloudStack regions | — |
-| `INTERNAL_TLS_INSECURE` | Skip Apple internal CA verify | `true` |
+| `INTERNAL_TLS_INSECURE` | Skip internal CA verify | `true` |
 
 ---
 
@@ -823,5 +823,5 @@ Production go-live weights are locked at: Topology(45%) Rules(25%) Semantic(20%)
 Do **not** add `Co-Authored-By` lines. Commits show only the user's name.
 
 ### Design System
-Inline styles only, using the `c` token object (`src/lib/apple-tokens.ts`) with CSS variables.
+Inline styles only, using the `c` token object (`src/lib/design-tokens.ts`) with CSS variables.
 Never use Tailwind classes or external CSS frameworks.

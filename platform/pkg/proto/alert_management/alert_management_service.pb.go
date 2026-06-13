@@ -1915,30 +1915,30 @@ func (x *EscalateAlertResponse) GetErrorMessage() string {
 	return ""
 }
 
-// Floodgate Messages
-type ApplyFloodgateRequest struct {
+// OIDC Provider Messages
+type ApplyOIDC ProviderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AlertIds      []string               `protobuf:"bytes,1,rep,name=alert_ids,json=alertIds,proto3" json:"alert_ids,omitempty"`
-	Rule          *FloodgateRule         `protobuf:"bytes,2,opt,name=rule,proto3" json:"rule,omitempty"`
+	Rule          *OIDC ProviderRule         `protobuf:"bytes,2,opt,name=rule,proto3" json:"rule,omitempty"`
 	AppliedBy     string                 `protobuf:"bytes,3,opt,name=applied_by,json=appliedBy,proto3" json:"applied_by,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ApplyFloodgateRequest) Reset() {
-	*x = ApplyFloodgateRequest{}
+func (x *ApplyOIDC ProviderRequest) Reset() {
+	*x = ApplyOIDC ProviderRequest{}
 	mi := &file_proto_alert_management_alert_management_service_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ApplyFloodgateRequest) String() string {
+func (x *ApplyOIDC ProviderRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ApplyFloodgateRequest) ProtoMessage() {}
+func (*ApplyOIDC ProviderRequest) ProtoMessage() {}
 
-func (x *ApplyFloodgateRequest) ProtoReflect() protoreflect.Message {
+func (x *ApplyOIDC ProviderRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_alert_management_alert_management_service_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1950,57 +1950,57 @@ func (x *ApplyFloodgateRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ApplyFloodgateRequest.ProtoReflect.Descriptor instead.
-func (*ApplyFloodgateRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ApplyOIDC ProviderRequest.ProtoReflect.Descriptor instead.
+func (*ApplyOIDC ProviderRequest) Descriptor() ([]byte, []int) {
 	return file_proto_alert_management_alert_management_service_proto_rawDescGZIP(), []int{30}
 }
 
-func (x *ApplyFloodgateRequest) GetAlertIds() []string {
+func (x *ApplyOIDC ProviderRequest) GetAlertIds() []string {
 	if x != nil {
 		return x.AlertIds
 	}
 	return nil
 }
 
-func (x *ApplyFloodgateRequest) GetRule() *FloodgateRule {
+func (x *ApplyOIDC ProviderRequest) GetRule() *OIDC ProviderRule {
 	if x != nil {
 		return x.Rule
 	}
 	return nil
 }
 
-func (x *ApplyFloodgateRequest) GetAppliedBy() string {
+func (x *ApplyOIDC ProviderRequest) GetAppliedBy() string {
 	if x != nil {
 		return x.AppliedBy
 	}
 	return ""
 }
 
-type ApplyFloodgateResponse struct {
+type ApplyOIDC ProviderResponse struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	Success            bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	SuppressedCount    int32                  `protobuf:"varint,2,opt,name=suppressed_count,json=suppressedCount,proto3" json:"suppressed_count,omitempty"`
 	SuppressedAlertIds []string               `protobuf:"bytes,3,rep,name=suppressed_alert_ids,json=suppressedAlertIds,proto3" json:"suppressed_alert_ids,omitempty"`
-	FloodgateSessionId string                 `protobuf:"bytes,4,opt,name=floodgate_session_id,json=floodgateSessionId,proto3" json:"floodgate_session_id,omitempty"`
+	OIDC ProviderSessionId string                 `protobuf:"bytes,4,opt,name=oidc_session_id,json=oidcSessionId,proto3" json:"oidc_session_id,omitempty"`
 	ErrorMessage       string                 `protobuf:"bytes,5,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
-func (x *ApplyFloodgateResponse) Reset() {
-	*x = ApplyFloodgateResponse{}
+func (x *ApplyOIDC ProviderResponse) Reset() {
+	*x = ApplyOIDC ProviderResponse{}
 	mi := &file_proto_alert_management_alert_management_service_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ApplyFloodgateResponse) String() string {
+func (x *ApplyOIDC ProviderResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ApplyFloodgateResponse) ProtoMessage() {}
+func (*ApplyOIDC ProviderResponse) ProtoMessage() {}
 
-func (x *ApplyFloodgateResponse) ProtoReflect() protoreflect.Message {
+func (x *ApplyOIDC ProviderResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_alert_management_alert_management_service_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2012,40 +2012,40 @@ func (x *ApplyFloodgateResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ApplyFloodgateResponse.ProtoReflect.Descriptor instead.
-func (*ApplyFloodgateResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ApplyOIDC ProviderResponse.ProtoReflect.Descriptor instead.
+func (*ApplyOIDC ProviderResponse) Descriptor() ([]byte, []int) {
 	return file_proto_alert_management_alert_management_service_proto_rawDescGZIP(), []int{31}
 }
 
-func (x *ApplyFloodgateResponse) GetSuccess() bool {
+func (x *ApplyOIDC ProviderResponse) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
 	return false
 }
 
-func (x *ApplyFloodgateResponse) GetSuppressedCount() int32 {
+func (x *ApplyOIDC ProviderResponse) GetSuppressedCount() int32 {
 	if x != nil {
 		return x.SuppressedCount
 	}
 	return 0
 }
 
-func (x *ApplyFloodgateResponse) GetSuppressedAlertIds() []string {
+func (x *ApplyOIDC ProviderResponse) GetSuppressedAlertIds() []string {
 	if x != nil {
 		return x.SuppressedAlertIds
 	}
 	return nil
 }
 
-func (x *ApplyFloodgateResponse) GetFloodgateSessionId() string {
+func (x *ApplyOIDC ProviderResponse) GetOIDC ProviderSessionId() string {
 	if x != nil {
-		return x.FloodgateSessionId
+		return x.OIDC ProviderSessionId
 	}
 	return ""
 }
 
-func (x *ApplyFloodgateResponse) GetErrorMessage() string {
+func (x *ApplyOIDC ProviderResponse) GetErrorMessage() string {
 	if x != nil {
 		return x.ErrorMessage
 	}
@@ -2982,7 +2982,7 @@ func (x *BurstMetrics) GetSeverityDistribution() map[string]int32 {
 	return nil
 }
 
-type FloodgateRule struct {
+type OIDC ProviderRule struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -2996,20 +2996,20 @@ type FloodgateRule struct {
 	sizeCache         protoimpl.SizeCache
 }
 
-func (x *FloodgateRule) Reset() {
-	*x = FloodgateRule{}
+func (x *OIDC ProviderRule) Reset() {
+	*x = OIDC ProviderRule{}
 	mi := &file_proto_alert_management_alert_management_service_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *FloodgateRule) String() string {
+func (x *OIDC ProviderRule) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FloodgateRule) ProtoMessage() {}
+func (*OIDC ProviderRule) ProtoMessage() {}
 
-func (x *FloodgateRule) ProtoReflect() protoreflect.Message {
+func (x *OIDC ProviderRule) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_alert_management_alert_management_service_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3021,61 +3021,61 @@ func (x *FloodgateRule) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FloodgateRule.ProtoReflect.Descriptor instead.
-func (*FloodgateRule) Descriptor() ([]byte, []int) {
+// Deprecated: Use OIDC ProviderRule.ProtoReflect.Descriptor instead.
+func (*OIDC ProviderRule) Descriptor() ([]byte, []int) {
 	return file_proto_alert_management_alert_management_service_proto_rawDescGZIP(), []int{44}
 }
 
-func (x *FloodgateRule) GetId() string {
+func (x *OIDC ProviderRule) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *FloodgateRule) GetName() string {
+func (x *OIDC ProviderRule) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *FloodgateRule) GetRuleType() string {
+func (x *OIDC ProviderRule) GetRuleType() string {
 	if x != nil {
 		return x.RuleType
 	}
 	return ""
 }
 
-func (x *FloodgateRule) GetConditions() map[string]string {
+func (x *OIDC ProviderRule) GetConditions() map[string]string {
 	if x != nil {
 		return x.Conditions
 	}
 	return nil
 }
 
-func (x *FloodgateRule) GetThreshold() int32 {
+func (x *OIDC ProviderRule) GetThreshold() int32 {
 	if x != nil {
 		return x.Threshold
 	}
 	return 0
 }
 
-func (x *FloodgateRule) GetTimeWindowMinutes() int32 {
+func (x *OIDC ProviderRule) GetTimeWindowMinutes() int32 {
 	if x != nil {
 		return x.TimeWindowMinutes
 	}
 	return 0
 }
 
-func (x *FloodgateRule) GetAction() string {
+func (x *OIDC ProviderRule) GetAction() string {
 	if x != nil {
 		return x.Action
 	}
 	return ""
 }
 
-func (x *FloodgateRule) GetEnabled() bool {
+func (x *OIDC ProviderRule) GetEnabled() bool {
 	if x != nil {
 		return x.Enabled
 	}
@@ -3875,16 +3875,16 @@ const file_proto_alert_management_alert_management_service_proto_rawDesc = "" +
 	"\x05alert\x18\x02 \x01(\v2\x17.alert_management.AlertR\x05alert\x12#\n" +
 	"\rescalation_id\x18\x03 \x01(\tR\fescalationId\x12#\n" +
 	"\rerror_message\x18\x04 \x01(\tR\ferrorMessage\"\x88\x01\n" +
-	"\x15ApplyFloodgateRequest\x12\x1b\n" +
+	"\x15ApplyOIDC ProviderRequest\x12\x1b\n" +
 	"\talert_ids\x18\x01 \x03(\tR\balertIds\x123\n" +
-	"\x04rule\x18\x02 \x01(\v2\x1f.alert_management.FloodgateRuleR\x04rule\x12\x1d\n" +
+	"\x04rule\x18\x02 \x01(\v2\x1f.alert_management.OIDC ProviderRuleR\x04rule\x12\x1d\n" +
 	"\n" +
 	"applied_by\x18\x03 \x01(\tR\tappliedBy\"\xe6\x01\n" +
-	"\x16ApplyFloodgateResponse\x12\x18\n" +
+	"\x16ApplyOIDC ProviderResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12)\n" +
 	"\x10suppressed_count\x18\x02 \x01(\x05R\x0fsuppressedCount\x120\n" +
 	"\x14suppressed_alert_ids\x18\x03 \x03(\tR\x12suppressedAlertIds\x120\n" +
-	"\x14floodgate_session_id\x18\x04 \x01(\tR\x12floodgateSessionId\x12#\n" +
+	"\x14oidc_session_id\x18\x04 \x01(\tR\x12oidcSessionId\x12#\n" +
 	"\rerror_message\x18\x05 \x01(\tR\ferrorMessage\"Z\n" +
 	"\x1aGetSuppressionRulesRequest\x12\x1b\n" +
 	"\trule_type\x18\x01 \x01(\tR\bruleType\x12\x1f\n" +
@@ -3994,12 +3994,12 @@ const file_proto_alert_management_alert_management_service_proto_rawDesc = "" +
 	"\x19SeverityDistributionEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"\xe0\x02\n" +
-	"\rFloodgateRule\x12\x0e\n" +
+	"\rOIDC ProviderRule\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1b\n" +
 	"\trule_type\x18\x03 \x01(\tR\bruleType\x12O\n" +
 	"\n" +
-	"conditions\x18\x04 \x03(\v2/.alert_management.FloodgateRule.ConditionsEntryR\n" +
+	"conditions\x18\x04 \x03(\v2/.alert_management.OIDC ProviderRule.ConditionsEntryR\n" +
 	"conditions\x12\x1c\n" +
 	"\tthreshold\x18\x05 \x01(\x05R\tthreshold\x12.\n" +
 	"\x13time_window_minutes\x18\x06 \x01(\x05R\x11timeWindowMinutes\x12\x16\n" +
@@ -4102,7 +4102,7 @@ const file_proto_alert_management_alert_management_service_proto_rawDesc = "" +
 	"\x10AcknowledgeAlert\x12).alert_management.AcknowledgeAlertRequest\x1a*.alert_management.AcknowledgeAlertResponse\x12]\n" +
 	"\fResolveAlert\x12%.alert_management.ResolveAlertRequest\x1a&.alert_management.ResolveAlertResponse\x12`\n" +
 	"\rEscalateAlert\x12&.alert_management.EscalateAlertRequest\x1a'.alert_management.EscalateAlertResponse\x12c\n" +
-	"\x0eApplyFloodgate\x12'.alert_management.ApplyFloodgateRequest\x1a(.alert_management.ApplyFloodgateResponse\x12r\n" +
+	"\x0eApplyOIDC Provider\x12'.alert_management.ApplyOIDC ProviderRequest\x1a(.alert_management.ApplyOIDC ProviderResponse\x12r\n" +
 	"\x13GetSuppressionRules\x12,.alert_management.GetSuppressionRulesRequest\x1a-.alert_management.GetSuppressionRulesResponse\x12f\n" +
 	"\x0fGetAlertMetrics\x12(.alert_management.GetAlertMetricsRequest\x1a).alert_management.GetAlertMetricsResponse\x12c\n" +
 	"\x0eGetAlertTrends\x12'.alert_management.GetAlertTrendsRequest\x1a(.alert_management.GetAlertTrendsResponseB7Z5github.com/alerthub-enterprise/proto/alert_managementb\x06proto3"
@@ -4151,8 +4151,8 @@ var file_proto_alert_management_alert_management_service_proto_goTypes = []any{
 	(*ResolveAlertResponse)(nil),        // 27: alert_management.ResolveAlertResponse
 	(*EscalateAlertRequest)(nil),        // 28: alert_management.EscalateAlertRequest
 	(*EscalateAlertResponse)(nil),       // 29: alert_management.EscalateAlertResponse
-	(*ApplyFloodgateRequest)(nil),       // 30: alert_management.ApplyFloodgateRequest
-	(*ApplyFloodgateResponse)(nil),      // 31: alert_management.ApplyFloodgateResponse
+	(*ApplyOIDC ProviderRequest)(nil),       // 30: alert_management.ApplyOIDC ProviderRequest
+	(*ApplyOIDC ProviderResponse)(nil),      // 31: alert_management.ApplyOIDC ProviderResponse
 	(*GetSuppressionRulesRequest)(nil),  // 32: alert_management.GetSuppressionRulesRequest
 	(*GetSuppressionRulesResponse)(nil), // 33: alert_management.GetSuppressionRulesResponse
 	(*GetAlertMetricsRequest)(nil),      // 34: alert_management.GetAlertMetricsRequest
@@ -4165,7 +4165,7 @@ var file_proto_alert_management_alert_management_service_proto_goTypes = []any{
 	(*AlertContext)(nil),                // 41: alert_management.AlertContext
 	(*AlertMetadata)(nil),               // 42: alert_management.AlertMetadata
 	(*BurstMetrics)(nil),                // 43: alert_management.BurstMetrics
-	(*FloodgateRule)(nil),               // 44: alert_management.FloodgateRule
+	(*OIDC ProviderRule)(nil),               // 44: alert_management.OIDC ProviderRule
 	(*SuppressionRule)(nil),             // 45: alert_management.SuppressionRule
 	(*AlertMetric)(nil),                 // 46: alert_management.AlertMetric
 	(*AlertTrend)(nil),                  // 47: alert_management.AlertTrend
@@ -4184,7 +4184,7 @@ var file_proto_alert_management_alert_management_service_proto_goTypes = []any{
 	nil,                                 // 60: alert_management.AlertContext.DataEntry
 	nil,                                 // 61: alert_management.AlertMetadata.EnrichmentDataEntry
 	nil,                                 // 62: alert_management.BurstMetrics.SeverityDistributionEntry
-	nil,                                 // 63: alert_management.FloodgateRule.ConditionsEntry
+	nil,                                 // 63: alert_management.OIDC ProviderRule.ConditionsEntry
 	nil,                                 // 64: alert_management.SuppressionRule.FiltersEntry
 	nil,                                 // 65: alert_management.AlertMetric.DimensionsEntry
 	nil,                                 // 66: alert_management.TrendDataPoint.LabelsEntry
@@ -4224,7 +4224,7 @@ var file_proto_alert_management_alert_management_service_proto_depIdxs = []int32
 	38, // 27: alert_management.AcknowledgeAlertResponse.alert:type_name -> alert_management.Alert
 	38, // 28: alert_management.ResolveAlertResponse.alert:type_name -> alert_management.Alert
 	38, // 29: alert_management.EscalateAlertResponse.alert:type_name -> alert_management.Alert
-	44, // 30: alert_management.ApplyFloodgateRequest.rule:type_name -> alert_management.FloodgateRule
+	44, // 30: alert_management.ApplyOIDC ProviderRequest.rule:type_name -> alert_management.OIDC ProviderRule
 	45, // 31: alert_management.GetSuppressionRulesResponse.rules:type_name -> alert_management.SuppressionRule
 	70, // 32: alert_management.GetAlertMetricsRequest.from_time:type_name -> google.protobuf.Timestamp
 	70, // 33: alert_management.GetAlertMetricsRequest.to_time:type_name -> google.protobuf.Timestamp
@@ -4252,7 +4252,7 @@ var file_proto_alert_management_alert_management_service_proto_depIdxs = []int32
 	70, // 55: alert_management.BurstMetrics.burst_start:type_name -> google.protobuf.Timestamp
 	70, // 56: alert_management.BurstMetrics.burst_end:type_name -> google.protobuf.Timestamp
 	62, // 57: alert_management.BurstMetrics.severity_distribution:type_name -> alert_management.BurstMetrics.SeverityDistributionEntry
-	63, // 58: alert_management.FloodgateRule.conditions:type_name -> alert_management.FloodgateRule.ConditionsEntry
+	63, // 58: alert_management.OIDC ProviderRule.conditions:type_name -> alert_management.OIDC ProviderRule.ConditionsEntry
 	64, // 59: alert_management.SuppressionRule.filters:type_name -> alert_management.SuppressionRule.FiltersEntry
 	70, // 60: alert_management.SuppressionRule.start_time:type_name -> google.protobuf.Timestamp
 	70, // 61: alert_management.SuppressionRule.end_time:type_name -> google.protobuf.Timestamp
@@ -4283,7 +4283,7 @@ var file_proto_alert_management_alert_management_service_proto_depIdxs = []int32
 	24, // 86: alert_management.AlertManagementService.AcknowledgeAlert:input_type -> alert_management.AcknowledgeAlertRequest
 	26, // 87: alert_management.AlertManagementService.ResolveAlert:input_type -> alert_management.ResolveAlertRequest
 	28, // 88: alert_management.AlertManagementService.EscalateAlert:input_type -> alert_management.EscalateAlertRequest
-	30, // 89: alert_management.AlertManagementService.ApplyFloodgate:input_type -> alert_management.ApplyFloodgateRequest
+	30, // 89: alert_management.AlertManagementService.ApplyOIDC Provider:input_type -> alert_management.ApplyOIDC ProviderRequest
 	32, // 90: alert_management.AlertManagementService.GetSuppressionRules:input_type -> alert_management.GetSuppressionRulesRequest
 	34, // 91: alert_management.AlertManagementService.GetAlertMetrics:input_type -> alert_management.GetAlertMetricsRequest
 	36, // 92: alert_management.AlertManagementService.GetAlertTrends:input_type -> alert_management.GetAlertTrendsRequest
@@ -4302,7 +4302,7 @@ var file_proto_alert_management_alert_management_service_proto_depIdxs = []int32
 	25, // 105: alert_management.AlertManagementService.AcknowledgeAlert:output_type -> alert_management.AcknowledgeAlertResponse
 	27, // 106: alert_management.AlertManagementService.ResolveAlert:output_type -> alert_management.ResolveAlertResponse
 	29, // 107: alert_management.AlertManagementService.EscalateAlert:output_type -> alert_management.EscalateAlertResponse
-	31, // 108: alert_management.AlertManagementService.ApplyFloodgate:output_type -> alert_management.ApplyFloodgateResponse
+	31, // 108: alert_management.AlertManagementService.ApplyOIDC Provider:output_type -> alert_management.ApplyOIDC ProviderResponse
 	33, // 109: alert_management.AlertManagementService.GetSuppressionRules:output_type -> alert_management.GetSuppressionRulesResponse
 	35, // 110: alert_management.AlertManagementService.GetAlertMetrics:output_type -> alert_management.GetAlertMetricsResponse
 	37, // 111: alert_management.AlertManagementService.GetAlertTrends:output_type -> alert_management.GetAlertTrendsResponse

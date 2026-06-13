@@ -624,10 +624,10 @@ func (h *IncidentHandler) GetIncidentAlerts(c *gin.Context) {
 	})
 }
 
-// FloodgateRCA runs an RCA investigation using a Floodgate-proxied Claude model.
-// POST /api/v1/incidents/:id/rca/floodgate
+// OIDC ProviderRCA runs an RCA investigation using a OIDC Provider-proxied Claude model.
+// POST /api/v1/incidents/:id/rca/oidc
 // Body: { "model": "claude-sonnet-4-6" | "claude-opus-4-7", "token": "<oauth-id-token>" }
-func (h *IncidentHandler) FloodgateRCA(c *gin.Context) {
+func (h *IncidentHandler) OIDC ProviderRCA(c *gin.Context) {
 	incidentID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Invalid incident ID"})
@@ -686,10 +686,10 @@ func (h *IncidentHandler) FloodgateRCA(c *gin.Context) {
 	}
 	promptBuf.WriteString("\nProvide:\n1. Root cause (2-3 sentences)\n2. Contributing factors (1-2 sentences)\n3. Immediate remediation steps (numbered list)")
 
-	// Call Floodgate with the user-provided token
-	result, err := callFloodgateClaude(c.Request.Context(), req.Token, claudeModel, promptBuf.String())
+	// Call OIDC Provider with the user-provided token
+	result, err := callOIDC ProviderClaude(c.Request.Context(), req.Token, claudeModel, promptBuf.String())
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "message": fmt.Sprintf("Floodgate error: %v", err)})
+		c.JSON(http.StatusBadGateway, gin.H{"success": false, "message": fmt.Sprintf("OIDC Provider error: %v", err)})
 		return
 	}
 
@@ -714,8 +714,8 @@ func (h *IncidentHandler) FloodgateRCA(c *gin.Context) {
 	})
 }
 
-// callFloodgateClaude sends a prompt to Claude via the Floodgate proxy using the given user token.
-func callFloodgateClaude(ctx context.Context, token, model, prompt string) (string, error) {
+// callOIDC ProviderClaude sends a prompt to Claude via the OIDC Provider proxy using the given user token.
+func callOIDC ProviderClaude(ctx context.Context, token, model, prompt string) (string, error) {
 	type claudeContent struct {
 		Type string `json:"type"`
 		Text string `json:"text"`
@@ -774,12 +774,12 @@ func callFloodgateClaude(ctx context.Context, token, model, prompt string) (stri
 
 	raw, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Floodgate returned %d: %s", resp.StatusCode, string(raw))
+		return "", fmt.Errorf("OIDC Provider returned %d: %s", resp.StatusCode, string(raw))
 	}
 
 	var cr claudeResp
 	if err := json.Unmarshal(raw, &cr); err != nil {
-		return "", fmt.Errorf("failed to parse Floodgate response: %w", err)
+		return "", fmt.Errorf("failed to parse OIDC Provider response: %w", err)
 	}
 
 	var text string
@@ -791,10 +791,10 @@ func callFloodgateClaude(ctx context.Context, token, model, prompt string) (stri
 	return strings.TrimSpace(text), nil
 }
 
-// FloodgateTestToken validates a Floodgate OAuth token with a minimal Claude API call.
-// POST /api/v1/incidents/floodgate-token-test
+// OIDC ProviderTestToken validates a OIDC Provider OAuth token with a minimal Claude API call.
+// POST /api/v1/incidents/oidc-token-test
 // Body: { "token": "<oauth-id-token>" }
-func (h *IncidentHandler) FloodgateTestToken(c *gin.Context) {
+func (h *IncidentHandler) OIDC ProviderTestToken(c *gin.Context) {
 	var req struct {
 		Token string `json:"token" binding:"required"`
 	}
@@ -806,7 +806,7 @@ func (h *IncidentHandler) FloodgateTestToken(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
 	defer cancel()
 
-	_, err := callFloodgateClaude(ctx, req.Token, "claude-sonnet-4-6-20250514", "Reply with exactly: ok")
+	_, err := callOIDC ProviderClaude(ctx, req.Token, "claude-sonnet-4-6-20250514", "Reply with exactly: ok")
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
@@ -819,7 +819,7 @@ func (h *IncidentHandler) FloodgateTestToken(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"valid":   true,
-		"message": "Token is valid — Floodgate Claude is reachable",
+		"message": "Token is valid — OIDC Provider Claude is reachable",
 	})
 }
 
@@ -1193,7 +1193,7 @@ func (h *IncidentHandler) RegisterRoutes(router *gin.RouterGroup) {
 		incidents.GET("", h.ListIncidents)
 		incidents.POST("", h.CreateIncident)
 		incidents.GET("/stats", h.GetIncidentStats)
-		incidents.POST("/floodgate-token-test", h.FloodgateTestToken)
+		incidents.POST("/oidc-token-test", h.OIDC ProviderTestToken)
 		incidents.POST("/auto-close", h.AutoCloseResolved)
 		incidents.GET("/:id", h.GetIncident)
 		incidents.PUT("/:id", h.UpdateIncident)
@@ -1202,7 +1202,7 @@ func (h *IncidentHandler) RegisterRoutes(router *gin.RouterGroup) {
 		incidents.GET("/:id/timeline", h.GetIncidentTimeline)
 		incidents.POST("/:id/timeline", h.AddTimelineEvent)
 		incidents.POST("/:id/rca", h.PerformRCA)
-		incidents.POST("/:id/rca/floodgate", h.FloodgateRCA)
+		incidents.POST("/:id/rca/oidc", h.OIDC ProviderRCA)
 		incidents.GET("/:id/alerts", h.GetIncidentAlerts)
 		incidents.GET("/:id/investigation", h.GetInvestigationDAG)
 		incidents.PATCH("/:id/investigation/steps/:step_id", h.UpdateInvestigationStep)

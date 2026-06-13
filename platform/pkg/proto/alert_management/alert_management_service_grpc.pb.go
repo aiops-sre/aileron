@@ -34,7 +34,7 @@ const (
 	AlertManagementService_AcknowledgeAlert_FullMethodName    = "/alert_management.AlertManagementService/AcknowledgeAlert"
 	AlertManagementService_ResolveAlert_FullMethodName        = "/alert_management.AlertManagementService/ResolveAlert"
 	AlertManagementService_EscalateAlert_FullMethodName       = "/alert_management.AlertManagementService/EscalateAlert"
-	AlertManagementService_ApplyFloodgate_FullMethodName      = "/alert_management.AlertManagementService/ApplyFloodgate"
+	AlertManagementService_ApplyOIDC Provider_FullMethodName      = "/alert_management.AlertManagementService/ApplyOIDC Provider"
 	AlertManagementService_GetSuppressionRules_FullMethodName = "/alert_management.AlertManagementService/GetSuppressionRules"
 	AlertManagementService_GetAlertMetrics_FullMethodName     = "/alert_management.AlertManagementService/GetAlertMetrics"
 	AlertManagementService_GetAlertTrends_FullMethodName      = "/alert_management.AlertManagementService/GetAlertTrends"
@@ -66,8 +66,8 @@ type AlertManagementServiceClient interface {
 	AcknowledgeAlert(ctx context.Context, in *AcknowledgeAlertRequest, opts ...grpc.CallOption) (*AcknowledgeAlertResponse, error)
 	ResolveAlert(ctx context.Context, in *ResolveAlertRequest, opts ...grpc.CallOption) (*ResolveAlertResponse, error)
 	EscalateAlert(ctx context.Context, in *EscalateAlertRequest, opts ...grpc.CallOption) (*EscalateAlertResponse, error)
-	// Floodgate and suppression
-	ApplyFloodgate(ctx context.Context, in *ApplyFloodgateRequest, opts ...grpc.CallOption) (*ApplyFloodgateResponse, error)
+	// OIDC Provider and suppression
+	ApplyOIDC Provider(ctx context.Context, in *ApplyOIDC ProviderRequest, opts ...grpc.CallOption) (*ApplyOIDC ProviderResponse, error)
 	GetSuppressionRules(ctx context.Context, in *GetSuppressionRulesRequest, opts ...grpc.CallOption) (*GetSuppressionRulesResponse, error)
 	// Metrics and analytics
 	GetAlertMetrics(ctx context.Context, in *GetAlertMetricsRequest, opts ...grpc.CallOption) (*GetAlertMetricsResponse, error)
@@ -232,10 +232,10 @@ func (c *alertManagementServiceClient) EscalateAlert(ctx context.Context, in *Es
 	return out, nil
 }
 
-func (c *alertManagementServiceClient) ApplyFloodgate(ctx context.Context, in *ApplyFloodgateRequest, opts ...grpc.CallOption) (*ApplyFloodgateResponse, error) {
+func (c *alertManagementServiceClient) ApplyOIDC Provider(ctx context.Context, in *ApplyOIDC ProviderRequest, opts ...grpc.CallOption) (*ApplyOIDC ProviderResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ApplyFloodgateResponse)
-	err := c.cc.Invoke(ctx, AlertManagementService_ApplyFloodgate_FullMethodName, in, out, cOpts...)
+	out := new(ApplyOIDC ProviderResponse)
+	err := c.cc.Invoke(ctx, AlertManagementService_ApplyOIDC Provider_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -298,8 +298,8 @@ type AlertManagementServiceServer interface {
 	AcknowledgeAlert(context.Context, *AcknowledgeAlertRequest) (*AcknowledgeAlertResponse, error)
 	ResolveAlert(context.Context, *ResolveAlertRequest) (*ResolveAlertResponse, error)
 	EscalateAlert(context.Context, *EscalateAlertRequest) (*EscalateAlertResponse, error)
-	// Floodgate and suppression
-	ApplyFloodgate(context.Context, *ApplyFloodgateRequest) (*ApplyFloodgateResponse, error)
+	// OIDC Provider and suppression
+	ApplyOIDC Provider(context.Context, *ApplyOIDC ProviderRequest) (*ApplyOIDC ProviderResponse, error)
 	GetSuppressionRules(context.Context, *GetSuppressionRulesRequest) (*GetSuppressionRulesResponse, error)
 	// Metrics and analytics
 	GetAlertMetrics(context.Context, *GetAlertMetricsRequest) (*GetAlertMetricsResponse, error)
@@ -359,8 +359,8 @@ func (UnimplementedAlertManagementServiceServer) ResolveAlert(context.Context, *
 func (UnimplementedAlertManagementServiceServer) EscalateAlert(context.Context, *EscalateAlertRequest) (*EscalateAlertResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method EscalateAlert not implemented")
 }
-func (UnimplementedAlertManagementServiceServer) ApplyFloodgate(context.Context, *ApplyFloodgateRequest) (*ApplyFloodgateResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ApplyFloodgate not implemented")
+func (UnimplementedAlertManagementServiceServer) ApplyOIDC Provider(context.Context, *ApplyOIDC ProviderRequest) (*ApplyOIDC ProviderResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ApplyOIDC Provider not implemented")
 }
 func (UnimplementedAlertManagementServiceServer) GetSuppressionRules(context.Context, *GetSuppressionRulesRequest) (*GetSuppressionRulesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetSuppressionRules not implemented")
@@ -663,20 +663,20 @@ func _AlertManagementService_EscalateAlert_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AlertManagementService_ApplyFloodgate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ApplyFloodgateRequest)
+func _AlertManagementService_ApplyOIDC Provider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ApplyOIDC ProviderRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AlertManagementServiceServer).ApplyFloodgate(ctx, in)
+		return srv.(AlertManagementServiceServer).ApplyOIDC Provider(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AlertManagementService_ApplyFloodgate_FullMethodName,
+		FullMethod: AlertManagementService_ApplyOIDC Provider_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AlertManagementServiceServer).ApplyFloodgate(ctx, req.(*ApplyFloodgateRequest))
+		return srv.(AlertManagementServiceServer).ApplyOIDC Provider(ctx, req.(*ApplyOIDC ProviderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -803,8 +803,8 @@ var AlertManagementService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AlertManagementService_EscalateAlert_Handler,
 		},
 		{
-			MethodName: "ApplyFloodgate",
-			Handler:    _AlertManagementService_ApplyFloodgate_Handler,
+			MethodName: "ApplyOIDC Provider",
+			Handler:    _AlertManagementService_ApplyOIDC Provider_Handler,
 		},
 		{
 			MethodName: "GetSuppressionRules",

@@ -105,7 +105,7 @@ export default function RCAInvestigationPage() {
   const doneInvs = investigations.filter(i => ['completed', 'failed'].includes(i.phase))
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-background)', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--color-background)', fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px' }}>
 
         {/* Header */}

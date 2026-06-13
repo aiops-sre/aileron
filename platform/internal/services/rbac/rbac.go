@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/aileron-platform/aileron/platform/internal/services/dsldap"
+	"github.com/aileron-platform/aileron/platform/internal/services/ldap"
 )
 
 var (
@@ -215,7 +215,7 @@ func (s *RBACService) HasPermission(ctx context.Context, userID uuid.UUID, permi
 // CheckPermission checks permission and returns error if denied.
 // Priority order:
 //  1. DB permission query (role_id join via HasPermission)
-//  2. DS-LDAP role injected into context by auth middleware (most authoritative for MAS users)
+//  2. LDAP role injected into context by auth middleware (most authoritative for MAS users)
 //  3. role text column fallback (for MAS-provisioned users without role_id)
 func (s *RBACService) CheckPermission(ctx context.Context, userID uuid.UUID, permission string) error {
 	// 1. Try DB-backed permission check (works when role_id is set)
@@ -224,8 +224,8 @@ func (s *RBACService) CheckPermission(ctx context.Context, userID uuid.UUID, per
 		return nil
 	}
 
-	// 2. DS-LDAP role from request context (injected by Authenticate middleware)
-	if ldapRole := dsldap.RoleFromContext(ctx); ldapRole != "" {
+	// 2. LDAP role from request context (injected by Authenticate middleware)
+	if ldapRole := ldap.RoleFromContext(ctx); ldapRole != "" {
 		if checkRolePermission(ldapRole, permission) {
 			return nil
 		}

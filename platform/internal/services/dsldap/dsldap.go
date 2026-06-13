@@ -1,10 +1,10 @@
-// Package dsldap provides Apple DS-LDAP group lookup for RBAC.
+// Package ldap provides Aileron LDAP group lookup for RBAC.
 // It binds as an application (not a user) and resolves a user's AD group
 // memberships by email, then maps those groups to AlertHub roles.
 // Grouprole mappings can be configured statically (via env vars) or dynamically
 // (via DB-backed admin UI). DB mappings take priority over env-var defaults.
 // Results are cached per-user to avoid hitting the directory on every request.
-package dsldap
+package ldap
 
 import (
 	"context"
@@ -20,21 +20,21 @@ import (
 	gldap "github.com/go-ldap/ldap/v3"
 )
 
-// Config holds all DS-LDAP configuration. Credentials are loaded from K8s secrets
+// Config holds all LDAP configuration. Credentials are loaded from K8s secrets
 // via environment variables LDAP_APP_ID and LDAP_APP_PASSWORD.
 type Config struct {
 	Enabled bool
 	// ServerURL is the full ldaps:// URL, e.g. 
 	ServerURL string
-	// AppID is the IdMS application ID used to build the bind DN:
-	//   appid=<AppID>,ou=applications,o=apple
+	// AppID is the OIDC application ID used to build the bind DN:
+	//   appid=<AppID>,ou=applications,dc=example,dc=com
 	AppID string
-	// AppPassword is the 16-character application password from the IdMS Portal.
+	// AppPassword is the 16-character application password from the OIDC Portal.
 	AppPassword string
-	// UserSearchBase is the LDAP subtree to search for users, e.g. ou=people,o=apple
+	// UserSearchBase is the LDAP subtree to search for users, e.g. ou=people,dc=example,dc=com
 	UserSearchBase string
 	// CacheTTL controls how long group memberships are cached. Default: 5 minutes.
-	// DS-LDAP syncs AD group changes within 3-10 minutes, so 5 minutes is safe.
+	// LDAP syncs AD group changes within 3-10 minutes, so 5 minutes is safe.
 	CacheTTL time.Duration
 	// AdminGroups lists LDAP group CNs that map to the 'admin' role.
 	AdminGroups []string
@@ -44,12 +44,12 @@ type Config struct {
 	ViewerGroups []string
 }
 
-// DefaultConfig returns production-safe defaults for Apple DS-LDAP.
+// DefaultConfig returns production-safe defaults for Aileron LDAP.
 func DefaultConfig() Config {
 	return Config{
 		Enabled:        false,
 		ServerURL:      "",
-		UserSearchBase: "ou=people,o=apple",
+		UserSearchBase: "ou=people,dc=example,dc=com",
 		CacheTTL:       5 * time.Minute,
 		AdminGroups:    []string{"aileron-admins"},
 		OperatorGroups: []string{"aileron-operators", "aileron-operators"},
@@ -68,7 +68,7 @@ type dbGroupMapping struct {
 	roleName  string
 }
 
-// Service is the DS-LDAP group-lookup client.
+// Service is the LDAP group-lookup client.
 type Service struct {
 	cfg      Config
 	db       *sql.DB // optional; used for live mapping reloads from admin UI
@@ -78,7 +78,7 @@ type Service struct {
 	mapsOnce sync.Once
 }
 
-// New creates a new DS-LDAP service. Returns nil if cfg.Enabled is false so
+// New creates a new LDAP service. Returns nil if cfg.Enabled is false so
 // callers can use a nil check as a feature flag.
 func New(cfg Config) *Service {
 	if !cfg.Enabled {
@@ -110,7 +110,7 @@ func (s *Service) ReloadMappings() {
 		ORDER BY r.name  -- priority: admin < operator < viewer (last write wins in MapGroupsToRole)
 	`)
 	if err != nil {
-		log.Printf("dsldap: failed to reload group mappings: %v", err)
+		log.Printf("ldap: failed to reload group mappings: %v", err)
 		return
 	}
 	defer rows.Close()
@@ -124,7 +124,7 @@ func (s *Service) ReloadMappings() {
 	s.mu.Lock()
 	s.dbMaps = maps
 	s.mu.Unlock()
-	log.Printf("dsldap: loaded %d grouprole mappings from database", len(maps))
+	log.Printf("ldap: loaded %d grouprole mappings from database", len(maps))
 }
 
 // GetUserGroups returns the AD group CNs for a user identified by email.
@@ -204,7 +204,7 @@ func (s *Service) MapGroupsToRole(groups []string) string {
 	return ""
 }
 
-// Ping verifies that the service can bind to DS-LDAP. Used for health checks.
+// Ping verifies that the service can bind to LDAP. Used for health checks.
 func (s *Service) Ping() error {
 	conn, err := s.dial()
 	if err != nil {
@@ -218,25 +218,25 @@ func (s *Service) Ping() error {
 func (s *Service) ServerURL() string { return s.cfg.ServerURL }
 
 // InvalidateCache removes the cached groups for a user, forcing the next
-// GetUserGroups call to re-query DS-LDAP.
+// GetUserGroups call to re-query LDAP.
 func (s *Service) InvalidateCache(email string) {
 	s.mu.Lock()
 	delete(s.cache, email)
 	s.mu.Unlock()
 }
 
-// SearchGroups returns up to 20 group CNs from ou=groups,o=apple whose CN
+// SearchGroups returns up to 20 group CNs from ou=groups,dc=example,dc=com whose CN
 // contains the given prefix (case-insensitive substring match via *prefix*).
 // Empty prefix returns the first 20 groups alphabetically for browse-on-focus UX.
 func (s *Service) SearchGroups(prefix string) ([]string, error) {
 	conn, err := s.dial()
 	if err != nil {
-		return nil, fmt.Errorf("dsldap dial: %w", err)
+		return nil, fmt.Errorf("ldap dial: %w", err)
 	}
 	defer conn.Close()
 
 	if err := s.bind(conn); err != nil {
-		return nil, fmt.Errorf("dsldap bind: %w", err)
+		return nil, fmt.Errorf("ldap bind: %w", err)
 	}
 
 	var filter string
@@ -246,7 +246,7 @@ func (s *Service) SearchGroups(prefix string) ([]string, error) {
 		filter = fmt.Sprintf("(cn=*%s*)", gldap.EscapeFilter(prefix))
 	}
 	req := gldap.NewSearchRequest(
-		"ou=groups,o=apple",
+		"ou=groups,dc=example,dc=com",
 		gldap.ScopeWholeSubtree, gldap.NeverDerefAliases,
 		0, 20, false,
 		filter,
@@ -255,7 +255,7 @@ func (s *Service) SearchGroups(prefix string) ([]string, error) {
 	)
 	sr, err := conn.Search(req)
 	if err != nil {
-		return nil, fmt.Errorf("dsldap search groups: %w", err)
+		return nil, fmt.Errorf("ldap search groups: %w", err)
 	}
 
 	entries := sr.Entries
@@ -277,16 +277,16 @@ func (s *Service) SearchGroups(prefix string) ([]string, error) {
 func (s *Service) fetchGroups(email string) ([]string, error) {
 	conn, err := s.dial()
 	if err != nil {
-		return nil, fmt.Errorf("dsldap dial: %w", err)
+		return nil, fmt.Errorf("ldap dial: %w", err)
 	}
 	defer conn.Close()
 
 	if err := s.bind(conn); err != nil {
-		return nil, fmt.Errorf("dsldap bind: %w", err)
+		return nil, fmt.Errorf("ldap bind: %w", err)
 	}
 
 	// Step 1: fetch the user entry including the memberOf attribute.
-	// Apple DS-LDAP stores memberOf values as "appledsid=N,ou=groups,o=apple"
+	// Aileron LDAP stores memberOf values as "appledsid=N,ou=groups,dc=example,dc=com"
 	// (numeric IDs, not CN-based DNs), so we can't extract CNs directly from them.
 	// Instead we collect the full DN set and resolve CNs in step 3.
 	userReq := gldap.NewSearchRequest(
@@ -299,16 +299,16 @@ func (s *Service) fetchGroups(email string) ([]string, error) {
 	)
 	userSR, err := conn.Search(userReq)
 	if err != nil {
-		return nil, fmt.Errorf("dsldap user search: %w", err)
+		return nil, fmt.Errorf("ldap user search: %w", err)
 	}
 	if len(userSR.Entries) == 0 {
-		log.Printf("dsldap: user %s not found in directory", email)
+		log.Printf("ldap: user %s not found in directory", email)
 		return nil, nil
 	}
 
 	// Build a lowercase set of every group DN the user belongs to
 	rawMemberOf := userSR.Entries[0].GetAttributeValues("memberOf")
-	log.Printf("dsldap: user %s has %d memberOf entries", email, len(rawMemberOf))
+	log.Printf("ldap: user %s has %d memberOf entries", email, len(rawMemberOf))
 	memberOfSet := make(map[string]struct{}, len(rawMemberOf))
 	for _, dn := range rawMemberOf {
 		memberOfSet[strings.ToLower(dn)] = struct{}{}
@@ -340,7 +340,7 @@ func (s *Service) fetchGroups(email string) ([]string, error) {
 	var groups []string
 	for groupCN := range targetGroups {
 		req := gldap.NewSearchRequest(
-			"ou=groups,o=apple",
+			"ou=groups,dc=example,dc=com",
 			gldap.ScopeWholeSubtree, gldap.NeverDerefAliases,
 			0, 1, false,
 			fmt.Sprintf("(cn=%s)", gldap.EscapeFilter(groupCN)),
@@ -349,11 +349,11 @@ func (s *Service) fetchGroups(email string) ([]string, error) {
 		)
 		sr, err := conn.Search(req)
 		if err != nil {
-			log.Printf("dsldap: group DN lookup error for %s: %v", groupCN, err)
+			log.Printf("ldap: group DN lookup error for %s: %v", groupCN, err)
 			continue
 		}
 		if len(sr.Entries) == 0 {
-			log.Printf("dsldap: group %s not found in directory", groupCN)
+			log.Printf("ldap: group %s not found in directory", groupCN)
 			continue
 		}
 		groupDN := sr.Entries[0].DN
@@ -361,13 +361,13 @@ func (s *Service) fetchGroups(email string) ([]string, error) {
 			groups = append(groups, groupCN)
 		}
 	}
-	log.Printf("dsldap: resolved %d groups for %s: %v", len(groups), email, groups)
+	log.Printf("ldap: resolved %d groups for %s: %v", len(groups), email, groups)
 	return groups, nil
 }
 
 func (s *Service) dial() (*gldap.Conn, error) {
-	// Apple's corporate CA is not in the Alpine container trust store, so we skip
-	// TLS certificate verification. The cluster is already inside Apple's internal
+	// Private CA certs may not be in the Alpine container trust store; skip
+	// TLS certificate verification. The cluster is on a private network;
 	// network; the connection to  is protected at the network
 	// layer. Skip only cert verification — TLS encryption is still enforced.
 	return gldap.DialURL(s.cfg.ServerURL, gldap.DialWithTLSConfig(&tls.Config{
@@ -378,12 +378,12 @@ func (s *Service) dial() (*gldap.Conn, error) {
 }
 
 func (s *Service) bind(conn *gldap.Conn) error {
-	dn := fmt.Sprintf("appid=%s,ou=applications,o=apple", s.cfg.AppID)
+	dn := fmt.Sprintf("appid=%s,ou=applications,dc=example,dc=com", s.cfg.AppID)
 	return conn.Bind(dn, s.cfg.AppPassword)
 }
 
 // extractCN pulls the CN value from an LDAP DN string.
-// e.g. "cn=aileron-operators,ou=groups,o=apple" "aileron-operators"
+// e.g. "cn=aileron-operators,ou=groups,dc=example,dc=com" "aileron-operators"
 func extractCN(dn string) string {
 	parsed, err := gldap.ParseDN(dn)
 	if err != nil {
@@ -417,9 +417,9 @@ type ContextKey string
 const (
 	// ContextKeyRole is the key under which the LDAP-derived role is stored
 	// in the request context. Read by rbac.CheckPermission.
-	ContextKeyRole   ContextKey = "dsldap_role"
+	ContextKeyRole   ContextKey = "ldap_role"
 	// ContextKeyGroups is the key under which the raw LDAP groups are stored.
-	ContextKeyGroups ContextKey = "dsldap_groups"
+	ContextKeyGroups ContextKey = "ldap_groups"
 )
 
 // WithRole returns a new context carrying the LDAP-derived role.

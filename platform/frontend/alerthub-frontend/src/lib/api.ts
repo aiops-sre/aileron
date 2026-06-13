@@ -6,22 +6,22 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 180000, // 3 min — AI chat (Floodgate LLM) can take 60-90s for longer responses
+  timeout: 180000, // 3 min — AI chat (OIDC Provider LLM) can take 60-90s for longer responses
 })
 
-// Request interceptor — attach JWT and Floodgate token
+// Request interceptor — attach JWT and OIDC Provider token
 api.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem('access_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    // Forward Floodgate/IdMS token for AI endpoints (sessionStorage only — never localStorage)
-    const floodgateToken =
-      sessionStorage.getItem('floodgate_token') ||
+    // Forward OIDC Provider/OIDC token for AI endpoints (sessionStorage only — never localStorage)
+    const oidcToken =
+      sessionStorage.getItem('oidc_token') ||
       sessionStorage.getItem('oauth_id_token')
-    if (floodgateToken) {
-      config.headers['X-Floodgate-Token'] = floodgateToken
+    if (oidcToken) {
+      config.headers['X-OIDC Provider-Token'] = oidcToken
     }
     return config
   },
@@ -110,10 +110,10 @@ export const incidentsApi = {
   
   // AI and RCA (✅ EXISTS in backend)
   performRCA: (id: string) => api.post(`/incidents/${id}/rca`),
-  floodgateRCA: (id: string, data: { model: string; token: string }) =>
-    api.post(`/incidents/${id}/rca/floodgate`, data),
-  testFloodgateToken: (token: string) =>
-    api.post('/incidents/floodgate-token-test', { token }),
+  oidcRCA: (id: string, data: { model: string; token: string }) =>
+    api.post(`/incidents/${id}/rca/oidc`, data),
+  testOIDC ProviderToken: (token: string) =>
+    api.post('/incidents/oidc-token-test', { token }),
   getStats: () => api.get('/incidents/stats'),
   getAlerts: (id: string) => api.get(`/incidents/${id}/alerts`),
 
@@ -136,7 +136,7 @@ export const incidentsApi = {
   rejectRemediation: (incidentId: string, remediationId: string, reason?: string) =>
     api.post(`/incidents/${incidentId}/remediations/${remediationId}/reject`, { reason }),
   
-  // HCL Kentaurus integration (✅ EXISTS - keep existing)
+  // HCL IncidentManager integration (✅ EXISTS - keep existing)
   createHCLIncident: (data: {
     title: string
     description: string
@@ -353,7 +353,7 @@ export const permissionsApi = {
   delete: (id: string) => api.delete(`/permissions/${id}`),
 }
 
-// ✅ LDAP GROUP MAPPING API (DS-LDAP group → role mappings, live without restart)
+// ✅ LDAP GROUP MAPPING API (LDAP group → role mappings, live without restart)
 export const ldapMappingsApi = {
   list: () => api.get('/ldap-mappings'),
   upsert: (data: { ldap_group: string; role_id: string }) => api.post('/ldap-mappings', data),
@@ -463,22 +463,22 @@ export const oauthApi = {
   getCorporateTokens: () => api.get('/oauth/corporate/tokens'),
   refreshCorporateToken: () => api.post('/oauth/refresh'),
 
-  // Floodgate integration (✅ EXISTS in backend)
-  getFloodgateModels: () => api.get('/oauth/floodgate/models'),
-  proxyFloodgateRequest: (data: {
+  // OIDC Provider integration (✅ EXISTS in backend)
+  getOIDC ProviderModels: () => api.get('/oauth/oidc/models'),
+  proxyOIDC ProviderRequest: (data: {
     endpoint: string;
     method: string;
     payload?: any;
-  }) => api.post('/oauth/floodgate/proxy', data),
+  }) => api.post('/oauth/oidc/proxy', data),
 
   // Generic OAuth2 providers (✅ EXISTS in backend - public list, admin create)
   listOAuth2Providers: () => api.get('/auth/oauth2/providers'),
   createOAuth2Provider: (data: any) => api.post('/admin/oauth2/providers', data),
 
-  // IDMS authentication
-  getIDMSSettings: () => api.get('/auth/oidc/settings'),
-  getIDMSGroups: () => api.get('/auth/oidc/groups'),
-  checkIDMSPermission: (data: { permission: string }) => api.post('/auth/oidc/check-permission', data),
+  // OIDC authentication
+  getOIDCSettings: () => api.get('/auth/oidc/settings'),
+  getOIDCGroups: () => api.get('/auth/oidc/groups'),
+  checkOIDCPermission: (data: { permission: string }) => api.post('/auth/oidc/check-permission', data),
 }
 
 // ✅ WEBSOCKET API (MATCHING ACTUAL BACKEND - websocket.go)

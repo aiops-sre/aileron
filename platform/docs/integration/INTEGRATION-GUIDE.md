@@ -140,7 +140,7 @@ print(f"Recommendations: {alert.ai_analysis.recommendations}")
 
 ### Installation
 ```bash
-go get github.com/apple/alerthub-go-sdk
+go get github.com/aiops-sre/aileron-go-sdk
 ```
 
 ### Usage
@@ -149,7 +149,7 @@ package main
 
 import (
     "context"
-    "github.com/apple/alerthub-go-sdk"
+    "github.com/aiops-sre/aileron-go-sdk"
 )
 
 func main() {
@@ -183,12 +183,12 @@ func main() {
 
 ### Installation
 ```bash
-npm install @apple/alerthub-sdk
+npm install @aiops-sre/aileron-sdk
 ```
 
 ### Usage
 ```javascript
-const AlertHub = require('@apple/alerthub-sdk');
+const AlertHub = require('@aiops-sre/aileron-sdk');
 
 // Initialize client
 const client = new AlertHub({
@@ -329,7 +329,7 @@ alerthub alert analyze <alert-id>
 terraform {
   required_providers {
     alerthub = {
-      source  = "apple/alerthub"
+      source  = "aiops-sre/aileron"
       version = "~> 1.0"
     }
   }
@@ -720,7 +720,7 @@ Contact support for higher limits.
 
 - **Documentation**: https://docs.alerthub.example.com
 - **Slack**: #help-interactive-sre
-- **Email**: alerthub-support@apple.com
+- **Email**: alerthub-support@example.com
 - **JIRA**: https://jira.iapps.example.com
 
 ## 24. Quick Reference

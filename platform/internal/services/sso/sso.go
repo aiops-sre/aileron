@@ -161,10 +161,10 @@ func (s *SSOService) AuthenticateLDAP(ctx context.Context, username, password st
 func (s *SSOService) MapLDAPGroupsToRole(groups []string) string {
 	// Define group to role mapping
 	groupRoleMap := map[string]string{
-		"CN=AlertHub-Admins,OU=Groups,DC=apple,DC=com":    "admin",
-		"CN=AlertHub-Managers,OU=Groups,DC=apple,DC=com":  "manager",
-		"CN=AlertHub-Engineers,OU=Groups,DC=apple,DC=com": "engineer",
-		"CN=AlertHub-Viewers,OU=Groups,DC=apple,DC=com":   "viewer",
+		"CN=AlertHub-Admins,OU=Groups,DC=example,DC=com":    "admin",
+		"CN=AlertHub-Managers,OU=Groups,DC=example,DC=com":  "manager",
+		"CN=AlertHub-Engineers,OU=Groups,DC=example,DC=com": "engineer",
+		"CN=AlertHub-Viewers,OU=Groups,DC=example,DC=com":   "viewer",
 	}
 
 	// Check groups in priority order

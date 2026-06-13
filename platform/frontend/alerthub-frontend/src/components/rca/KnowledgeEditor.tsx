@@ -40,7 +40,7 @@ export function KnowledgeEditor({ onSaved }: { onSaved?: () => void }) {
   }, [entry, onSaved])
 
   return (
-    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif', padding: 20, maxWidth: 640 }}>
+    <div style={{ fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", sans-serif', padding: 20, maxWidth: 640 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
         <BookOpen size={18} color="#007AFF" />
         <span style={{ fontSize: 16, fontWeight: 600 }}>Add to Agent Knowledge Base</span>

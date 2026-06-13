@@ -20,7 +20,7 @@ Operational reference for the AlertHub AIOps platform running in the `aileron` n
 ## Service Topology
 
 ```
-Internet / Apple Corp Network
+Internet / your organization Network
         │
         ▼
 aileron.example.com  (NGINX Ingress, TLS)
@@ -494,7 +494,7 @@ The CI/CD pipeline is fully automated: `git push` → commit-lint + secret-scan 
 **Check GitHub Actions:**
 
 ```bash
-gh run list --repo interactive-service-delivery/alert-engine --limit 5
+gh run list --repo aiops-sre/alert-engine --limit 5
 gh run view <run-id>
 ```
 
@@ -505,9 +505,9 @@ gh run view <run-id>
 | `commit-lint: conventional commit format required` | Use `feat:`, `fix:`, `chore:`, `docs:` prefix in commit message |
 | `secret-scan: potential secret detected` | Remove the secret. Do not commit `.env` files. |
 | `branch-naming: invalid branch name` | Branch must match `feat/*`, `fix/*`, `chore/*`, `hotfix/*` |
-| BuildKit: `npm registry unreachable` | Retry; Apple npm proxy may be transient. Or add `--registry https://registry.npmjs.org` to package.json |
+| BuildKit: `npm registry unreachable` | Retry; Aileron npm proxy may be transient. Or add `--registry https://registry.npmjs.org` to package.json |
 | BuildKit: `Go module proxy timeout` | Set `GONOSUMCHECK=*` and `GOFLAGS=-mod=mod` in BuildKit env |
-| Cosign: `Whisper auth: 401` | Whisper namespace token expired. Rotate `alerthub-whisper-cert` secret |
+| Cosign: `SecretsManager auth: 401` | SecretsManager namespace token expired. Rotate `alerthub-secrets_manager-cert` secret |
 
 ### ArgoCD App Not Syncing
 
@@ -557,8 +557,8 @@ kubectl get application -n argocd alert-engine -o jsonpath='{.status.sync.compar
 | `KUBESENSE_CORE_URL` | KubeSense API proxy target (default `http://kubesense-core.aileron-agent.svc.cluster.local:8080`) |
 | `CORRELATION_THRESHOLD` | Score threshold to merge incidents (default `0.75`) |
 | `TOPOLOGY_DOMINANCE_THRESHOLD` | Score for deterministic topology override (default `0.60`) |
-| `OIDC_CLIENT_ID` | IDMS OAuth2 client ID |
-| `OIDC_CLIENT_SECRET` | IDMS OAuth2 client secret |
+| `OIDC_CLIENT_ID` | OIDC OAuth2 client ID |
+| `OIDC_CLIENT_SECRET` | OIDC OAuth2 client secret |
 | `JWT_SECRET` | HMAC secret for JWT signing |
 | `INTERNAL_SERVICE_TOKEN` | Token for RCA callback from rca-orchestrator |
 
@@ -657,10 +657,10 @@ kubectl rollout restart deployment/oie -n aileron
 | Secret | Namespace | Contents |
 |---|---|---|
 | `alerthub-secrets` | `aileron` | DB, JWT, OAuth credentials, Dynatrace token |
-| `alerthub-dsldap-credentials` | `aileron` | DS-LDAP bind DN + password |
+| `alerthub-ldap-credentials` | `aileron` | LDAP bind DN + password |
 | `alerthub-hcl-credentials` | `aileron` | HCL API credentials |
 | `infrastructure-credentials` | `aileron` | CloudStack API key/secret, Dynatrace API token |
-| `alerthub-whisper-cert` | `aileron` | Cosign Whisper Apple corp CA cert for image signing |
+| `alerthub-secrets_manager-cert` | `aileron` | Cosign SecretsManager Aileron corp CA cert for image signing |
 
 ```bash
 # View secret keys (not values)

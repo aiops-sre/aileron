@@ -79,9 +79,9 @@ Go to `Settings → Collaborators and teams`:
 
 | Team | Role |
 |---|---|
-| `interactive-service-delivery/sre-backend` | Write |
-| `interactive-service-delivery/sre-frontend` | Write |
-| `interactive-service-delivery/sre-devops` | Write |
+| `aiops-sre/sre-backend` | Write |
+| `aiops-sre/sre-frontend` | Write |
+| `aiops-sre/sre-devops` | Write |
 | Repo owner (`vk-patha`) | Admin |
 
 ---

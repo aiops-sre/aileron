@@ -395,7 +395,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 ### Getting Help
 - **Slack**: #help-interactive-sre
 - **Wiki**: https://wiki.iapps.example.com/display/ISRE
-- **Email**: interactive-sre@apple.com
+- **Email**: interactive-sre@example.com
 
 ### Reporting Issues
 Include:

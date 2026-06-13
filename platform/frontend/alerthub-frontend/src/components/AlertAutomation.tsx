@@ -233,7 +233,7 @@ export function AlertAutomation({ alerts, onExecuteAction }: AlertAutomationProp
         </div>
         <button
           onClick={() => setIsConfiguring(!isConfiguring)}
-          className="btn-apple bg-purple-500/10 text-purple-600 border border-purple-500/20 hover:bg-purple-500/20"
+          className="btn-aileron bg-purple-500/10 text-purple-600 border border-purple-500/20 hover:bg-purple-500/20"
         >
           <Settings className="w-4 h-4 mr-2" />
           Configure
@@ -299,7 +299,7 @@ export function AlertAutomation({ alerts, onExecuteAction }: AlertAutomationProp
                   await executeAutomation(candidate.alert, candidate.rules);
                 }
               }}
-              className="btn-apple bg-green-500/10 text-green-600 border border-green-500/20 hover:bg-green-500/20"
+              className="btn-aileron bg-green-500/10 text-green-600 border border-green-500/20 hover:bg-green-500/20"
             >
               <Play className="w-4 h-4 mr-2" />
               Execute All ({automationCandidates.length})
@@ -333,7 +333,7 @@ export function AlertAutomation({ alerts, onExecuteAction }: AlertAutomationProp
                   </div>
                   <button
                     onClick={() => executeAutomation(alert, rules)}
-                    className="btn-apple bg-green-500/10 text-green-600 border border-green-500/20 hover:bg-green-500/20 px-3 py-1 text-xs"
+                    className="btn-aileron bg-green-500/10 text-green-600 border border-green-500/20 hover:bg-green-500/20 px-3 py-1 text-xs"
                   >
                     Execute
                   </button>
@@ -458,7 +458,7 @@ export function AlertAutomation({ alerts, onExecuteAction }: AlertAutomationProp
                       Based on historical patterns with high resolution rates
                     </p>
                   </div>
-                  <button className="btn-apple bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20 px-3 py-1 text-xs">
+                  <button className="btn-aileron bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20 px-3 py-1 text-xs">
                     Add Rule
                   </button>
                 </div>

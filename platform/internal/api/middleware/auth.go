@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/aileron-platform/aileron/platform/internal/services/dsldap"
+	"github.com/aileron-platform/aileron/platform/internal/services/ldap"
 	"github.com/aileron-platform/aileron/platform/internal/services/jwt"
 	"github.com/aileron-platform/aileron/platform/internal/services/rbac"
 )
@@ -21,7 +21,7 @@ import (
 type AuthMiddleware struct {
 	jwtService  *jwt.JWTService
 	rbacService *rbac.RBACService
-	ldapService *dsldap.Service // optional; nil when DS-LDAP is disabled
+	ldapService *ldap.Service // optional; nil when LDAP is disabled
 }
 
 // NewAuthMiddleware creates a new auth middleware
@@ -32,18 +32,18 @@ func NewAuthMiddleware(jwtService *jwt.JWTService, rbacService *rbac.RBACService
 	}
 }
 
-// SetLDAPService attaches an optional DS-LDAP service for group-based role enrichment.
+// SetLDAPService attaches an optional LDAP service for group-based role enrichment.
 // Call this after NewAuthMiddleware if LDAP is enabled.
-func (m *AuthMiddleware) SetLDAPService(svc *dsldap.Service) {
+func (m *AuthMiddleware) SetLDAPService(svc *ldap.Service) {
 	m.ldapService = svc
 }
 
-// Authenticate validates JWT token OR IDMS headers and sets user context
+// Authenticate validates JWT token OR OIDC headers and sets user context
 func (m *AuthMiddleware) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Check if IDMS user already set by IDMS middleware
-		if idmsUser, exists := c.Get("idms_user"); exists && idmsUser != nil {
-			// IDMS authenticated — allow through
+		// Check if OIDC user already set by OIDC middleware
+		if oidcUser, exists := c.Get("oidc_user"); exists && oidcUser != nil {
+			// OIDC authenticated — allow through
 			c.Next()
 			return
 		}
@@ -108,22 +108,22 @@ func (m *AuthMiddleware) Authenticate() gin.HandlerFunc {
 		c.Set("token_id", claims.ID)
 		c.Set("claims", claims)
 
-		// DS-LDAP group enrichment (optional — runs only when ldapService is set).
+		// LDAP group enrichment (optional — runs only when ldapService is set).
 		// Looks up the user's AD group memberships and maps them to an AlertHub role.
 		// The result is stored in both the gin context and the request context so that
 		// rbac.CheckPermission can read it without an extra DB round-trip.
 		if m.ldapService != nil && claims.Email != "" {
 			groups, err := m.ldapService.GetUserGroups(claims.Email)
 			if err != nil {
-				log.Printf("dsldap: group lookup failed for %s: %v (falling back to JWT role)", claims.Email, err)
+				log.Printf("ldap: group lookup failed for %s: %v (falling back to JWT role)", claims.Email, err)
 			} else {
 				ldapRole := m.ldapService.MapGroupsToRole(groups)
 				c.Set("ldap_groups", groups)
 				if ldapRole != "" {
 					c.Set("ldap_role", ldapRole)
 					// Inject into request context so rbac.CheckPermission can read it
-					enriched := dsldap.WithRole(c.Request.Context(), ldapRole)
-					enriched = dsldap.WithGroups(enriched, groups)
+					enriched := ldap.WithRole(c.Request.Context(), ldapRole)
+					enriched = ldap.WithGroups(enriched, groups)
 					c.Request = c.Request.WithContext(enriched)
 				}
 			}

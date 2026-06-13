@@ -13,7 +13,7 @@ import { Shield, Loader2, RefreshCw } from 'lucide-react'
 // Import pages
 import { ManualLoginPage } from '@/pages/ManualLoginPage'
 import { OAuthCallbackPage } from '@/pages/OAuthCallbackPage'
-import { FloodgateTestPage } from '@/pages/FloodgateTestPage'
+import { OIDC ProviderTestPage } from '@/pages/OIDC ProviderTestPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { RevolutionaryAIOpsDashboard } from '@/pages/RevolutionaryDashboardPage'
 import { AlertsPage } from '@/pages/AlertsPage'
@@ -44,8 +44,8 @@ import RCAInvestigationPage from '@/pages/RCAInvestigationPage'
 import CapacityPlanningPage from '@/pages/CapacityPlanningPage'
 import { KubeSensePage } from '@/pages/KubeSensePage'
 
-// Apple Design Tokens for loading screen
-const apple = {
+// Aileron Design Tokens for loading screen
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   purple: '#AF52DE',
@@ -75,7 +75,7 @@ const AuthenticationLoader = ({ isReauthenticating = false }: { isReauthenticati
   const [showRetry, setShowRetry] = useState(false)
 
   // If authentication takes more than 8 seconds, show a manual "Try Again" button.
-  // This catches the case where the IdMS redirect is stuck or the browser blocked it.
+  // This catches the case where the OIDC redirect is stuck or the browser blocked it.
   useEffect(() => {
     const t = setTimeout(() => setShowRetry(true), 8000)
     return () => clearTimeout(t)
@@ -88,20 +88,20 @@ const AuthenticationLoader = ({ isReauthenticating = false }: { isReauthenticati
   return (
   <div style={{
     minHeight: '100vh',
-    background: apple.background,
+    background: tokens.background,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", sans-serif',
+    fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", sans-serif',
   }}>
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
       style={{
-        background: apple.secondaryBackground,
-        borderRadius: apple.radius.xl,
-        border: `0.5px solid ${apple.separator}`,
+        background: tokens.secondaryBackground,
+        borderRadius: tokens.radius.xl,
+        border: `0.5px solid ${tokens.separator}`,
         padding: 40,
         textAlign: 'center',
         boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
@@ -115,8 +115,8 @@ const AuthenticationLoader = ({ isReauthenticating = false }: { isReauthenticati
         style={{
           width: 64,
           height: 64,
-          borderRadius: apple.radius.xl,
-          background: `linear-gradient(135deg, ${apple.blue}, ${apple.purple})`,
+          borderRadius: tokens.radius.xl,
+          background: `linear-gradient(135deg, ${tokens.blue}, ${tokens.purple})`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -126,14 +126,14 @@ const AuthenticationLoader = ({ isReauthenticating = false }: { isReauthenticati
         <Shield style={{ width: 28, height: 28, color: '#fff' }} />
       </motion.div>
 
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
         {isReauthenticating ? 'Refreshing Session' : 'Initializing SRE Command Center'}
       </h2>
 
-      <p style={{ fontSize: 15, color: apple.secondaryLabel, marginBottom: 24, lineHeight: 1.4 }}>
+      <p style={{ fontSize: 15, color: tokens.secondaryLabel, marginBottom: 24, lineHeight: 1.4 }}>
         {isReauthenticating
           ? 'Updating your authentication tokens in the background...'
-          : 'Setting up your secure session with Apple authentication...'
+          : 'Setting up your secure session with Aileron authentication...'
         }
       </p>
 
@@ -143,12 +143,12 @@ const AuthenticationLoader = ({ isReauthenticating = false }: { isReauthenticati
         justifyContent: 'center',
         gap: 8,
         padding: '12px 20px',
-        background: apple.fill,
-        borderRadius: apple.radius.md,
+        background: tokens.fill,
+        borderRadius: tokens.radius.md,
       }}>
-        <Loader2 style={{ width: 18, height: 18, color: apple.blue, animation: 'spin 1s linear infinite' }} />
-        <span style={{ fontSize: 14, color: apple.secondaryLabel, fontWeight: 500 }}>
-          {isReauthenticating ? 'Refreshing tokens...' : 'Authenticating with IdMS...'}
+        <Loader2 style={{ width: 18, height: 18, color: tokens.blue, animation: 'spin 1s linear infinite' }} />
+        <span style={{ fontSize: 14, color: tokens.secondaryLabel, fontWeight: 500 }}>
+          {isReauthenticating ? 'Refreshing tokens...' : 'Authenticating with OIDC...'}
         </span>
       </div>
 
@@ -160,16 +160,16 @@ const AuthenticationLoader = ({ isReauthenticating = false }: { isReauthenticati
           transition={{ duration: 0.2 }}
           style={{ marginTop: 20 }}
         >
-          <p style={{ fontSize: 12, color: apple.tertiaryLabel, marginBottom: 10 }}>
+          <p style={{ fontSize: 12, color: tokens.tertiaryLabel, marginBottom: 10 }}>
             Taking longer than expected?
           </p>
           <button
             onClick={handleRetry}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '8px 16px', borderRadius: apple.radius.md,
-              background: `${apple.blue}15`, border: `0.5px solid ${apple.blue}40`,
-              color: apple.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              padding: '8px 16px', borderRadius: tokens.radius.md,
+              background: `${tokens.blue}15`, border: `0.5px solid ${tokens.blue}40`,
+              color: tokens.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}
           >
             <RefreshCw style={{ width: 13, height: 13 }} />
@@ -181,20 +181,20 @@ const AuthenticationLoader = ({ isReauthenticating = false }: { isReauthenticati
       <div style={{
         marginTop: 24,
         padding: 16,
-        background: apple.tertiaryFill,
-        borderRadius: apple.radius.sm,
-        border: `0.5px solid ${apple.separator}`,
+        background: tokens.tertiaryFill,
+        borderRadius: tokens.radius.sm,
+        border: `0.5px solid ${tokens.separator}`,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <Shield style={{ width: 14, height: 14, color: apple.blue }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: apple.label }}>
-            Apple Single Sign-On
+          <Shield style={{ width: 14, height: 14, color: tokens.blue }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: tokens.label }}>
+            Aileron Single Sign-On
           </span>
         </div>
-        <p style={{ fontSize: 11, color: apple.tertiaryLabel, lineHeight: 1.4, margin: 0 }}>
+        <p style={{ fontSize: 11, color: tokens.tertiaryLabel, lineHeight: 1.4, margin: 0 }}>
           {isReauthenticating
             ? 'Your session is being refreshed automatically.'
-            : 'Secure authentication through Apple\'s enterprise system.'
+            : 'Secure authentication through your OIDC provider.'
           }
         </p>
       </div>
@@ -205,12 +205,12 @@ const AuthenticationLoader = ({ isReauthenticating = false }: { isReauthenticati
   )
 }
 
-// Protected route wrapper — auto-redirects to IdMS OAuth2 when unauthenticated
+// Protected route wrapper — auto-redirects to OIDC OAuth2 when unauthenticated
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useEnhancedAuthStore(selectIsAuthenticated)
   const isInitializing = useEnhancedAuthStore(selectIsInitializing)
   const location = useLocation()
-  // Prevent duplicate redirects: once we've kicked off the navigation to IdMS,
+  // Prevent duplicate redirects: once we've kicked off the navigation to OIDC,
   // don't do it again even if React re-renders this component (which it will, because
   // setting window.location.href is async and React may render several more times
   // before the browser actually navigates away).
@@ -291,7 +291,7 @@ function App() {
             <Route path="/manual-login" element={<ManualLoginPage />} />
             
             {/* Test route */}
-            <Route path="/floodgate-test" element={<FloodgateTestPage />} />
+            <Route path="/oidc-test" element={<OIDC ProviderTestPage />} />
             
             {/* Revolutionary AIOps Dashboard - The Greatest Frontend */}
             <Route

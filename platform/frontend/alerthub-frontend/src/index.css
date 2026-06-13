@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apple Design System - Complete with Dark Mode Fix */
+/* Aileron Design System - Complete with Dark Mode Fix */
 :root {
-  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", sans-serif;
-  --font-family-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Icons", "Helvetica Neue", sans-serif;
+  --font-family: -aileron-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", sans-serif;
+  --font-family-display: -aileron-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Icons", "Helvetica Neue", sans-serif;
   --radius-lg: 12px;
   --radius-xl: 18px;
   --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
@@ -601,8 +601,8 @@
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
-/* Apple Button System - Frontend-3.0 exact */
-.btn-apple {
+/* Aileron Button System - Frontend-3.0 exact */
+.btn-aileron {
   padding: 10px 20px;
   font-weight: 500;
   font-size: 14px;
@@ -614,43 +614,43 @@
   transform: scale(1);
 }
 
-.btn-apple:active {
+.btn-aileron:active {
   transform: scale(0.98);
 }
 
-.btn-apple-primary {
+.btn-primary {
   background-color: var(--color-blue);
   color: white;
   border: none;
   box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.25);
 }
 
-.btn-apple-primary:hover:not(:disabled) {
+.btn-primary:hover:not(:disabled) {
   background-color: #0077ed;
 }
 
-.btn-apple-primary:disabled {
+.btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.btn-apple-secondary {
+.btn-secondary {
   background-color: var(--color-fill);
   color: var(--color-text);
   border: 1px solid var(--color-separator);
 }
 
-.btn-apple-secondary:hover:not(:disabled) {
+.btn-secondary:hover:not(:disabled) {
   background-color: var(--color-separator);
 }
 
-.btn-apple-secondary:disabled {
+.btn-secondary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Apple Input System - Frontend-3.0 exact */
-.input-apple {
+/* Aileron Input System - Frontend-3.0 exact */
+.input-aileron {
   padding: 12px 16px;
   border-radius: 12px;
   border: 1px solid var(--color-separator);
@@ -662,13 +662,13 @@
   transition: all 0.2s;
 }
 
-.input-apple:focus {
+.input-aileron:focus {
   border-color: var(--color-blue);
   box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.2);
   outline: none;
 }
 
-.input-apple::placeholder {
+.input-aileron::placeholder {
   color: var(--color-text-secondary);
 }
 
@@ -745,8 +745,8 @@
   --ring: 212 100% 48%;
 }
 
-/* Apple Shadow System */
-.shadow-apple-xl {
+/* Aileron Shadow System */
+.shadow-aileron-xl {
   box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
 }
 
@@ -764,7 +764,7 @@
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-/* MOBILE RESPONSIVENESS - Apple iOS Guidelines */
+/* MOBILE RESPONSIVENESS - Aileron iOS Guidelines */
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 /* Mobile viewport optimizations */
@@ -810,14 +810,14 @@
   }
 
   /* Buttons - full width on mobile */
-  .btn-apple,
+  .btn-aileron,
   .button {
     width: 100%;
     justify-content: center;
   }
 
   /* Form inputs - larger touch targets */
-  .input-apple,
+  .input-aileron,
   .input {
     height: 44px !important;
     font-size: 16px !important; /* Prevents zoom on iOS */
@@ -881,7 +881,7 @@
 /* iOS Safari specific fixes */
 @supports (-webkit-touch-callout: none) {
   /* Fix iOS input zoom */
-  .input-apple,
+  .input-aileron,
   .input {
     font-size: 16px !important;
   }

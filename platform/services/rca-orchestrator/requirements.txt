@@ -8,4 +8,4 @@ kubernetes==31.0.0
 neo4j==5.27.0
 pydantic==2.10.4
 python-snappy==0.7.3
-interlinked  # Apple internal LLM gateway client — install from internal PyPI
+interlinked  # internal LLM gateway client — install from internal PyPI

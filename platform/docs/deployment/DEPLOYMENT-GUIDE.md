@@ -50,8 +50,8 @@ JWT_REFRESH_TTL=7d
 LDAP_ENABLED=true
 LDAP_SERVER=ldap.example.com
 LDAP_PORT=636
-LDAP_BASE_DN=dc=apple,dc=com
-LDAP_BIND_DN=cn=alerthub,ou=services,dc=apple,dc=com
+LDAP_BASE_DN=dc=example,dc=com
+LDAP_BIND_DN=cn=alerthub,ou=services,dc=example,dc=com
 LDAP_BIND_PASSWORD=\${LDAP_PASSWORD}
 LDAP_USER_FILTER=(sAMAccountName=%s)
 LDAP_USE_TLS=true
@@ -257,7 +257,7 @@ curl https://alerthub.example.com/health/ai
 2. Check database connections
 3. Verify external service connectivity
 4. Review recent changes
-5. Contact: alerthub-support@apple.com
+5. Contact: alerthub-support@example.com
 
 ### Emergency Contacts
 - **Slack**: #alerthub-oncall

@@ -1,4 +1,4 @@
-package floodgate
+package oidc
 
 import (
 	"bytes"
@@ -16,16 +16,16 @@ import (
 )
 
 const (
-	FloodgateBaseURL      = ""
+	OIDC ProviderBaseURL      = ""
 	ClaudeAPIPath         = "/api/anthropic/v1/messages"
 	GeminiAPIPathTemplate = "/api/gemini/v1/publishers/google/models/%s:generateContent"
 	ModelsAPIPath         = "/api/openai/v1/models"
-	AppleConnectPath      = "/usr/local/bin/appleconnect"
+	OIDCHelperPath      = "/usr/local/bin/oidc-helper"
 	ClientID              = "hvys3fcwcteqrvw3qzkvtk86viuoqv"
 )
 
-// FloodgateService handles interactions with Apple's Floodgate GenAI service
-type FloodgateService struct {
+// OIDCService handles interactions with the configured OIDC provider
+type OIDC ProviderService struct {
 	httpClient *http.Client
 	tokenCache *tokenCache
 	userToken  string
@@ -40,8 +40,8 @@ type tokenCache struct {
 	expiresAt time.Time
 }
 
-// NewFloodgateService creates a new Floodgate service instance
-func NewFloodgateService() *FloodgateService {
+// NewOIDC ProviderService creates a new OIDC Provider service instance
+func NewOIDC ProviderService() *OIDC ProviderService {
 	// Check for mTLS certificates (K8s production mode like Interlinked)
 	certPath := "/narrative/kube-actor/cert.pem"
 	keyPath := "/narrative/kube-actor/private.pem"
@@ -53,12 +53,12 @@ func NewFloodgateService() *FloodgateService {
 	// INTERNAL_TLS_INSECURE must not bypass a properly-signed mTLS connection.
 	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
 	if err == nil {
-		log.Printf("Floodgate: Using mTLS certificates from K8s (like Interlinked)")
+		log.Printf("OIDC Provider: Using mTLS certificates from K8s (like Interlinked)")
 		transport.TLSClientConfig = &tls.Config{
 			Certificates: []tls.Certificate{cert},
 		}
 	} else {
-		log.Printf("Floodgate: mTLS certificates not found, will use user OAuth tokens")
+		log.Printf("OIDC Provider: mTLS certificates not found, will use user OAuth tokens")
 		// No mTLS — allow opt-in TLS bypass for dev/non-prod environments only.
 		//nolint:gosec
 		transport.TLSClientConfig = &tls.Config{
@@ -66,7 +66,7 @@ func NewFloodgateService() *FloodgateService {
 		}
 	}
 
-	return &FloodgateService{
+	return &OIDC ProviderService{
 		httpClient: &http.Client{
 			Timeout:   180 * time.Second,
 			Transport: transport,
@@ -78,7 +78,7 @@ func NewFloodgateService() *FloodgateService {
 }
 
 // SetUserToken sets a token provided by the user's browser/device
-func (s *FloodgateService) SetUserToken(token string) {
+func (s *OIDC ProviderService) SetUserToken(token string) {
 	s.userToken = token
 	// Cache the token
 	s.tokenCache.token = token
@@ -86,13 +86,13 @@ func (s *FloodgateService) SetUserToken(token string) {
 }
 
 // SetUserVPNIP sets the user's VPN IP for proxy requests
-// This is required by Floodgate when using multi-audience tokens
-func (s *FloodgateService) SetUserVPNIP(ip string) {
+// This is required by OIDC Provider when using multi-audience tokens
+func (s *OIDC ProviderService) SetUserVPNIP(ip string) {
 	s.userVPNIP = ip
 }
 
-// getToken retrieves OAuth token from appleconnect or user-provided token
-func (s *FloodgateService) getToken() (string, error) {
+// getToken retrieves OAuth token from oidc-helper or user-provided token
+func (s *OIDC ProviderService) getToken() (string, error) {
 	// First check if user provided token
 	if s.userToken != "" {
 		return s.userToken, nil
@@ -103,14 +103,14 @@ func (s *FloodgateService) getToken() (string, error) {
 		return s.tokenCache.token, nil
 	}
 
-	// Check if appleconnect exists
-	if _, err := exec.LookPath(AppleConnectPath); err != nil {
-		// appleconnect not available (e.g., in Docker), return demo mode indication
-		return "", fmt.Errorf("appleconnect not available in this environment (Docker container). User should provide token from their Mac")
+	// Check if oidc-helper exists
+	if _, err := exec.LookPath(OIDCHelperPath); err != nil {
+		// oidc-helper not available (e.g., in Docker), return demo mode indication
+		return "", fmt.Errorf("oidc-helper not available in this environment (Docker container). User should provide token from their Mac")
 	}
 
 	cmd := exec.Command(
-		AppleConnectPath,
+		OIDCHelperPath,
 		"getToken",
 		"-C", ClientID,
 		"--token-type=oauth",
@@ -122,7 +122,7 @@ func (s *FloodgateService) getToken() (string, error) {
 
 	output, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("failed to execute appleconnect: %w", err)
+		return "", fmt.Errorf("failed to execute oidc-helper: %w", err)
 	}
 
 	lines := strings.Split(string(output), "\n")
@@ -139,19 +139,19 @@ func (s *FloodgateService) getToken() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("oauth-id-token not found in appleconnect output")
+	return "", fmt.Errorf("oauth-id-token not found in oidc-helper output")
 }
 
-// GetTokenDirect retrieves OAuth token directly via appleconnect command
+// GetTokenDirect retrieves OAuth token directly via oidc-helper command
 // This is used during MAS login to automatically capture the token
 // It includes retry logic similar to kubot for better reliability
-func (s *FloodgateService) GetTokenDirect() (string, error) {
+func (s *OIDC ProviderService) GetTokenDirect() (string, error) {
 	return s.getTokenWithRetry()
 }
 
 // getTokenWithRetry implements retry logic similar to kubot
 // Retries up to 3 times with exponential backoff (2, 4, 8 seconds)
-func (s *FloodgateService) getTokenWithRetry() (string, error) {
+func (s *OIDC ProviderService) getTokenWithRetry() (string, error) {
 	maxRetries := 3
 
 	for retry := 0; retry <= maxRetries; retry++ {
@@ -175,15 +175,15 @@ func (s *FloodgateService) getTokenWithRetry() (string, error) {
 	return "", fmt.Errorf("failed to retrieve OAuth token after %d attempts", maxRetries+1)
 }
 
-// executeAppleConnect runs the appleconnect command once
-func (s *FloodgateService) executeAppleConnect() (string, error) {
-	// Check if appleconnect exists
-	if _, err := exec.LookPath(AppleConnectPath); err != nil {
-		return "", fmt.Errorf("appleconnect not available: %w", err)
+// executeAppleConnect runs the oidc-helper command once
+func (s *OIDC ProviderService) executeAppleConnect() (string, error) {
+	// Check if oidc-helper exists
+	if _, err := exec.LookPath(OIDCHelperPath); err != nil {
+		return "", fmt.Errorf("oidc-helper not available: %w", err)
 	}
 
 	cmd := exec.Command(
-		AppleConnectPath,
+		OIDCHelperPath,
 		"getToken",
 		"-C", ClientID,
 		"--token-type=oauth",
@@ -195,7 +195,7 @@ func (s *FloodgateService) executeAppleConnect() (string, error) {
 
 	output, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("appleconnect command failed: %w", err)
+		return "", fmt.Errorf("oidc-helper command failed: %w", err)
 	}
 
 	lines := strings.Split(string(output), "\n")
@@ -211,7 +211,7 @@ func (s *FloodgateService) executeAppleConnect() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("oauth-id-token not found in appleconnect output")
+	return "", fmt.Errorf("oauth-id-token not found in oidc-helper output")
 }
 
 // ChatRequest represents a chat request
@@ -303,7 +303,7 @@ type geminiCandidate struct {
 }
 
 // Chat sends a chat request to the specified model
-func (s *FloodgateService) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
+func (s *OIDC ProviderService) Chat(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	if strings.HasPrefix(req.Model, "aws:") || strings.Contains(req.Model, "claude") {
 		return s.chatClaude(ctx, req)
 	} else if strings.Contains(req.Model, "gemini") {
@@ -313,8 +313,8 @@ func (s *FloodgateService) Chat(ctx context.Context, req *ChatRequest) (*ChatRes
 	return nil, fmt.Errorf("unsupported model: %s", req.Model)
 }
 
-// chatClaude sends request to Claude via Floodgate
-func (s *FloodgateService) chatClaude(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
+// chatClaude sends request to Claude via OIDC Provider
+func (s *OIDC ProviderService) chatClaude(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	token, err := s.getToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
@@ -350,7 +350,7 @@ func (s *FloodgateService) chatClaude(ctx context.Context, req *ChatRequest) (*C
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := FloodgateBaseURL + ClaudeAPIPath
+	url := OIDC ProviderBaseURL + ClaudeAPIPath
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -407,8 +407,8 @@ func (s *FloodgateService) chatClaude(ctx context.Context, req *ChatRequest) (*C
 	}, nil
 }
 
-// chatGemini sends request to Gemini via Floodgate
-func (s *FloodgateService) chatGemini(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
+// chatGemini sends request to Gemini via OIDC Provider
+func (s *OIDC ProviderService) chatGemini(ctx context.Context, req *ChatRequest) (*ChatResponse, error) {
 	token, err := s.getToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
@@ -443,7 +443,7 @@ func (s *FloodgateService) chatGemini(ctx context.Context, req *ChatRequest) (*C
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := FloodgateBaseURL + fmt.Sprintf(GeminiAPIPathTemplate, req.Model)
+	url := OIDC ProviderBaseURL + fmt.Sprintf(GeminiAPIPathTemplate, req.Model)
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -502,13 +502,13 @@ type ModelInfo struct {
 	CreatedAt int64  `json:"created_at"`
 }
 
-// ListModels retrieves available models from Floodgate
-func (s *FloodgateService) ListModels(ctx context.Context) ([]ModelInfo, error) {
+// ListModels retrieves available models from OIDC Provider
+func (s *OIDC ProviderService) ListModels(ctx context.Context) ([]ModelInfo, error) {
 	// Check if using mTLS (certificates loaded in transport)
 	transport := s.httpClient.Transport.(*http.Transport)
 	usingMTLS := len(transport.TLSClientConfig.Certificates) > 0
 
-	url := FloodgateBaseURL + ModelsAPIPath
+	url := OIDC ProviderBaseURL + ModelsAPIPath
 	httpReq, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -522,13 +522,13 @@ func (s *FloodgateService) ListModels(ctx context.Context) ([]ModelInfo, error) 
 		}
 		httpReq.Header.Set("Authorization", "Bearer "+token)
 	} else {
-		log.Printf("Using mTLS authentication for Floodgate models")
+		log.Printf("Using mTLS authentication for OIDC Provider models")
 	}
 
-	// NEW: Add X-Forwarded-For for proxy requests (required by Floodgate)
+	// NEW: Add X-Forwarded-For for proxy requests (required by OIDC Provider)
 	if s.userVPNIP != "" {
 		httpReq.Header.Set("X-Forwarded-For", s.userVPNIP)
-		log.Printf("Floodgate request with proxy headers (IP: %s)", s.userVPNIP)
+		log.Printf("OIDC Provider request with proxy headers (IP: %s)", s.userVPNIP)
 	}
 
 	// Identify as AlertHub proxy
@@ -582,8 +582,8 @@ func (s *FloodgateService) ListModels(ctx context.Context) ([]ModelInfo, error) 
 	return models, nil
 }
 
-// HealthCheck verifies Floodgate connectivity
-func (s *FloodgateService) HealthCheck(ctx context.Context) error {
+// HealthCheck verifies OIDC Provider connectivity
+func (s *OIDC ProviderService) HealthCheck(ctx context.Context) error {
 	_, err := s.getToken()
 	if err != nil {
 		return fmt.Errorf("health check failed: %w", err)

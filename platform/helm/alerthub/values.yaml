@@ -61,10 +61,10 @@ ingress:
   tlsSecret: k-miao-tls-cert
   ingressClass: nginx
   dnsTarget: example-cluster.example.com
-  # idmsIngressSecret: set this to the same value as IDMS_INGRESS_SECRET in alerthub-secrets
+  # oidcIngressSecret: set this to the same value as OIDC_INGRESS_SECRET in alerthub-secrets
   # When set, NGINX injects X-Internal-Auth header so the backend can validate that
   # identity headers (X-Forwarded-User etc.) came through the trusted ingress.
-  idmsIngressSecret: ""
+  oidcIngressSecret: ""
 
 # ---------------------------------------------------------------------------
 # Backend
@@ -218,19 +218,19 @@ config:
   logLevel: info
   port: "3000"
   cluster: example-cluster
-  idmsEnabled: "true"
-  idmsAutoProvision: "true"
-  idmsDefaultRole: viewer
-  idmsStrictMode: "false"
+  oidcEnabled: "true"
+  oidcAutoProvision: "true"
+  oidcDefaultRole: viewer
+  oidcStrictMode: "false"
   internalTlsInsecure: "true"
 
 # ---------------------------------------------------------------------------
-# DS-LDAP
+# LDAP
 # ---------------------------------------------------------------------------
-dsldap:
+ldap:
   enabled: "true"
   serverUrl: 
-  userSearchBase: "ou=people,o=apple"
+  userSearchBase: "ou=people,dc=example,dc=com"
   cacheTtlMinutes: "5"
   adminGroups: aileron-admins
   operatorGroups: "aileron-operators,aileron-operators"
@@ -241,11 +241,11 @@ dsldap:
 # ---------------------------------------------------------------------------
 secrets:
   name: alerthub-secrets
-  dsldapName: alerthub-dsldap-credentials
+  ldapName: alerthub-ldap-credentials
   hclName: alerthub-hcl-credentials
   neo4jCredsName: neo4j-credentials
   infraCredsName: infrastructure-credentials
-  whisperCertName: alerthub-whisper-cert
+  secrets_managerCertName: alerthub-secrets_manager-cert
 
 # ---------------------------------------------------------------------------
 # Build jobs (buildkit / cosign) — disable on DR clusters without buildkit
@@ -254,9 +254,9 @@ build:
   enabled: true
 
 # ---------------------------------------------------------------------------
-# Whisper secret store — disable on clusters without AppleCertificateManager CR
+# SecretsManager secret store — disable on clusters without AppleCertificateManager CR
 # ---------------------------------------------------------------------------
-whisper:
+secrets_manager:
   enabled: true
 
 # ---------------------------------------------------------------------------

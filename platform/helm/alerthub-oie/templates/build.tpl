@@ -42,7 +42,7 @@ spec:
             - build
             - --frontend=dockerfile.v0
             - --opt=filename=services/oie/Dockerfile
-            - "--opt=context=https://$(GIT_TOKEN)@interactive-git.example.com/interactive-service-delivery/alert-engine.git#{{ .Values.Branch }}"
+            - "--opt=context=https://$(GIT_TOKEN)@github.com/aiops-sre/aiops-sre/alert-engine.git#{{ .Values.Branch }}"
             - "--output=type=image,name={{ .Values.images.oie.repository }}:{{ .Values.imageTag }},push=true,registry.insecure=true"
             - "--export-cache=type=registry,ref={{ .Values.images.oie.repository }}:buildcache,mode=max"
             - "--import-cache=type=registry,ref={{ .Values.images.oie.repository }}:buildcache"

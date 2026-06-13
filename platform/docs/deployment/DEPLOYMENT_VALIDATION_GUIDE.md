@@ -13,7 +13,7 @@
 
 ```bash
 # Clone repository
-git clone git@github.com/aileron-platform:interactive-service-delivery/alert-engine.git
+git clone git@github.com/aileron-platform:aiops-sre/alert-engine.git
 cd alert-engine
 
 # Deploy AWS infrastructure

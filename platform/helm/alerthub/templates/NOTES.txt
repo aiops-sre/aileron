@@ -43,15 +43,15 @@ A commented-out example manifest is available at:
      mps-tooling-dev-mdn.yaml
      mps-tooling-mdn.yaml
 
-2. {{ .Values.secrets.dsldapName }} (alerthub-dsldap-credentials)
+2. {{ .Values.secrets.ldapName }} (alerthub-ldap-credentials)
    Keys:
-     LDAP_APP_ID       — DS-LDAP / IdMS application ID
-     LDAP_APP_PASSWORD — DS-LDAP / IdMS application password
+     LDAP_APP_ID       — LDAP / OIDC application ID
+     LDAP_APP_PASSWORD — LDAP / OIDC application password
 
 3. {{ .Values.secrets.hclName }} (alerthub-hcl-credentials)
    Keys:
-     IDMS_APP_ID       — IdMS HCL / Kentaurus application ID
-     IDMS_APP_PASSWORD — IdMS HCL / Kentaurus application password
+     OIDC_APP_ID       — OIDC HCL / IncidentManager application ID
+     OIDC_APP_PASSWORD — OIDC HCL / IncidentManager application password
 
 4. {{ .Values.secrets.neo4jCredsName }} (neo4j-credentials)
    Keys:
@@ -63,17 +63,17 @@ A commented-out example manifest is available at:
      cloudstack-api-key    — CloudStack API key (RNO + MDN shared)
      cloudstack-secret-key — CloudStack secret key
 
-6. endor-credentials  (optional — Apple internal LLM gateway)
+6. endor-credentials  (optional — internal LLM gateway)
    Keys:
      client-id        oidc-app-id
      client-secret    account-name
      totp-secret      account-password
      app-id-key
 
-7. {{ .Values.secrets.whisperCertName }} (alerthub-whisper-cert)
+7. {{ .Values.secrets.secrets_managerCertName }} (alerthub-secrets_manager-cert)
    Keys:
-     tls.crt  — Whisper/internal TLS certificate (PEM)
-     tls.key  — Whisper/internal TLS private key (PEM)
+     tls.crt  — SecretsManager/internal TLS certificate (PEM)
+     tls.key  — SecretsManager/internal TLS private key (PEM)
 
 ------------------------------------------------------------
 INGRESS

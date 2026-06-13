@@ -1301,7 +1301,7 @@ export function KubeSensePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: c.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: c.bg, fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
       {/* Spinning keyframe */}
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px' }}>

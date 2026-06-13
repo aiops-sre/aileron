@@ -32,8 +32,8 @@ FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates tzdata postgresql-client curl
 
-# Trust Apple Corporate Root CAs (required for  and other internal services)
-COPY docker/apple-corp-cas.crt /usr/local/share/ca-certificates/apple-corp.crt
+# Trust your organizationorate Root CAs (required for  and other internal services)
+COPY docker/aileron-corp-cas.crt /usr/local/share/ca-certificates/aileron-corp.crt
 RUN update-ca-certificates
 
 RUN addgroup -g 1000 alerthub && \

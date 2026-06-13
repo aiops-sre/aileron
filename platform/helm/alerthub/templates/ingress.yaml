@@ -23,15 +23,15 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
-    # Apple-specific: DNS external CNAME target
+    # DNS external CNAME target
     external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.dnsTarget | quote }}
-    # IDMS trusted-ingress header: backend middleware validates X-Internal-Auth to confirm
-    # that IDMS identity headers (X-Forwarded-User etc.) came through this trusted NGINX
+    # OIDC trusted-ingress header: backend middleware validates X-Internal-Auth to confirm
+    # that OIDC identity headers (X-Forwarded-User etc.) came through this trusted NGINX
     # and not from a direct in-cluster caller forging identity. Value must match
-    # IDMS_INGRESS_SECRET in the alerthub-secrets K8s secret.
-    {{- if .Values.ingress.idmsIngressSecret }}
+    # OIDC_INGRESS_SECRET in the alerthub-secrets K8s secret.
+    {{- if .Values.ingress.oidcIngressSecret }}
     nginx.ingress.kubernetes.io/configuration-snippet: |
-      proxy_set_header X-Internal-Auth {{ .Values.ingress.idmsIngressSecret | quote }};
+      proxy_set_header X-Internal-Auth {{ .Values.ingress.oidcIngressSecret | quote }};
     {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.ingressClass }}

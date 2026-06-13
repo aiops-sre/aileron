@@ -673,13 +673,13 @@ const AIOpsPage: React.FC = () => {
   const [invStarting, setInvStarting] = useState(false)
   const [rcaTraining, setRcaTraining] = useState(false)
 
-  // Floodgate RCA state (separate from AI chat Floodgate)
-  const [floodgateRcaToken, setFloodgateRcaToken] = useState<string>(() =>
-    localStorage.getItem('rca_floodgate_token') || ''
+  // OIDC Provider RCA state (separate from AI chat OIDC Provider)
+  const [oidcRcaToken, setOIDC ProviderRcaToken] = useState<string>(() =>
+    localStorage.getItem('rca_oidc_token') || ''
   )
-  const [floodgateRcaModel, setFloodgateRcaModel] = useState<'claude-sonnet-4-6' | 'claude-opus-4-7'>('claude-sonnet-4-6')
-  const [floodgateRunningFor, setFloodgateRunningFor] = useState<string | null>(null)
-  const [floodgateTokenStatus, setFloodgateTokenStatus] = useState<'idle' | 'testing' | 'valid' | 'invalid'>('idle')
+  const [oidcRcaModel, setOIDC ProviderRcaModel] = useState<'claude-sonnet-4-6' | 'claude-opus-4-7'>('claude-sonnet-4-6')
+  const [oidcRunningFor, setOIDC ProviderRunningFor] = useState<string | null>(null)
+  const [oidcTokenStatus, setOIDC ProviderTokenStatus] = useState<'idle' | 'testing' | 'valid' | 'invalid'>('idle')
 
   const [processingMonitored, setProcessingMonitored] = useState(false)
 
@@ -853,9 +853,9 @@ const AIOpsPage: React.FC = () => {
 
   const startInvestigation = useCallback(async () => {
     if (!invTitle) return toast.error('Enter an alert title')
-    const isFloodgate = floodgateRcaModel !== null && floodgateRcaToken && rcaSubTab !== 'model'
-    // If using Floodgate but no token, redirect to model tab
-    if (floodgateRcaToken && !invTitle) return
+    const isOIDC Provider = oidcRcaModel !== null && oidcRcaToken && rcaSubTab !== 'model'
+    // If using OIDC Provider but no token, redirect to model tab
+    if (oidcRcaToken && !invTitle) return
     setInvStarting(true)
     try {
       const body: any = {
@@ -867,11 +867,11 @@ const AIOpsPage: React.FC = () => {
         cluster: invCluster || null,
         service: invService || null,
       }
-      // Pass Floodgate config if token is set and a claude model is selected
-      if (floodgateRcaToken && floodgateRcaModel) {
-        body.llm_provider = 'floodgate'
-        body.llm_model = floodgateRcaModel
-        body.llm_token = floodgateRcaToken
+      // Pass OIDC Provider config if token is set and a claude model is selected
+      if (oidcRcaToken && oidcRcaModel) {
+        body.llm_provider = 'oidc'
+        body.llm_model = oidcRcaModel
+        body.llm_token = oidcRcaToken
       }
       const r = await fetch('/api/v1/rca/investigations', {
         method: 'POST',
@@ -882,12 +882,12 @@ const AIOpsPage: React.FC = () => {
       setSelectedInvId(d.investigation_id)
       setRcaSubTab('active')
       await loadInvestigations()
-      const modelLabel = floodgateRcaToken ? `Floodgate ${floodgateRcaModel}` : 'local Ollama'
+      const modelLabel = oidcRcaToken ? `OIDC Provider ${oidcRcaModel}` : 'local Ollama'
       toast.success(`Investigation started (${modelLabel})`)
       setInvTitle('')
     } catch { toast.error('Failed to start investigation') }
     finally { setInvStarting(false) }
-  }, [invTitle, invSeverity, invNs, invCluster, invService, invPod, floodgateRcaToken, floodgateRcaModel, loadInvestigations, rcaSubTab])
+  }, [invTitle, invSeverity, invNs, invCluster, invService, invPod, oidcRcaToken, oidcRcaModel, loadInvestigations, rcaSubTab])
 
   const triggerRcaTraining = useCallback(async () => {
     setRcaTraining(true)
@@ -898,9 +898,9 @@ const AIOpsPage: React.FC = () => {
     finally { setTimeout(() => setRcaTraining(false), 3000) }
   }, [])
 
-  const runFloodgateRca = useCallback(async (inv: any) => {
-    if (!floodgateRcaToken.trim()) {
-      toast.error('Enter your Floodgate token in the Model tab first')
+  const runOIDC ProviderRca = useCallback(async (inv: any) => {
+    if (!oidcRcaToken.trim()) {
+      toast.error('Enter your OIDC Provider token in the Model tab first')
       setRcaSubTab('model')
       return
     }
@@ -908,20 +908,20 @@ const AIOpsPage: React.FC = () => {
       toast.error('This investigation has no linked incident ID')
       return
     }
-    setFloodgateRunningFor(inv.id)
+    setOIDC ProviderRunningFor(inv.id)
     try {
-      await incidentsApi.floodgateRCA(inv.incident_id, {
-        model: floodgateRcaModel,
-        token: floodgateRcaToken,
+      await incidentsApi.oidcRCA(inv.incident_id, {
+        model: oidcRcaModel,
+        token: oidcRcaToken,
       })
-      toast.success(`Floodgate RCA completed for "${inv.alert_title}"`)
+      toast.success(`OIDC Provider RCA completed for "${inv.alert_title}"`)
       await loadInvestigations()
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Floodgate RCA failed')
+      toast.error(e?.response?.data?.message || 'OIDC Provider RCA failed')
     } finally {
-      setFloodgateRunningFor(null)
+      setOIDC ProviderRunningFor(null)
     }
-  }, [floodgateRcaToken, floodgateRcaModel, loadInvestigations])
+  }, [oidcRcaToken, oidcRcaModel, loadInvestigations])
 
   // ── Effects ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -2068,10 +2068,10 @@ const AIOpsPage: React.FC = () => {
                       <Brain style={{ width: 14, height: 14, color: a.indigo }} />
                       <span style={{ fontSize: 11, fontWeight: 600, color: a.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Start Investigation</span>
                       {/* Show which LLM will be used */}
-                      {floodgateRcaToken ? (
+                      {oidcRcaToken ? (
                         <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, padding: '2px 8px', borderRadius: 4, background: `${a.orange}12`, color: a.orange, fontWeight: 600 }}>
                           <Sparkles style={{ width: 9, height: 9 }} />
-                          Floodgate {floodgateRcaModel === 'claude-sonnet-4-6' ? 'Sonnet 4.6' : 'Opus 4.7'}
+                          OIDC Provider {oidcRcaModel === 'claude-sonnet-4-6' ? 'Sonnet 4.6' : 'Opus 4.7'}
                         </span>
                       ) : rcaModel?.current_model ? (
                         <code style={{ fontSize: 10, padding: '1px 8px', borderRadius: 4, background: `${a.indigo}12`, color: a.indigo, marginLeft: 'auto' }}>
@@ -2098,8 +2098,8 @@ const AIOpsPage: React.FC = () => {
                       <input value={invPod} onChange={e => setInvPod(e.target.value)} placeholder="pod (optional)"
                         style={{ padding: '9px 12px', borderRadius: a.r.sm, border: `0.5px solid ${a.separator}`, background: a.fill, color: a.label, fontSize: 13, outline: 'none', width: 140 }} />
                       <button onClick={startInvestigation} disabled={invStarting || !invTitle}
-                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: a.r.sm, background: invStarting || !invTitle ? `${floodgateRcaToken ? a.orange : a.indigo}50` : (floodgateRcaToken ? a.orange : a.indigo), color: '#fff', border: 'none', cursor: invStarting || !invTitle ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}>
-                        {floodgateRcaToken ? <Sparkles style={{ width: 13, height: 13 }} /> : <Play style={{ width: 13, height: 13 }} />}{invStarting ? 'Starting…' : 'Investigate'}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: a.r.sm, background: invStarting || !invTitle ? `${oidcRcaToken ? a.orange : a.indigo}50` : (oidcRcaToken ? a.orange : a.indigo), color: '#fff', border: 'none', cursor: invStarting || !invTitle ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600 }}>
+                        {oidcRcaToken ? <Sparkles style={{ width: 13, height: 13 }} /> : <Play style={{ width: 13, height: 13 }} />}{invStarting ? 'Starting…' : 'Investigate'}
                       </button>
                     </div>
                   </div>
@@ -2160,20 +2160,20 @@ const AIOpsPage: React.FC = () => {
                                       {inv.root_cause && <span style={{ color: a.green }}>{Math.round(inv.root_cause.confidence * 100)}% conf</span>}
                                     </div>
                                   </div>
-                                  {/* Floodgate re-run button — only for investigations linked to an incident */}
+                                  {/* OIDC Provider re-run button — only for investigations linked to an incident */}
                                   {inv.incident_id && (
                                     <button
-                                      onClick={e => { e.stopPropagation(); runFloodgateRca(inv) }}
-                                      disabled={floodgateRunningFor === inv.id}
-                                      title={`Re-run RCA with Floodgate ${floodgateRcaModel}`}
+                                      onClick={e => { e.stopPropagation(); runOIDC ProviderRca(inv) }}
+                                      disabled={oidcRunningFor === inv.id}
+                                      title={`Re-run RCA with OIDC Provider ${oidcRcaModel}`}
                                       style={{
                                         display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px',
                                         borderRadius: a.r.xs, border: `0.5px solid ${a.orange}40`,
                                         background: `${a.orange}10`, color: a.orange,
-                                        fontSize: 11, fontWeight: 600, cursor: floodgateRunningFor === inv.id ? 'not-allowed' : 'pointer',
-                                        opacity: floodgateRunningFor === inv.id ? 0.5 : 1, flexShrink: 0,
+                                        fontSize: 11, fontWeight: 600, cursor: oidcRunningFor === inv.id ? 'not-allowed' : 'pointer',
+                                        opacity: oidcRunningFor === inv.id ? 0.5 : 1, flexShrink: 0,
                                       }}>
-                                      {floodgateRunningFor === inv.id
+                                      {oidcRunningFor === inv.id
                                         ? <Loader2 style={{ width: 10, height: 10 }} />
                                         : <Sparkles style={{ width: 10, height: 10 }} />}
                                       Claude
@@ -2253,18 +2253,18 @@ const AIOpsPage: React.FC = () => {
                           </button>
                         </div>
 
-                        {/* Floodgate Claude card */}
+                        {/* OIDC Provider Claude card */}
                         <div style={{ background: a.card, border: `0.5px solid ${a.separator}`, borderRadius: a.r.lg, padding: 20 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                             <Sparkles style={{ width: 18, height: 18, color: a.orange }} />
-                            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: a.label }}>Floodgate Claude</h3>
+                            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: a.label }}>OIDC Provider Claude</h3>
                             <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 5, background: `${a.orange}15`, color: a.orange, fontWeight: 600 }}>Separate from AI Chat</span>
                           </div>
                           <p style={{ fontSize: 12, color: a.secondaryLabel, margin: '0 0 16px', lineHeight: 1.5 }}>
-                            Use Claude Sonnet or Opus via Floodgate for RCA on existing incidents and investigations. Run the command below in Terminal to get your token, then paste it here.
+                            Use Claude Sonnet or Opus via OIDC Provider for RCA on existing incidents and investigations. Run the command below in Terminal to get your token, then paste it here.
                           </p>
                           <div style={{ padding: 10, background: 'rgba(0,0,0,0.04)', borderRadius: a.r.sm, marginBottom: 14, fontFamily: 'monospace', fontSize: 11, color: a.label, wordBreak: 'break-all', lineHeight: 1.6 }}>
-                            appleconnect getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv --token-type=oauth --interactivity-type=none -E prod -G pkce -o openid,dsid,accountname,profile,groups | grep 'oauth-id-token' | awk '{`{print $2}`}'
+                            oidc-helper getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv --token-type=oauth --interactivity-type=none -E prod -G pkce -o openid,dsid,accountname,profile,groups | grep 'oauth-id-token' | awk '{`{print $2}`}'
                           </div>
 
                           <div style={{ marginBottom: 12 }}>
@@ -2273,13 +2273,13 @@ const AIOpsPage: React.FC = () => {
                               {([
                                 ['claude-sonnet-4-6', 'Claude Sonnet 4.6'],
                                 ['claude-opus-4-7',   'Claude Opus 4.7'],
-                              ] as [typeof floodgateRcaModel, string][]).map(([val, label]) => (
-                                <button key={val} onClick={() => setFloodgateRcaModel(val)}
+                              ] as [typeof oidcRcaModel, string][]).map(([val, label]) => (
+                                <button key={val} onClick={() => setOIDC ProviderRcaModel(val)}
                                   style={{
-                                    padding: '7px 14px', borderRadius: a.r.sm, border: `0.5px solid ${floodgateRcaModel === val ? a.orange : a.separator}`,
-                                    background: floodgateRcaModel === val ? `${a.orange}12` : a.fill,
-                                    color: floodgateRcaModel === val ? a.orange : a.secondaryLabel,
-                                    fontSize: 12, fontWeight: floodgateRcaModel === val ? 600 : 400, cursor: 'pointer',
+                                    padding: '7px 14px', borderRadius: a.r.sm, border: `0.5px solid ${oidcRcaModel === val ? a.orange : a.separator}`,
+                                    background: oidcRcaModel === val ? `${a.orange}12` : a.fill,
+                                    color: oidcRcaModel === val ? a.orange : a.secondaryLabel,
+                                    fontSize: 12, fontWeight: oidcRcaModel === val ? 600 : 400, cursor: 'pointer',
                                   }}>
                                   {label}
                                 </button>
@@ -2288,63 +2288,63 @@ const AIOpsPage: React.FC = () => {
                           </div>
 
                           <div style={{ marginBottom: 14 }}>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: a.tertiaryLabel, marginBottom: 6, textTransform: 'uppercase' }}>OAuth Token (from appleconnect)</div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: a.tertiaryLabel, marginBottom: 6, textTransform: 'uppercase' }}>OAuth Token (from oidc-helper)</div>
                             <div style={{ position: 'relative' }}>
                               <Key style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 13, height: 13, color: a.tertiaryLabel }} />
                               <input
                                 type="password"
-                                value={floodgateRcaToken}
+                                value={oidcRcaToken}
                                 onChange={e => {
-                                  setFloodgateRcaToken(e.target.value)
-                                  localStorage.setItem('rca_floodgate_token', e.target.value)
-                                  setFloodgateTokenStatus('idle')
+                                  setOIDC ProviderRcaToken(e.target.value)
+                                  localStorage.setItem('rca_oidc_token', e.target.value)
+                                  setOIDC ProviderTokenStatus('idle')
                                 }}
                                 placeholder="Paste your OAuth ID token here…"
                                 style={{
                                   width: '100%', padding: '9px 12px 9px 32px', borderRadius: a.r.sm,
-                                  border: `0.5px solid ${floodgateRcaToken ? a.orange : a.separator}`,
+                                  border: `0.5px solid ${oidcRcaToken ? a.orange : a.separator}`,
                                   background: a.fill, color: a.label, fontSize: 13, outline: 'none',
                                   boxSizing: 'border-box',
                                 }}
                               />
                             </div>
-                            {floodgateRcaToken && (
+                            {oidcRcaToken && (
                               <div style={{ marginTop: 5, fontSize: 11, color: a.green }}>
-                                Token saved · stored in browser only · never sent to our servers except to proxy Floodgate
+                                Token saved · stored in browser only · never sent to our servers except to proxy OIDC Provider
                               </div>
                             )}
                           </div>
 
                           {/* Test Connection button */}
-                          {floodgateRcaToken && (
+                          {oidcRcaToken && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                               <button
                                 onClick={async () => {
-                                  setFloodgateTokenStatus('testing')
+                                  setOIDC ProviderTokenStatus('testing')
                                   try {
-                                    const r = await incidentsApi.testFloodgateToken(floodgateRcaToken)
-                                    setFloodgateTokenStatus(r.data?.valid ? 'valid' : 'invalid')
+                                    const r = await incidentsApi.testOIDC ProviderToken(oidcRcaToken)
+                                    setOIDC ProviderTokenStatus(r.data?.valid ? 'valid' : 'invalid')
                                   } catch {
-                                    setFloodgateTokenStatus('invalid')
+                                    setOIDC ProviderTokenStatus('invalid')
                                   }
                                 }}
-                                disabled={floodgateTokenStatus === 'testing'}
+                                disabled={oidcTokenStatus === 'testing'}
                                 style={{
                                   display: 'flex', alignItems: 'center', gap: 6,
                                   padding: '7px 14px', borderRadius: a.r.sm,
-                                  background: floodgateTokenStatus === 'testing' ? `${a.orange}40` : `${a.orange}15`,
+                                  background: oidcTokenStatus === 'testing' ? `${a.orange}40` : `${a.orange}15`,
                                   color: a.orange, border: `0.5px solid ${a.orange}40`,
-                                  fontSize: 12, fontWeight: 600, cursor: floodgateTokenStatus === 'testing' ? 'not-allowed' : 'pointer',
+                                  fontSize: 12, fontWeight: 600, cursor: oidcTokenStatus === 'testing' ? 'not-allowed' : 'pointer',
                                 }}>
-                                {floodgateTokenStatus === 'testing'
+                                {oidcTokenStatus === 'testing'
                                   ? <><span style={{ display: 'inline-block', width: 12, height: 12, border: `2px solid ${a.orange}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Testing…</>
                                   : <><Sparkles style={{ width: 12, height: 12 }} /> Test Connection</>
                                 }
                               </button>
-                              {floodgateTokenStatus === 'valid' && (
-                                <span style={{ fontSize: 12, color: a.green, fontWeight: 600 }}>✓ Connected to Floodgate</span>
+                              {oidcTokenStatus === 'valid' && (
+                                <span style={{ fontSize: 12, color: a.green, fontWeight: 600 }}>✓ Connected to OIDC Provider</span>
                               )}
-                              {floodgateTokenStatus === 'invalid' && (
+                              {oidcTokenStatus === 'invalid' && (
                                 <span style={{ fontSize: 12, color: a.red, fontWeight: 600 }}>✗ Token invalid or expired</span>
                               )}
                             </div>
@@ -2352,7 +2352,7 @@ const AIOpsPage: React.FC = () => {
 
                           <div style={{ padding: 10, background: `${a.orange}08`, borderRadius: a.r.sm, fontSize: 12, color: a.secondaryLabel, lineHeight: 1.5 }}>
                             <strong style={{ color: a.label }}>Usage:</strong> Once the token is set, click the{' '}
-                            <span style={{ color: a.orange, fontWeight: 600 }}>Sparkles</span> button on any investigation to re-run RCA with Floodgate Claude.
+                            <span style={{ color: a.orange, fontWeight: 600 }}>Sparkles</span> button on any investigation to re-run RCA with OIDC Provider Claude.
                             Results are stored in the incident record and shown in the Incidents page RCA tab.
                           </div>
                         </div>

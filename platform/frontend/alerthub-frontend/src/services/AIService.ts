@@ -73,7 +73,7 @@ class AIService {
   // Enhanced authentication headers with multiple token sources
   private getAuthHeaders(): Record<string, string> {
     const accessToken = this.getAccessToken();
-    const floodgateToken = this.getFloodgateToken();
+    const oidcToken = this.getOIDC ProviderToken();
     const oauthToken = localStorage.getItem('oauth_id_token');
     
     const headers: Record<string, string> = {
@@ -86,8 +86,8 @@ class AIService {
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
-    if (floodgateToken) {
-      headers['X-Floodgate-Token'] = floodgateToken;
+    if (oidcToken) {
+      headers['X-OIDC Provider-Token'] = oidcToken;
     }
 
     if (oauthToken) {
@@ -111,9 +111,9 @@ class AIService {
     return sessionStorage.getItem('access_token') || localStorage.getItem('access_token') || localStorage.getItem('token') || '';
   }
 
-  // Advanced Floodgate token management
-  private getFloodgateToken(): string {
-    const tokenInfo = this.getFloodgateTokenInfo();
+  // Advanced OIDC Provider token management
+  private getOIDC ProviderToken(): string {
+    const tokenInfo = this.getOIDC ProviderTokenInfo();
     if (!tokenInfo) return '';
 
     const status = this.getTokenStatus(tokenInfo);
@@ -130,11 +130,11 @@ class AIService {
     return '';
   }
 
-  private getFloodgateTokenInfo(): TokenInfo | null {
-    const token = localStorage.getItem('floodgate_token');
-    const expiry = localStorage.getItem('floodgate_token_expiry');
-    const source = localStorage.getItem('floodgate_token_source') || 'manual';
-    const createdAt = localStorage.getItem('floodgate_token_created');
+  private getOIDC ProviderTokenInfo(): TokenInfo | null {
+    const token = localStorage.getItem('oidc_token');
+    const expiry = localStorage.getItem('oidc_token_expiry');
+    const source = localStorage.getItem('oidc_token_source') || 'manual';
+    const createdAt = localStorage.getItem('oidc_token_created');
 
     if (!token) return null;
 
@@ -164,8 +164,8 @@ class AIService {
   }
 
   // Enhanced token validation
-  isFloodgateTokenValid(): boolean {
-    const tokenInfo = this.getFloodgateTokenInfo();
+  isOIDC ProviderTokenValid(): boolean {
+    const tokenInfo = this.getOIDC ProviderTokenInfo();
     if (!tokenInfo) return false;
 
     const status = this.getTokenStatus(tokenInfo);
@@ -173,7 +173,7 @@ class AIService {
   }
 
   // Advanced token setting with metadata
-  setFloodgateToken(
+  setOIDC ProviderToken(
     token: string,
     expiryDate?: string,
     source: TokenInfo['source'] = 'manual',
@@ -181,16 +181,16 @@ class AIService {
   ) {
     const now = new Date().toISOString();
     
-    localStorage.setItem('floodgate_token', token);
-    localStorage.setItem('floodgate_token_source', source);
-    localStorage.setItem('floodgate_token_created', now);
+    localStorage.setItem('oidc_token', token);
+    localStorage.setItem('oidc_token_source', source);
+    localStorage.setItem('oidc_token_created', now);
     
     if (expiryDate) {
-      localStorage.setItem('floodgate_token_expiry', expiryDate);
+      localStorage.setItem('oidc_token_expiry', expiryDate);
     }
 
     if (metadata) {
-      localStorage.setItem('floodgate_token_metadata', JSON.stringify(metadata));
+      localStorage.setItem('oidc_token_metadata', JSON.stringify(metadata));
     }
 
     // Notify listeners
@@ -212,7 +212,7 @@ class AIService {
   }
 
   private checkTokenHealth() {
-    const tokenInfo = this.getFloodgateTokenInfo();
+    const tokenInfo = this.getOIDC ProviderTokenInfo();
     if (!tokenInfo) {
       this.notifyTokenStatusChange('missing');
       return;
@@ -249,7 +249,7 @@ class AIService {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data?.token) {
-          this.setFloodgateToken(
+          this.setOIDC ProviderToken(
             data.data.token,
             data.data.expiry,
             'auto',
@@ -266,7 +266,7 @@ class AIService {
   }
 
   private scheduleTokenRefresh() {
-    const tokenInfo = this.getFloodgateTokenInfo();
+    const tokenInfo = this.getOIDC ProviderTokenInfo();
     if (!tokenInfo?.expiry) return;
 
     const expiryTime = new Date(tokenInfo.expiry).getTime();
@@ -280,7 +280,7 @@ class AIService {
   }
 
   private scheduleTokenExpiryCheck() {
-    const tokenInfo = this.getFloodgateTokenInfo();
+    const tokenInfo = this.getOIDC ProviderTokenInfo();
     if (!tokenInfo?.expiry) return;
 
     const expiryTime = new Date(tokenInfo.expiry).getTime();
@@ -297,15 +297,15 @@ class AIService {
   private async attemptAutoTokenDetection() {
     // Try to get token from OAuth flow
     const urlParams = new URLSearchParams(window.location.search);
-    const floodgateParam = urlParams.get('floodgate_token');
+    const oidcParam = urlParams.get('oidc_token');
     
-    if (floodgateParam) {
+    if (oidcParam) {
       const expiry = urlParams.get('token_expiry');
-      this.setFloodgateToken(floodgateParam, expiry || undefined, 'oauth');
+      this.setOIDC ProviderToken(oidcParam, expiry || undefined, 'oauth');
       
       // Clean up URL
       const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('floodgate_token');
+      newUrl.searchParams.delete('oidc_token');
       newUrl.searchParams.delete('token_expiry');
       window.history.replaceState({}, '', newUrl.toString());
     }
@@ -316,7 +316,7 @@ class AIService {
     this.listeners.add(callback);
     
     // Immediately notify current status
-    const tokenInfo = this.getFloodgateTokenInfo();
+    const tokenInfo = this.getOIDC ProviderTokenInfo();
     const status = tokenInfo ? this.getTokenStatus(tokenInfo) : 'missing';
     callback(status);
     
@@ -330,11 +330,11 @@ class AIService {
   }
 
   getCurrentTokenInfo(): TokenInfo | null {
-    return this.getFloodgateTokenInfo();
+    return this.getOIDC ProviderTokenInfo();
   }
 
   getTokenTimeRemaining(): number | null {
-    const tokenInfo = this.getFloodgateTokenInfo();
+    const tokenInfo = this.getOIDC ProviderTokenInfo();
     if (!tokenInfo?.expiry) return null;
 
     const expiryTime = new Date(tokenInfo.expiry).getTime();
@@ -398,20 +398,20 @@ class AIService {
     throw new Error('Max retries exceeded');
   }
 
-  // Get available AI models from Floodgate via Corporate OAuth proxy
+  // Get available AI models from OIDC Provider via Corporate OAuth proxy
   async getModels(): Promise<AIModel[]> {
     try {
-      // Try Corporate OAuth + Floodgate first
+      // Try Corporate OAuth + OIDC Provider first
       if (corporateOAuthService.hasValidMultiAudienceToken()) {
-        console.log('🔑 Using Corporate OAuth + Floodgate for models')
-        const floodgateResponse = await corporateOAuthService.getFloodgateModels()
+        console.log('🔑 Using Corporate OAuth + OIDC Provider for models')
+        const oidcResponse = await corporateOAuthService.getOIDC ProviderModels()
         
-        // Transform Floodgate response to our format
-        if (floodgateResponse && Array.isArray(floodgateResponse)) {
-          return floodgateResponse.map((m: any) => ({
+        // Transform OIDC Provider response to our format
+        if (oidcResponse && Array.isArray(oidcResponse)) {
+          return oidcResponse.map((m: any) => ({
             id: m.id,
             name: m.id,
-            provider: 'floodgate',
+            provider: 'oidc',
             description: m.id,
             capabilities: ['chat', 'completion'],
             context_length: m.context_length || 8192,
@@ -489,26 +489,26 @@ class AIService {
     }
   }
 
-  // Send chat message via Corporate OAuth + Floodgate or backend
+  // Send chat message via Corporate OAuth + OIDC Provider or backend
   async sendMessage(
     messages: ChatMessage[],
     model?: string,
     sessionId?: string
   ): Promise<ChatResponse> {
     try {
-      // Try Corporate OAuth + Floodgate first for better models
+      // Try Corporate OAuth + OIDC Provider first for better models
       if (corporateOAuthService.hasValidMultiAudienceToken() && model && (model.startsWith('gpt') || model.startsWith('claude') || model.startsWith('gcp:'))) {
-        console.log('🔑 Using Corporate OAuth + Floodgate for chat')
+        console.log('🔑 Using Corporate OAuth + OIDC Provider for chat')
         
-        const floodgateResponse = await corporateOAuthService.chatWithFloodgate(messages, model)
+        const oidcResponse = await corporateOAuthService.chatWithOIDC Provider(messages, model)
         
-        // Transform Floodgate response to our format
-        if (floodgateResponse?.choices?.[0]?.message) {
+        // Transform OIDC Provider response to our format
+        if (oidcResponse?.choices?.[0]?.message) {
           return {
-            content: floodgateResponse.choices[0].message.content,
+            content: oidcResponse.choices[0].message.content,
             model: model,
             session_id: sessionId,
-            usage: floodgateResponse.usage,
+            usage: oidcResponse.usage,
           }
         }
       }
@@ -610,7 +610,7 @@ class AIService {
     }
   }
 
-  // Initialize Corporate OAuth for Floodgate access
+  // Initialize Corporate OAuth for OIDC Provider access
   async initializeCorporateOAuth(): Promise<boolean> {
     try {
       // Check if we already have a valid multi-audience token
@@ -631,10 +631,10 @@ class AIService {
       }
 
       // Generate multi-audience token
-      console.log('🔑 Generating multi-audience token for Floodgate access...')
+      console.log('🔑 Generating multi-audience token for OIDC Provider access...')
       await corporateOAuthService.generateMultiAudienceToken(masAssertion)
       
-      console.log('✅ Corporate OAuth initialized - Floodgate access enabled')
+      console.log('✅ Corporate OAuth initialized - OIDC Provider access enabled')
       return true
 
     } catch (error) {
@@ -643,8 +643,8 @@ class AIService {
     }
   }
 
-  // Check if Floodgate is available via Corporate OAuth
-  isFloodgateAvailable(): boolean {
+  // Check if OIDC Provider is available via Corporate OAuth
+  isOIDC ProviderAvailable(): boolean {
     return corporateOAuthService.hasValidMultiAudienceToken()
   }
 }

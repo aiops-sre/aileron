@@ -7,8 +7,8 @@ import {
   Target, Lightbulb, Activity, BarChart2, Layers, Filter,
 } from 'lucide-react'
 
-// ─── Apple Design Tokens ─────────────────────────────────────────────────────
-const apple = {
+// ─── Aileron Design Tokens ─────────────────────────────────────────────────────
+const tokens = {
   blue: '#007AFF', green: '#34C759', red: '#FF3B30', orange: '#FF9500',
   yellow: '#FFCC00', purple: '#AF52DE', pink: '#FF2D55', gray: '#8E8E93',
   teal: '#5AC8FA', indigo: '#5856D6',
@@ -128,19 +128,19 @@ function Badge({ color, children }: { color: string; children: React.ReactNode }
 }
 
 function Spinner() {
-  return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 48 }}><Loader2 style={{ width: 28, height: 28, color: apple.blue, animation: 'spin 1s linear infinite' }} /></div>
+  return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 48 }}><Loader2 style={{ width: 28, height: 28, color: tokens.blue, animation: 'spin 1s linear infinite' }} /></div>
 }
 
 function WasteBar({ pct, color }: { pct: number; color: string }) {
   return (
-    <div style={{ height: 5, borderRadius: 3, background: apple.fill, overflow: 'hidden', flex: 1 }}>
+    <div style={{ height: 5, borderRadius: 3, background: tokens.fill, overflow: 'hidden', flex: 1 }}>
       <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: color, borderRadius: 3, transition: 'width 0.5s ease' }} />
     </div>
   )
 }
 
 function ScoreBadge({ score }: { score: number }) {
-  const color = score >= 80 ? apple.red : score >= 50 ? apple.orange : score >= 20 ? apple.yellow : apple.green
+  const color = score >= 80 ? tokens.red : score >= 50 ? tokens.orange : score >= 20 ? tokens.yellow : tokens.green
   const label = score >= 80 ? 'Critical' : score >= 50 ? 'High' : score >= 20 ? 'Medium' : 'Low'
   return <Badge color={color}>{label} waste</Badge>
 }
@@ -149,8 +149,8 @@ function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-      style={{ padding: '3px 8px', fontSize: 11, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-      {copied ? <ClipboardCheck style={{ width: 10, height: 10, color: apple.green }} /> : <Copy style={{ width: 10, height: 10 }} />}
+      style={{ padding: '3px 8px', fontSize: 11, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+      {copied ? <ClipboardCheck style={{ width: 10, height: 10, color: tokens.green }} /> : <Copy style={{ width: 10, height: 10 }} />}
       {copied ? 'Copied' : 'Copy'}
     </button>
   )
@@ -410,33 +410,33 @@ const CapacityPlanningPage: React.FC = () => {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: apple.background, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: tokens.background, fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
       <style>{`@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } } * { box-sizing: border-box }`}</style>
 
       {/* Header */}
-      <div style={{ padding: '16px 28px', borderBottom: `0.5px solid ${apple.separator}`, background: apple.secondaryBackground, display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div style={{ padding: '16px 28px', borderBottom: `0.5px solid ${tokens.separator}`, background: tokens.secondaryBackground, display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3 }}>
-            <div style={{ width: 32, height: 32, borderRadius: apple.radius.sm, background: apple.indigo + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Target style={{ width: 17, height: 17, color: apple.indigo }} />
+            <div style={{ width: 32, height: 32, borderRadius: tokens.radius.sm, background: tokens.indigo + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Target style={{ width: 17, height: 17, color: tokens.indigo }} />
             </div>
-            <h1 style={{ fontSize: 17, fontWeight: 700, color: apple.label, margin: 0 }}>Intelligent Capacity Planning</h1>
-            {isLoading && <Loader2 style={{ width: 14, height: 14, color: apple.blue, animation: 'spin 1s linear infinite' }} />}
+            <h1 style={{ fontSize: 17, fontWeight: 700, color: tokens.label, margin: 0 }}>Intelligent Capacity Planning</h1>
+            {isLoading && <Loader2 style={{ width: 14, height: 14, color: tokens.blue, animation: 'spin 1s linear infinite' }} />}
           </div>
-          {lastRefreshed && <div style={{ fontSize: 11, color: apple.tertiaryLabel, paddingLeft: 42 }}>Analysed {lastRefreshed.toLocaleTimeString()}</div>}
+          {lastRefreshed && <div style={{ fontSize: 11, color: tokens.tertiaryLabel, paddingLeft: 42 }}>Analysed {lastRefreshed.toLocaleTimeString()}</div>}
         </div>
         <button onClick={refresh} disabled={isLoading}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 13, fontWeight: 500, cursor: 'pointer', opacity: isLoading ? 0.6 : 1 }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 13, fontWeight: 500, cursor: 'pointer', opacity: isLoading ? 0.6 : 1 }}>
           <RefreshCw style={{ width: 13, height: 13, animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />
           Refresh
         </button>
       </div>
 
       {/* Tab bar */}
-      <div style={{ padding: '0 28px', borderBottom: `0.5px solid ${apple.separator}`, background: apple.secondaryBackground, display: 'flex', gap: 0 }}>
+      <div style={{ padding: '0 28px', borderBottom: `0.5px solid ${tokens.separator}`, background: tokens.secondaryBackground, display: 'flex', gap: 0 }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
-            style={{ padding: '10px 16px', fontSize: 13, fontWeight: activeTab === t.key ? 600 : 400, border: 'none', borderBottom: activeTab === t.key ? `2px solid ${apple.indigo}` : '2px solid transparent', background: 'transparent', color: activeTab === t.key ? apple.indigo : apple.secondaryLabel, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', transition: 'all 0.12s', marginBottom: -1 }}>
+            style={{ padding: '10px 16px', fontSize: 13, fontWeight: activeTab === t.key ? 600 : 400, border: 'none', borderBottom: activeTab === t.key ? `2px solid ${tokens.indigo}` : '2px solid transparent', background: 'transparent', color: activeTab === t.key ? tokens.indigo : tokens.secondaryLabel, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', transition: 'all 0.12s', marginBottom: -1 }}>
             <t.icon style={{ width: 13, height: 13 }} />
             {t.label}
           </button>
@@ -517,70 +517,70 @@ function OverviewTab({
   const avgWaste = totalContainers > 0 ? Math.round(containerItems.reduce((s, i) => s + i.overallWasteScore, 0) / totalContainers) : 0
 
   const summaryCards = [
-    { label: 'Over-provisioned', value: criticalCount + highCount, sub: `${criticalCount} critical · ${highCount} high`, color: criticalCount > 0 ? apple.red : apple.orange, icon: AlertTriangle },
-    { label: 'Reclaimable CPU', value: totalSavableCpuM > 0 ? formatCpu(totalSavableCpuM) : '0m', sub: 'If right-sized to 2× request', color: apple.indigo, icon: Cpu },
-    { label: 'Reclaimable Memory', value: totalSavableMemMi > 0 ? formatMem(totalSavableMemMi) : '0Mi', sub: 'If right-sized to 2× request', color: apple.purple, icon: HardDrive },
-    { label: 'Avg Waste Score', value: `${avgWaste}%`, sub: `across ${totalContainers} containers`, color: avgWaste >= 50 ? apple.orange : apple.green, icon: BarChart2 },
-    { label: 'K8s Clusters', value: clusters.length, sub: `${Object.keys(clusterList.map(c => c.name)).length} analysed`, color: apple.blue, icon: Server },
-    { label: 'CloudStack Hosts', value: csHosts.length, sub: `${csHosts.filter(h => h.memUsedPct > 85).length} high utilisation`, color: apple.teal, icon: Cloud },
+    { label: 'Over-provisioned', value: criticalCount + highCount, sub: `${criticalCount} critical · ${highCount} high`, color: criticalCount > 0 ? tokens.red : tokens.orange, icon: AlertTriangle },
+    { label: 'Reclaimable CPU', value: totalSavableCpuM > 0 ? formatCpu(totalSavableCpuM) : '0m', sub: 'If right-sized to 2× request', color: tokens.indigo, icon: Cpu },
+    { label: 'Reclaimable Memory', value: totalSavableMemMi > 0 ? formatMem(totalSavableMemMi) : '0Mi', sub: 'If right-sized to 2× request', color: tokens.purple, icon: HardDrive },
+    { label: 'Avg Waste Score', value: `${avgWaste}%`, sub: `across ${totalContainers} containers`, color: avgWaste >= 50 ? tokens.orange : tokens.green, icon: BarChart2 },
+    { label: 'K8s Clusters', value: clusters.length, sub: `${Object.keys(clusterList.map(c => c.name)).length} analysed`, color: tokens.blue, icon: Server },
+    { label: 'CloudStack Hosts', value: csHosts.length, sub: `${csHosts.filter(h => h.memUsedPct > 85).length} high utilisation`, color: tokens.teal, icon: Cloud },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Loading banners */}
       {(busyClusters.size > 0 || csLoading) && (
-        <div style={{ background: apple.blue + '0d', border: `0.5px solid ${apple.blue}30`, borderRadius: apple.radius.md, padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: apple.blue }}>
+        <div style={{ background: tokens.blue + '0d', border: `0.5px solid ${tokens.blue}30`, borderRadius: tokens.radius.md, padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: tokens.blue }}>
           <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} />
           {busyClusters.size > 0 && <span>Loading {busyClusters.size} K8s cluster{busyClusters.size !== 1 ? 's' : ''}…</span>}
           {csLoading && <span>Loading CloudStack data…</span>}
-          <span style={{ color: apple.tertiaryLabel }}>Analysis will update as data arrives.</span>
+          <span style={{ color: tokens.tertiaryLabel }}>Analysis will update as data arrives.</span>
         </div>
       )}
 
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
         {summaryCards.map(c => (
-          <div key={c.label} style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, padding: '16px 18px' }}>
+          <div key={c.label} style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, padding: '16px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <div style={{ width: 30, height: 30, borderRadius: apple.radius.sm, background: c.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 30, height: 30, borderRadius: tokens.radius.sm, background: c.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <c.icon style={{ width: 15, height: 15, color: c.color }} />
               </div>
-              <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>{c.label}</span>
+              <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>{c.label}</span>
             </div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: apple.label, lineHeight: 1, marginBottom: 4 }}>{c.value}</div>
-            <div style={{ fontSize: 11, color: apple.secondaryLabel }}>{c.sub}</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: tokens.label, lineHeight: 1, marginBottom: 4 }}>{c.value}</div>
+            <div style={{ fontSize: 11, color: tokens.secondaryLabel }}>{c.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Top namespace waste */}
       {nsRollups.length > 0 && (
-        <Section icon={Layers} title="Namespace Capacity Overview" color={apple.orange}
+        <Section icon={Layers} title="Namespace Capacity Overview" color={tokens.orange}
           action={<button onClick={() => onTabChange('k8s')} style={linkBtnStyle}>View all K8s →</button>}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
             {nsRollups.slice(0, 9).map(ns => (
-              <div key={`${ns.cluster}/${ns.namespace}`} style={{ padding: '12px 14px', background: apple.fill, borderRadius: apple.radius.md, border: `0.5px solid ${apple.separator}` }}>
+              <div key={`${ns.cluster}/${ns.namespace}`} style={{ padding: '12px 14px', background: tokens.fill, borderRadius: tokens.radius.md, border: `0.5px solid ${tokens.separator}` }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: apple.label, fontFamily: 'monospace' }}>{ns.namespace}</div>
-                    <div style={{ fontSize: 10, color: apple.tertiaryLabel }}>{ns.cluster} · {ns.containerCount} containers</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: tokens.label, fontFamily: 'monospace' }}>{ns.namespace}</div>
+                    <div style={{ fontSize: 10, color: tokens.tertiaryLabel }}>{ns.cluster} · {ns.containerCount} containers</div>
                   </div>
                   <ScoreBadge score={ns.wasteScore} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 10, color: apple.tertiaryLabel, width: 28 }}>CPU</span>
+                    <span style={{ fontSize: 10, color: tokens.tertiaryLabel, width: 28 }}>CPU</span>
                     <WasteBar pct={ns.totalCpuRequestM > 0 ? (ns.totalCpuLimitM / ns.totalCpuRequestM) * 20 : 0}
-                      color={ns.totalCpuLimitM > ns.totalCpuRequestM * 3 ? apple.orange : apple.green} />
-                    <span style={{ fontSize: 10, color: apple.tertiaryLabel, whiteSpace: 'nowrap' }}>
+                      color={ns.totalCpuLimitM > ns.totalCpuRequestM * 3 ? tokens.orange : tokens.green} />
+                    <span style={{ fontSize: 10, color: tokens.tertiaryLabel, whiteSpace: 'nowrap' }}>
                       {formatCpu(ns.totalCpuRequestM)} req / {formatCpu(ns.totalCpuLimitM)} lim
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 10, color: apple.tertiaryLabel, width: 28 }}>Mem</span>
+                    <span style={{ fontSize: 10, color: tokens.tertiaryLabel, width: 28 }}>Mem</span>
                     <WasteBar pct={ns.totalMemRequestMi > 0 ? (ns.totalMemLimitMi / ns.totalMemRequestMi) * 20 : 0}
-                      color={ns.totalMemLimitMi > ns.totalMemRequestMi * 3 ? apple.orange : apple.green} />
-                    <span style={{ fontSize: 10, color: apple.tertiaryLabel, whiteSpace: 'nowrap' }}>
+                      color={ns.totalMemLimitMi > ns.totalMemRequestMi * 3 ? tokens.orange : tokens.green} />
+                    <span style={{ fontSize: 10, color: tokens.tertiaryLabel, whiteSpace: 'nowrap' }}>
                       {formatMem(ns.totalMemRequestMi)} req / {formatMem(ns.totalMemLimitMi)} lim
                     </span>
                   </div>
@@ -593,22 +593,22 @@ function OverviewTab({
 
       {/* Node capacity heatmap */}
       {nodeItems.length > 0 && (
-        <Section icon={Server} title="Node Pod Capacity" color={apple.blue}>
+        <Section icon={Server} title="Node Pod Capacity" color={tokens.blue}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
             {nodeItems.map(n => {
-              const pctColor = n.podUtilPct >= 85 ? apple.red : n.podUtilPct >= 65 ? apple.orange : apple.green
+              const pctColor = n.podUtilPct >= 85 ? tokens.red : n.podUtilPct >= 65 ? tokens.orange : tokens.green
               return (
-                <div key={`${n.cluster}/${n.name}`} style={{ padding: '10px 12px', borderRadius: apple.radius.md, background: apple.fill, border: `0.5px solid ${apple.separator}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: apple.label, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>{n.name}</div>
-                  <div style={{ fontSize: 10, color: apple.tertiaryLabel, marginBottom: 6 }}>{n.cluster} · {(n.roles ?? []).join(', ') || 'worker'}</div>
-                  <div style={{ height: 4, borderRadius: 2, background: apple.secondaryBackground, overflow: 'hidden', marginBottom: 5 }}>
+                <div key={`${n.cluster}/${n.name}`} style={{ padding: '10px 12px', borderRadius: tokens.radius.md, background: tokens.fill, border: `0.5px solid ${tokens.separator}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: tokens.label, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>{n.name}</div>
+                  <div style={{ fontSize: 10, color: tokens.tertiaryLabel, marginBottom: 6 }}>{n.cluster} · {(n.roles ?? []).join(', ') || 'worker'}</div>
+                  <div style={{ height: 4, borderRadius: 2, background: tokens.secondaryBackground, overflow: 'hidden', marginBottom: 5 }}>
                     <div style={{ height: '100%', width: `${n.podUtilPct}%`, background: pctColor, borderRadius: 2 }} />
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 11, color: pctColor, fontWeight: 600 }}>{n.podUtilPct}% pods</span>
-                    <span style={{ fontSize: 10, color: apple.tertiaryLabel }}>{n.podCount}/{n.podCapacity}</span>
+                    <span style={{ fontSize: 10, color: tokens.tertiaryLabel }}>{n.podCount}/{n.podCapacity}</span>
                   </div>
-                  <div style={{ fontSize: 10, color: apple.tertiaryLabel, marginTop: 3 }}>
+                  <div style={{ fontSize: 10, color: tokens.tertiaryLabel, marginTop: 3 }}>
                     {n.cpuCores > 0 && `${n.cpuCores} CPU`}{n.cpuCores > 0 && n.memGi > 0 && ' · '}{n.memGi > 0 && `${n.memGi.toFixed(0)}Gi RAM`}
                   </div>
                 </div>
@@ -620,21 +620,21 @@ function OverviewTab({
 
       {/* CloudStack overview */}
       {csHosts.length > 0 && (
-        <Section icon={Cloud} title="CloudStack Host Utilisation" color={apple.teal}
+        <Section icon={Cloud} title="CloudStack Host Utilisation" color={tokens.teal}
           action={<button onClick={() => onTabChange('cloudstack')} style={linkBtnStyle}>View all →</button>}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
             {csHosts.slice(0, 8).map(h => {
-              const pctColor = h.memUsedPct >= 85 ? apple.red : h.memUsedPct >= 65 ? apple.orange : apple.green
+              const pctColor = h.memUsedPct >= 85 ? tokens.red : h.memUsedPct >= 65 ? tokens.orange : tokens.green
               return (
-                <div key={`${h.region}/${h.name}`} style={{ padding: '10px 12px', borderRadius: apple.radius.md, background: apple.fill, border: `0.5px solid ${apple.separator}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: apple.label, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 3 }}>{h.name}</div>
-                  <div style={{ fontSize: 10, color: apple.tertiaryLabel, marginBottom: 6 }}>{h.region} · {h.vmCount} VMs</div>
-                  <div style={{ height: 4, borderRadius: 2, background: apple.secondaryBackground, overflow: 'hidden', marginBottom: 4 }}>
+                <div key={`${h.region}/${h.name}`} style={{ padding: '10px 12px', borderRadius: tokens.radius.md, background: tokens.fill, border: `0.5px solid ${tokens.separator}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: tokens.label, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 3 }}>{h.name}</div>
+                  <div style={{ fontSize: 10, color: tokens.tertiaryLabel, marginBottom: 6 }}>{h.region} · {h.vmCount} VMs</div>
+                  <div style={{ height: 4, borderRadius: 2, background: tokens.secondaryBackground, overflow: 'hidden', marginBottom: 4 }}>
                     <div style={{ height: '100%', width: `${Math.min(h.memUsedPct, 100)}%`, background: pctColor, borderRadius: 2 }} />
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 11, color: pctColor, fontWeight: 600 }}>{h.memUsedPct}% mem</span>
-                    <span style={{ fontSize: 10, color: apple.tertiaryLabel }}>{h.memAllocatedGi.toFixed(1)}/{h.memTotalGi.toFixed(1)} Gi</span>
+                    <span style={{ fontSize: 10, color: tokens.tertiaryLabel }}>{h.memAllocatedGi.toFixed(1)}/{h.memTotalGi.toFixed(1)} Gi</span>
                   </div>
                 </div>
               )
@@ -644,7 +644,7 @@ function OverviewTab({
       )}
 
       {containerItems.length === 0 && nodeItems.length === 0 && csHosts.length === 0 && !busyClusters.size && !csLoading && (
-        <div style={{ textAlign: 'center', padding: '48px 24px', color: apple.tertiaryLabel }}>
+        <div style={{ textAlign: 'center', padding: '48px 24px', color: tokens.tertiaryLabel }}>
           <Target style={{ width: 44, height: 44, marginBottom: 12 }} />
           <div style={{ fontSize: 15, fontWeight: 600 }}>No capacity data available</div>
           <div style={{ fontSize: 13, marginTop: 4 }}>No K8s clusters or CloudStack regions are configured, or data is still loading.</div>
@@ -653,7 +653,7 @@ function OverviewTab({
 
       {/* KubeSense Capacity Intelligence preview */}
       {(ksForecasts.length > 0 || storageEvents.length > 0) && (
-        <Section icon={TrendingUp} title="KubeSense Capacity Intelligence" color={apple.purple}
+        <Section icon={TrendingUp} title="KubeSense Capacity Intelligence" color={tokens.purple}
           action={<button style={linkBtnStyle} onClick={() => onTabChange('forecasts')}>See all forecasts →</button>}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {/* Imminent breaches — sorted by predicted_breach */}
@@ -661,15 +661,15 @@ function OverviewTab({
               const pct = Math.round((f.current_value ?? 0) * 100)
               const daysToBreachMs = f.predicted_breach ? (new Date(f.predicted_breach).getTime() - Date.now()) : null
               const daysTo = daysToBreachMs != null ? Math.ceil(daysToBreachMs / 86400000) : null
-              const urgencyColor = daysTo != null && daysTo <= 3 ? apple.red : daysTo != null && daysTo <= 7 ? apple.orange : apple.yellow
+              const urgencyColor = daysTo != null && daysTo <= 3 ? tokens.red : daysTo != null && daysTo <= 7 ? tokens.orange : tokens.yellow
               return (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: `0.5px solid ${apple.separator}` }}>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: `0.5px solid ${tokens.separator}` }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: urgencyColor, flexShrink: 0 }} />
                   <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: apple.label }}>{f.namespace}/{f.resource_name}</span>
-                    <span style={{ fontSize: 11, color: apple.tertiaryLabel, marginLeft: 8 }}>{f.target?.replace(/_/g, ' ')}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: tokens.label }}>{f.namespace}/{f.resource_name}</span>
+                    <span style={{ fontSize: 11, color: tokens.tertiaryLabel, marginLeft: 8 }}>{f.target?.replace(/_/g, ' ')}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: apple.secondaryLabel }}>{pct}% used</div>
+                  <div style={{ fontSize: 12, color: tokens.secondaryLabel }}>{pct}% used</div>
                   {daysTo != null && (
                     <div style={{ fontSize: 12, fontWeight: 600, color: urgencyColor }}>
                       {daysTo <= 0 ? 'BREACHED' : `${daysTo}d`}
@@ -679,8 +679,8 @@ function OverviewTab({
               )
             })}
             {storageEvents.length > 0 && (
-              <div style={{ marginTop: 4, padding: '8px 12px', background: `${apple.orange}08`, borderRadius: 8, fontSize: 12, color: apple.secondaryLabel }}>
-                <span style={{ fontWeight: 600, color: apple.orange }}>⚠ Storage:</span> {storageEvents.length} storage event{storageEvents.length !== 1 ? 's' : ''} in the last 24h —{' '}
+              <div style={{ marginTop: 4, padding: '8px 12px', background: `${tokens.orange}08`, borderRadius: 8, fontSize: 12, color: tokens.secondaryLabel }}>
+                <span style={{ fontWeight: 600, color: tokens.orange }}>⚠ Storage:</span> {storageEvents.length} storage event{storageEvents.length !== 1 ? 's' : ''} in the last 24h —{' '}
                 {storageEvents.filter((e: any) => e.severity === 'critical').length} critical
               </div>
             )}
@@ -691,14 +691,14 @@ function OverviewTab({
   )
 }
 
-const linkBtnStyle: React.CSSProperties = { padding: '4px 10px', fontSize: 12, borderRadius: 6, border: 'none', background: 'transparent', color: apple.blue, cursor: 'pointer', fontWeight: 500 }
+const linkBtnStyle: React.CSSProperties = { padding: '4px 10px', fontSize: 12, borderRadius: 6, border: 'none', background: 'transparent', color: tokens.blue, cursor: 'pointer', fontWeight: 500 }
 
 function Section({ icon: Icon, title, color, children, action }: { icon: React.ComponentType<any>; title: string; color: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-      <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${apple.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${tokens.separator}`, display: 'flex', alignItems: 'center', gap: 8 }}>
         <Icon style={{ width: 16, height: 16, color }} />
-        <span style={{ fontSize: 14, fontWeight: 600, color: apple.label, flex: 1 }}>{title}</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: tokens.label, flex: 1 }}>{title}</span>
         {action}
       </div>
       <div style={{ padding: '14px 18px' }}>{children}</div>
@@ -710,13 +710,13 @@ function Section({ icon: Icon, title, color, children, action }: { icon: React.C
 function ForecastsTab({ forecasts, loading }: { forecasts: any[]; loading: boolean }) {
   if (loading) return (
     <div style={{ textAlign: 'center', padding: 40 }}>
-      <Spinner /> <div style={{ marginTop: 12, fontSize: 14, color: apple.tertiaryLabel }}>Loading capacity forecasts…</div>
+      <Spinner /> <div style={{ marginTop: 12, fontSize: 14, color: tokens.tertiaryLabel }}>Loading capacity forecasts…</div>
     </div>
   )
   if (forecasts.length === 0) return (
-    <div style={{ textAlign: 'center', padding: '60px 24px', color: apple.tertiaryLabel }}>
+    <div style={{ textAlign: 'center', padding: '60px 24px', color: tokens.tertiaryLabel }}>
       <TrendingUp style={{ width: 40, height: 40, marginBottom: 14 }} />
-      <div style={{ fontSize: 15, fontWeight: 600, color: apple.secondaryLabel }}>No active forecasts</div>
+      <div style={{ fontSize: 15, fontWeight: 600, color: tokens.secondaryLabel }}>No active forecasts</div>
       <div style={{ fontSize: 13, marginTop: 6 }}>
         KubeSense capacity forecasts appear when resources are approaching their thresholds.
         Forecasts are published every 5 minutes by the KubeSense API service.
@@ -725,7 +725,7 @@ function ForecastsTab({ forecasts, loading }: { forecasts: any[]; loading: boole
   )
 
   const targetColor = (t: string) =>
-    t?.includes('pvc') || t?.includes('storage') ? apple.red : t?.includes('cpu') ? apple.orange : t?.includes('memory') ? apple.yellow : apple.purple
+    t?.includes('pvc') || t?.includes('storage') ? tokens.red : t?.includes('cpu') ? tokens.orange : t?.includes('memory') ? tokens.yellow : tokens.purple
 
   // Group by breach urgency
   const imminentBreaches = forecasts.filter(f => {
@@ -745,16 +745,16 @@ function ForecastsTab({ forecasts, loading }: { forecasts: any[]; loading: boole
     const col = targetColor(f.target)
     const daysToBreachMs = f.predicted_breach ? (new Date(f.predicted_breach).getTime() - Date.now()) : null
     const daysTo = daysToBreachMs != null ? Math.ceil(daysToBreachMs / 86400000) : null
-    const urgColor = daysTo != null && daysTo <= 3 ? apple.red : daysTo != null && daysTo <= 7 ? apple.orange : col
+    const urgColor = daysTo != null && daysTo <= 3 ? tokens.red : daysTo != null && daysTo <= 7 ? tokens.orange : col
     return (
-      <div style={{ padding: 16, background: apple.secondaryBackground, borderRadius: apple.radius.lg, border: `0.5px solid ${urgColor}30` }}>
+      <div style={{ padding: 16, background: tokens.secondaryBackground, borderRadius: tokens.radius.lg, border: `0.5px solid ${urgColor}30` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <div style={{ width: 36, height: 36, borderRadius: apple.radius.md, background: `${col}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: tokens.radius.md, background: `${col}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <TrendingUp style={{ width: 16, height: 16, color: col }} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, fontSize: 13, color: apple.label }}>{f.target?.replace(/_/g, ' ')?.toUpperCase()}</div>
-            <div style={{ fontSize: 11, color: apple.tertiaryLabel }}>{f.namespace}/{f.resource_name}</div>
+            <div style={{ fontWeight: 600, fontSize: 13, color: tokens.label }}>{f.target?.replace(/_/g, ' ')?.toUpperCase()}</div>
+            <div style={{ fontSize: 11, color: tokens.tertiaryLabel }}>{f.namespace}/{f.resource_name}</div>
           </div>
           {daysTo != null && (
             <span style={{ fontSize: 12, fontWeight: 700, color: urgColor, padding: '3px 8px', borderRadius: 20, background: `${urgColor}15` }}>
@@ -762,13 +762,13 @@ function ForecastsTab({ forecasts, loading }: { forecasts: any[]; loading: boole
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: apple.tertiaryLabel, marginBottom: 5 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: tokens.tertiaryLabel, marginBottom: 5 }}>
           <span>Current {pct}%</span><span>Threshold {thr}%</span>
         </div>
         <div style={{ height: 6, background: `${col}15`, borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
-          <div style={{ width: `${pct}%`, height: '100%', background: pct > 80 ? apple.red : pct > 60 ? apple.orange : apple.green, borderRadius: 3 }} />
+          <div style={{ width: `${pct}%`, height: '100%', background: pct > 80 ? tokens.red : pct > 60 ? tokens.orange : tokens.green, borderRadius: 3 }} />
         </div>
-        <div style={{ display: 'flex', gap: 12, fontSize: 12, color: apple.secondaryLabel }}>
+        <div style={{ display: 'flex', gap: 12, fontSize: 12, color: tokens.secondaryLabel }}>
           {f.predicted_breach && <span><span style={{ fontWeight: 600, color: urgColor }}>Breach: </span>{new Date(f.predicted_breach).toLocaleDateString()}</span>}
           {f.trend_per_day > 0 && <span>+{(f.trend_per_day * 100).toFixed(1)}%/day</span>}
           <span>conf {Math.round((f.model_confidence ?? 0) * 100)}%</span>
@@ -780,14 +780,14 @@ function ForecastsTab({ forecasts, loading }: { forecasts: any[]; loading: boole
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {imminentBreaches.length > 0 && (
-        <Section icon={AlertTriangle} title={`Imminent Breaches (≤7 days) — ${imminentBreaches.length} resource${imminentBreaches.length !== 1 ? 's' : ''}`} color={apple.red}>
+        <Section icon={AlertTriangle} title={`Imminent Breaches (≤7 days) — ${imminentBreaches.length} resource${imminentBreaches.length !== 1 ? 's' : ''}`} color={tokens.red}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
             {imminentBreaches.map((f, i) => <ForecastCard key={i} f={f} />)}
           </div>
         </Section>
       )}
       {laterBreaches.length > 0 && (
-        <Section icon={TrendingUp} title={`Long-Range Forecasts — ${laterBreaches.length} resource${laterBreaches.length !== 1 ? 's' : ''}`} color={apple.purple}>
+        <Section icon={TrendingUp} title={`Long-Range Forecasts — ${laterBreaches.length} resource${laterBreaches.length !== 1 ? 's' : ''}`} color={tokens.purple}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
             {laterBreaches.map((f, i) => <ForecastCard key={i} f={f} />)}
           </div>
@@ -827,7 +827,7 @@ function K8sAnalysisTab({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {busyClusters.size > 0 && (
-        <div style={{ background: apple.blue + '0d', border: `0.5px solid ${apple.blue}25`, borderRadius: apple.radius.sm, padding: '8px 14px', fontSize: 12, color: apple.blue, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ background: tokens.blue + '0d', border: `0.5px solid ${tokens.blue}25`, borderRadius: tokens.radius.sm, padding: '8px 14px', fontSize: 12, color: tokens.blue, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Loader2 style={{ width: 12, height: 12, animation: 'spin 1s linear infinite' }} />
           Loading {busyClusters.size} of {clusterCount} clusters…
         </div>
@@ -836,7 +836,7 @@ function K8sAnalysisTab({
       {/* View selector */}
       <div style={{ display: 'flex', gap: 4 }}>
         {(['containers', 'nodes', 'namespaces'] as const).map(v => (
-          <button key={v} onClick={() => setView(v)} style={{ padding: '6px 14px', fontSize: 12, borderRadius: apple.radius.sm, border: `0.5px solid ${view === v ? apple.indigo : apple.separator}`, background: view === v ? apple.indigo : apple.fill, color: view === v ? '#fff' : apple.label, cursor: 'pointer', fontWeight: 500 }}>
+          <button key={v} onClick={() => setView(v)} style={{ padding: '6px 14px', fontSize: 12, borderRadius: tokens.radius.sm, border: `0.5px solid ${view === v ? tokens.indigo : tokens.separator}`, background: view === v ? tokens.indigo : tokens.fill, color: view === v ? '#fff' : tokens.label, cursor: 'pointer', fontWeight: 500 }}>
             {v.charAt(0).toUpperCase() + v.slice(1)}
           </button>
         ))}
@@ -846,47 +846,47 @@ function K8sAnalysisTab({
       {view === 'containers' && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <select value={clusterFilter} onChange={e => setClusterFilter(e.target.value)}
-            style={{ padding: '5px 10px', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 12, outline: 'none' }}>
+            style={{ padding: '5px 10px', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 12, outline: 'none' }}>
             <option value="">All clusters</option>
             {allClusters.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <select value={nsFilter} onChange={e => setNsFilter(e.target.value)}
-            style={{ padding: '5px 10px', borderRadius: apple.radius.sm, border: `0.5px solid ${apple.separator}`, background: apple.fill, color: apple.label, fontSize: 12, outline: 'none' }}>
+            style={{ padding: '5px 10px', borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.separator}`, background: tokens.fill, color: tokens.label, fontSize: 12, outline: 'none' }}>
             <option value="">All namespaces</option>
             {allNs.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Filter style={{ width: 12, height: 12, color: apple.gray }} />
-            <span style={{ fontSize: 12, color: apple.secondaryLabel }}>Min waste:</span>
+            <Filter style={{ width: 12, height: 12, color: tokens.gray }} />
+            <span style={{ fontSize: 12, color: tokens.secondaryLabel }}>Min waste:</span>
             {[0, 20, 50, 80].map(s => (
-              <button key={s} onClick={() => setMinScore(s)} style={{ padding: '3px 9px', fontSize: 11, borderRadius: 20, border: `0.5px solid ${minScore === s ? apple.indigo : apple.separator}`, background: minScore === s ? apple.indigo : apple.fill, color: minScore === s ? '#fff' : apple.secondaryLabel, cursor: 'pointer' }}>
+              <button key={s} onClick={() => setMinScore(s)} style={{ padding: '3px 9px', fontSize: 11, borderRadius: 20, border: `0.5px solid ${minScore === s ? tokens.indigo : tokens.separator}`, background: minScore === s ? tokens.indigo : tokens.fill, color: minScore === s ? '#fff' : tokens.secondaryLabel, cursor: 'pointer' }}>
                 {s}%
               </button>
             ))}
           </div>
-          <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>{filtered.length} containers</span>
+          <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>{filtered.length} containers</span>
         </div>
       )}
 
       {/* Container table */}
       {view === 'containers' && (
-        <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
+        <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
           {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '36px', color: apple.tertiaryLabel, fontSize: 13 }}>
-              <CheckCircle style={{ width: 32, height: 32, color: apple.green, marginBottom: 8 }} />
+            <div style={{ textAlign: 'center', padding: '36px', color: tokens.tertiaryLabel, fontSize: 13 }}>
+              <CheckCircle style={{ width: 32, height: 32, color: tokens.green, marginBottom: 8 }} />
               <div>No over-provisioned containers found</div>
             </div>
           ) : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1fr 90px 90px 90px 90px 100px', padding: '8px 16px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1fr 90px 90px 90px 90px 100px', padding: '8px 16px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 <div>Deployment / Container</div><div>Namespace</div><div>Cluster</div><div>CPU Req</div><div>CPU Lim</div><div>Mem Req</div><div>Mem Lim</div><div>Waste</div>
               </div>
               {filtered.slice(0, shown).map((item, i) => (
                 <ContainerRow key={`${item.cluster}/${item.namespace}/${item.deployment}/${item.container}`} item={item} idx={i} total={Math.min(shown, filtered.length)} />
               ))}
               {filtered.length > shown && (
-                <div style={{ padding: '10px 16px', borderTop: `0.5px solid ${apple.separator}`, display: 'flex', gap: 8, justifyContent: 'center' }}>
-                  <button onClick={() => setShown(n => n + 30)} style={{ padding: '5px 14px', fontSize: 12, borderRadius: apple.radius.sm, border: `0.5px solid ${apple.indigo}40`, background: apple.indigo + '12', color: apple.indigo, cursor: 'pointer' }}>
+                <div style={{ padding: '10px 16px', borderTop: `0.5px solid ${tokens.separator}`, display: 'flex', gap: 8, justifyContent: 'center' }}>
+                  <button onClick={() => setShown(n => n + 30)} style={{ padding: '5px 14px', fontSize: 12, borderRadius: tokens.radius.sm, border: `0.5px solid ${tokens.indigo}40`, background: tokens.indigo + '12', color: tokens.indigo, cursor: 'pointer' }}>
                     <ChevronDown style={{ width: 11, height: 11, display: 'inline', marginRight: 4 }} />Show more
                   </button>
                 </div>
@@ -898,22 +898,22 @@ function K8sAnalysisTab({
 
       {/* Node table */}
       {view === 'nodes' && (
-        <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 100px 80px 80px 140px', padding: '8px 16px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 100px 80px 80px 140px', padding: '8px 16px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             <div>Node</div><div>Cluster</div><div>CPU Cores</div><div>Memory</div><div>Pods</div><div>Pod Utilisation</div>
           </div>
           {filteredNodes.map((n, i) => {
-            const pctColor = n.podUtilPct >= 85 ? apple.red : n.podUtilPct >= 65 ? apple.orange : apple.green
+            const pctColor = n.podUtilPct >= 85 ? tokens.red : n.podUtilPct >= 65 ? tokens.orange : tokens.green
             return (
-              <div key={`${n.cluster}/${n.name}`} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 100px 80px 80px 140px', padding: '10px 16px', borderBottom: i < filteredNodes.length - 1 ? `0.5px solid ${apple.separator}` : 'none', fontSize: 12, alignItems: 'center' }}>
+              <div key={`${n.cluster}/${n.name}`} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 100px 80px 80px 140px', padding: '10px 16px', borderBottom: i < filteredNodes.length - 1 ? `0.5px solid ${tokens.separator}` : 'none', fontSize: 12, alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontFamily: 'monospace', color: apple.label, fontSize: 11, fontWeight: 500 }}>{n.name}</div>
-                  <div style={{ fontSize: 10, color: apple.tertiaryLabel }}>{(n.roles ?? []).join(', ') || 'worker'}</div>
+                  <div style={{ fontFamily: 'monospace', color: tokens.label, fontSize: 11, fontWeight: 500 }}>{n.name}</div>
+                  <div style={{ fontSize: 10, color: tokens.tertiaryLabel }}>{(n.roles ?? []).join(', ') || 'worker'}</div>
                 </div>
-                <div style={{ color: apple.secondaryLabel }}>{n.cluster}</div>
-                <div style={{ color: apple.label, fontWeight: 500 }}>{n.cpuCores > 0 ? n.cpuCores : '—'}</div>
-                <div style={{ color: apple.label }}>{n.memGi > 0 ? `${n.memGi.toFixed(0)} Gi` : '—'}</div>
-                <div style={{ color: apple.label }}>{n.podCount}/{n.podCapacity}</div>
+                <div style={{ color: tokens.secondaryLabel }}>{n.cluster}</div>
+                <div style={{ color: tokens.label, fontWeight: 500 }}>{n.cpuCores > 0 ? n.cpuCores : '—'}</div>
+                <div style={{ color: tokens.label }}>{n.memGi > 0 ? `${n.memGi.toFixed(0)} Gi` : '—'}</div>
+                <div style={{ color: tokens.label }}>{n.podCount}/{n.podCapacity}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <WasteBar pct={n.podUtilPct} color={pctColor} />
                   <span style={{ fontSize: 11, color: pctColor, fontWeight: 600, minWidth: 36 }}>{n.podUtilPct}%</span>
@@ -921,31 +921,31 @@ function K8sAnalysisTab({
               </div>
             )
           })}
-          {filteredNodes.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: apple.tertiaryLabel, fontSize: 13 }}>No node capacity data available</div>}
+          {filteredNodes.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: tokens.tertiaryLabel, fontSize: 13 }}>No node capacity data available</div>}
         </div>
       )}
 
       {/* Namespace rollup */}
       {view === 'namespaces' && (
-        <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 70px 110px 110px 110px', padding: '8px 16px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 70px 110px 110px 110px', padding: '8px 16px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             <div>Namespace</div><div>Cluster</div><div>Ctrs</div><div>CPU Req/Lim</div><div>Mem Req/Lim</div><div>Waste</div>
           </div>
           {nsRollups.map((ns, i) => (
-            <div key={`${ns.cluster}/${ns.namespace}`} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 70px 110px 110px 110px', padding: '10px 16px', borderBottom: i < nsRollups.length - 1 ? `0.5px solid ${apple.separator}` : 'none', fontSize: 12, alignItems: 'center' }}>
-              <div style={{ fontFamily: 'monospace', color: apple.label, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ns.namespace}</div>
-              <div style={{ color: apple.secondaryLabel }}>{ns.cluster}</div>
-              <div style={{ color: apple.tertiaryLabel }}>{ns.containerCount}</div>
-              <div style={{ color: ns.totalCpuLimitM > ns.totalCpuRequestM * 3 ? apple.orange : apple.label, fontFamily: 'monospace', fontSize: 11 }}>
+            <div key={`${ns.cluster}/${ns.namespace}`} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 70px 110px 110px 110px', padding: '10px 16px', borderBottom: i < nsRollups.length - 1 ? `0.5px solid ${tokens.separator}` : 'none', fontSize: 12, alignItems: 'center' }}>
+              <div style={{ fontFamily: 'monospace', color: tokens.label, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ns.namespace}</div>
+              <div style={{ color: tokens.secondaryLabel }}>{ns.cluster}</div>
+              <div style={{ color: tokens.tertiaryLabel }}>{ns.containerCount}</div>
+              <div style={{ color: ns.totalCpuLimitM > ns.totalCpuRequestM * 3 ? tokens.orange : tokens.label, fontFamily: 'monospace', fontSize: 11 }}>
                 {formatCpu(ns.totalCpuRequestM)} / {formatCpu(ns.totalCpuLimitM)}
               </div>
-              <div style={{ color: ns.totalMemLimitMi > ns.totalMemRequestMi * 3 ? apple.orange : apple.label, fontFamily: 'monospace', fontSize: 11 }}>
+              <div style={{ color: ns.totalMemLimitMi > ns.totalMemRequestMi * 3 ? tokens.orange : tokens.label, fontFamily: 'monospace', fontSize: 11 }}>
                 {formatMem(ns.totalMemRequestMi)} / {formatMem(ns.totalMemLimitMi)}
               </div>
               <div><ScoreBadge score={ns.wasteScore} /></div>
             </div>
           ))}
-          {nsRollups.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: apple.tertiaryLabel, fontSize: 13 }}>No namespace data available</div>}
+          {nsRollups.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: tokens.tertiaryLabel, fontSize: 13 }}>No namespace data available</div>}
         </div>
       )}
     </div>
@@ -954,54 +954,54 @@ function K8sAnalysisTab({
 
 function ContainerRow({ item, idx, total }: { item: ContainerCapacityItem; idx: number; total: number }) {
   const [expanded, setExpanded] = useState(false)
-  const cpuColor = item.cpuWasteRatio > 5 ? apple.red : item.cpuWasteRatio > 2 ? apple.orange : apple.green
-  const memColor = item.memWasteRatio > 5 ? apple.red : item.memWasteRatio > 2 ? apple.orange : apple.green
+  const cpuColor = item.cpuWasteRatio > 5 ? tokens.red : item.cpuWasteRatio > 2 ? tokens.orange : tokens.green
+  const memColor = item.memWasteRatio > 5 ? tokens.red : item.memWasteRatio > 2 ? tokens.orange : tokens.green
 
   return (
-    <div style={{ borderBottom: idx < total - 1 ? `0.5px solid ${apple.separator}` : 'none' }}>
+    <div style={{ borderBottom: idx < total - 1 ? `0.5px solid ${tokens.separator}` : 'none' }}>
       <div onClick={() => setExpanded(!expanded)}
-        style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1fr 90px 90px 90px 90px 100px', padding: '10px 16px', fontSize: 12, alignItems: 'center', cursor: 'pointer', background: expanded ? apple.fill : 'transparent' }}
-        onMouseEnter={e => { if (!expanded) e.currentTarget.style.background = apple.fill }}
+        style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1fr 90px 90px 90px 90px 100px', padding: '10px 16px', fontSize: 12, alignItems: 'center', cursor: 'pointer', background: expanded ? tokens.fill : 'transparent' }}
+        onMouseEnter={e => { if (!expanded) e.currentTarget.style.background = tokens.fill }}
         onMouseLeave={e => { if (!expanded) e.currentTarget.style.background = 'transparent' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          {expanded ? <ChevronUp style={{ width: 11, height: 11, color: apple.gray }} /> : <ChevronRight style={{ width: 11, height: 11, color: apple.gray }} />}
+          {expanded ? <ChevronUp style={{ width: 11, height: 11, color: tokens.gray }} /> : <ChevronRight style={{ width: 11, height: 11, color: tokens.gray }} />}
           <div>
-            <div style={{ fontFamily: 'monospace', color: apple.label, fontWeight: 500, fontSize: 11 }}>{item.deployment}</div>
-            <div style={{ fontSize: 10, color: apple.tertiaryLabel }}>{item.container}</div>
+            <div style={{ fontFamily: 'monospace', color: tokens.label, fontWeight: 500, fontSize: 11 }}>{item.deployment}</div>
+            <div style={{ fontSize: 10, color: tokens.tertiaryLabel }}>{item.container}</div>
           </div>
         </div>
-        <div style={{ color: apple.secondaryLabel, fontFamily: 'monospace', fontSize: 11 }}>{item.namespace}</div>
-        <div style={{ color: apple.tertiaryLabel, fontSize: 11 }}>{item.cluster}</div>
-        <div style={{ color: item.cpuRequest > 0 ? apple.label : apple.tertiaryLabel, fontFamily: 'monospace', fontSize: 11 }}>{item.cpuRequest > 0 ? formatCpu(item.cpuRequest) : '—'}</div>
+        <div style={{ color: tokens.secondaryLabel, fontFamily: 'monospace', fontSize: 11 }}>{item.namespace}</div>
+        <div style={{ color: tokens.tertiaryLabel, fontSize: 11 }}>{item.cluster}</div>
+        <div style={{ color: item.cpuRequest > 0 ? tokens.label : tokens.tertiaryLabel, fontFamily: 'monospace', fontSize: 11 }}>{item.cpuRequest > 0 ? formatCpu(item.cpuRequest) : '—'}</div>
         <div style={{ color: cpuColor, fontFamily: 'monospace', fontSize: 11, fontWeight: item.cpuWasteRatio > 2 ? 600 : 400 }}>{item.cpuLimit > 0 ? formatCpu(item.cpuLimit) : '—'}</div>
-        <div style={{ color: item.memRequestMi > 0 ? apple.label : apple.tertiaryLabel, fontFamily: 'monospace', fontSize: 11 }}>{item.memRequestMi > 0 ? formatMem(item.memRequestMi) : '—'}</div>
+        <div style={{ color: item.memRequestMi > 0 ? tokens.label : tokens.tertiaryLabel, fontFamily: 'monospace', fontSize: 11 }}>{item.memRequestMi > 0 ? formatMem(item.memRequestMi) : '—'}</div>
         <div style={{ color: memColor, fontFamily: 'monospace', fontSize: 11, fontWeight: item.memWasteRatio > 2 ? 600 : 400 }}>{item.memLimitMi > 0 ? formatMem(item.memLimitMi) : '—'}</div>
         <div><ScoreBadge score={item.overallWasteScore} /></div>
       </div>
       {expanded && (
-        <div style={{ background: apple.tertiaryFill, padding: '12px 32px 16px', borderTop: `0.5px solid ${apple.separator}` }}>
+        <div style={{ background: tokens.tertiaryFill, padding: '12px 32px 16px', borderTop: `0.5px solid ${tokens.separator}` }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 }}>
             <div>
-              <div style={{ fontSize: 11, color: apple.tertiaryLabel, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>CPU Analysis</div>
+              <div style={{ fontSize: 11, color: tokens.tertiaryLabel, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>CPU Analysis</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                <AnalysisRow label="Request" value={formatCpu(item.cpuRequest)} color={apple.green} />
-                <AnalysisRow label="Current Limit" value={formatCpu(item.cpuLimit)} color={item.cpuWasteRatio > 2 ? apple.orange : apple.green} />
-                <AnalysisRow label="Limit/Request ratio" value={`${item.cpuWasteRatio.toFixed(1)}×`} color={item.cpuWasteRatio > 3 ? apple.red : item.cpuWasteRatio > 2 ? apple.orange : apple.green} />
-                <AnalysisRow label="Suggested limit" value={item.suggestedCpuLimit} color={apple.blue} />
+                <AnalysisRow label="Request" value={formatCpu(item.cpuRequest)} color={tokens.green} />
+                <AnalysisRow label="Current Limit" value={formatCpu(item.cpuLimit)} color={item.cpuWasteRatio > 2 ? tokens.orange : tokens.green} />
+                <AnalysisRow label="Limit/Request ratio" value={`${item.cpuWasteRatio.toFixed(1)}×`} color={item.cpuWasteRatio > 3 ? tokens.red : item.cpuWasteRatio > 2 ? tokens.orange : tokens.green} />
+                <AnalysisRow label="Suggested limit" value={item.suggestedCpuLimit} color={tokens.blue} />
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: apple.tertiaryLabel, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Memory Analysis</div>
+              <div style={{ fontSize: 11, color: tokens.tertiaryLabel, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Memory Analysis</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                <AnalysisRow label="Request" value={formatMem(item.memRequestMi)} color={apple.green} />
-                <AnalysisRow label="Current Limit" value={formatMem(item.memLimitMi)} color={item.memWasteRatio > 2 ? apple.orange : apple.green} />
-                <AnalysisRow label="Limit/Request ratio" value={`${item.memWasteRatio.toFixed(1)}×`} color={item.memWasteRatio > 3 ? apple.red : item.memWasteRatio > 2 ? apple.orange : apple.green} />
-                <AnalysisRow label="Suggested limit" value={item.suggestedMemLimit} color={apple.blue} />
+                <AnalysisRow label="Request" value={formatMem(item.memRequestMi)} color={tokens.green} />
+                <AnalysisRow label="Current Limit" value={formatMem(item.memLimitMi)} color={item.memWasteRatio > 2 ? tokens.orange : tokens.green} />
+                <AnalysisRow label="Limit/Request ratio" value={`${item.memWasteRatio.toFixed(1)}×`} color={item.memWasteRatio > 3 ? tokens.red : item.memWasteRatio > 2 ? tokens.orange : tokens.green} />
+                <AnalysisRow label="Suggested limit" value={item.suggestedMemLimit} color={tokens.blue} />
               </div>
             </div>
           </div>
-          <div style={{ fontSize: 11, color: apple.tertiaryLabel, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>kubectl Patch Command</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: apple.fill, borderRadius: apple.radius.sm, padding: '8px 12px' }}>
+          <div style={{ fontSize: 11, color: tokens.tertiaryLabel, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>kubectl Patch Command</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: tokens.fill, borderRadius: tokens.radius.sm, padding: '8px 12px' }}>
             <code style={{ flex: 1, fontSize: 10, color: '#c9d1d9', fontFamily: '"SF Mono", monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.patchCmd}</code>
             <CopyBtn text={item.patchCmd} />
           </div>
@@ -1014,7 +1014,7 @@ function ContainerRow({ item, idx, total }: { item: ContainerCapacityItem; idx: 
 function AnalysisRow({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '3px 0' }}>
-      <span style={{ color: apple.secondaryLabel }}>{label}</span>
+      <span style={{ color: tokens.secondaryLabel }}>{label}</span>
       <span style={{ color, fontWeight: 600, fontFamily: 'monospace' }}>{value}</span>
     </div>
   )
@@ -1031,7 +1031,7 @@ function CloudStackTab({ csHosts, csRegions, csLoading }: { csHosts: CloudStackH
 
   if (csHosts.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '48px', color: apple.tertiaryLabel }}>
+      <div style={{ textAlign: 'center', padding: '48px', color: tokens.tertiaryLabel }}>
         <Cloud style={{ width: 44, height: 44, marginBottom: 12 }} />
         <div style={{ fontSize: 14, fontWeight: 600 }}>No CloudStack data available</div>
         <div style={{ fontSize: 12, marginTop: 4 }}>CloudStack infrastructure data could not be loaded. Check region configuration.</div>
@@ -1049,17 +1049,17 @@ function CloudStackTab({ csHosts, csRegions, csLoading }: { csHosts: CloudStackH
       {/* Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
         {[
-          { label: 'Total Hosts', value: totalHosts, color: apple.teal, icon: Server },
-          { label: 'High Memory (>85%)', value: highMemHosts, color: apple.red, icon: AlertTriangle },
-          { label: 'Under-utilised (<30%)', value: lowMemHosts, color: apple.orange, icon: TrendingDown },
-          { label: 'Total VMs', value: totalVMs, color: apple.blue, icon: Activity },
+          { label: 'Total Hosts', value: totalHosts, color: tokens.teal, icon: Server },
+          { label: 'High Memory (>85%)', value: highMemHosts, color: tokens.red, icon: AlertTriangle },
+          { label: 'Under-utilised (<30%)', value: lowMemHosts, color: tokens.orange, icon: TrendingDown },
+          { label: 'Total VMs', value: totalVMs, color: tokens.blue, icon: Activity },
         ].map(c => (
-          <div key={c.label} style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, padding: '14px 16px' }}>
+          <div key={c.label} style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
               <c.icon style={{ width: 14, height: 14, color: c.color }} />
-              <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>{c.label}</span>
+              <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>{c.label}</span>
             </div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: apple.label }}>{c.value}</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: tokens.label }}>{c.value}</div>
           </div>
         ))}
       </div>
@@ -1067,31 +1067,31 @@ function CloudStackTab({ csHosts, csRegions, csLoading }: { csHosts: CloudStackH
       {/* Region filter */}
       <div style={{ display: 'flex', gap: 6 }}>
         {['', ...regions].map(r => (
-          <button key={r} onClick={() => setRegionFilter(r)} style={{ padding: '5px 12px', fontSize: 12, borderRadius: apple.radius.sm, border: `0.5px solid ${regionFilter === r ? apple.teal : apple.separator}`, background: regionFilter === r ? apple.teal + '18' : apple.fill, color: regionFilter === r ? apple.teal : apple.label, cursor: 'pointer', fontWeight: 500 }}>
+          <button key={r} onClick={() => setRegionFilter(r)} style={{ padding: '5px 12px', fontSize: 12, borderRadius: tokens.radius.sm, border: `0.5px solid ${regionFilter === r ? tokens.teal : tokens.separator}`, background: regionFilter === r ? tokens.teal + '18' : tokens.fill, color: regionFilter === r ? tokens.teal : tokens.label, cursor: 'pointer', fontWeight: 500 }}>
             {r || 'All regions'}
           </button>
         ))}
       </div>
 
       {/* Host table */}
-      <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${apple.separator}`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 80px 100px 80px 1fr 60px', padding: '8px 16px', borderBottom: `0.5px solid ${apple.separator}`, fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+      <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${tokens.separator}`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 80px 100px 80px 1fr 60px', padding: '8px 16px', borderBottom: `0.5px solid ${tokens.separator}`, fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           <div>Host</div><div>Region</div><div>CPU Cores</div><div>VMs</div><div>Memory Utilisation</div><div>Usage %</div>
         </div>
         {filtered.map((h, i) => {
-          const pctColor = h.memUsedPct >= 85 ? apple.red : h.memUsedPct >= 65 ? apple.orange : h.memUsedPct < 30 ? apple.yellow : apple.green
+          const pctColor = h.memUsedPct >= 85 ? tokens.red : h.memUsedPct >= 65 ? tokens.orange : h.memUsedPct < 30 ? tokens.yellow : tokens.green
           return (
-            <div key={`${h.region}/${h.name}`} style={{ display: 'grid', gridTemplateColumns: '2fr 80px 100px 80px 1fr 60px', padding: '10px 16px', borderBottom: i < filtered.length - 1 ? `0.5px solid ${apple.separator}` : 'none', fontSize: 12, alignItems: 'center' }}>
+            <div key={`${h.region}/${h.name}`} style={{ display: 'grid', gridTemplateColumns: '2fr 80px 100px 80px 1fr 60px', padding: '10px 16px', borderBottom: i < filtered.length - 1 ? `0.5px solid ${tokens.separator}` : 'none', fontSize: 12, alignItems: 'center' }}>
               <div>
-                <div style={{ fontFamily: 'monospace', color: apple.label, fontWeight: 500, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.name}</div>
-                <div style={{ fontSize: 10, color: apple.tertiaryLabel }}>{h.type}</div>
+                <div style={{ fontFamily: 'monospace', color: tokens.label, fontWeight: 500, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.name}</div>
+                <div style={{ fontSize: 10, color: tokens.tertiaryLabel }}>{h.type}</div>
               </div>
-              <div><Badge color={apple.teal}>{h.region}</Badge></div>
-              <div style={{ color: h.cpuCores > 0 ? apple.label : apple.tertiaryLabel }}>{h.cpuCores > 0 ? h.cpuCores : '—'}</div>
-              <div style={{ color: apple.label }}>{h.vmCount}</div>
+              <div><Badge color={tokens.teal}>{h.region}</Badge></div>
+              <div style={{ color: h.cpuCores > 0 ? tokens.label : tokens.tertiaryLabel }}>{h.cpuCores > 0 ? h.cpuCores : '—'}</div>
+              <div style={{ color: tokens.label }}>{h.vmCount}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <WasteBar pct={h.memUsedPct} color={pctColor} />
-                <span style={{ fontSize: 10, color: apple.tertiaryLabel, whiteSpace: 'nowrap' }}>{h.memAllocatedGi.toFixed(1)}/{h.memTotalGi.toFixed(1)} Gi</span>
+                <span style={{ fontSize: 10, color: tokens.tertiaryLabel, whiteSpace: 'nowrap' }}>{h.memAllocatedGi.toFixed(1)}/{h.memTotalGi.toFixed(1)} Gi</span>
               </div>
               <div style={{ fontSize: 12, fontWeight: 600, color: pctColor }}>{h.memUsedPct}%</div>
             </div>
@@ -1101,12 +1101,12 @@ function CloudStackTab({ csHosts, csRegions, csLoading }: { csHosts: CloudStackH
 
       {/* Consolidation opportunities */}
       {lowMemHosts > 0 && (
-        <div style={{ background: apple.orange + '0d', border: `0.5px solid ${apple.orange}30`, borderRadius: apple.radius.lg, padding: '14px 18px' }}>
+        <div style={{ background: tokens.orange + '0d', border: `0.5px solid ${tokens.orange}30`, borderRadius: tokens.radius.lg, padding: '14px 18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <TrendingDown style={{ width: 15, height: 15, color: apple.orange }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: apple.orange }}>Consolidation Opportunity: {lowMemHosts} under-utilised host{lowMemHosts !== 1 ? 's' : ''} (&lt;30% memory)</span>
+            <TrendingDown style={{ width: 15, height: 15, color: tokens.orange }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: tokens.orange }}>Consolidation Opportunity: {lowMemHosts} under-utilised host{lowMemHosts !== 1 ? 's' : ''} (&lt;30% memory)</span>
           </div>
-          <p style={{ margin: 0, fontSize: 12, color: apple.secondaryLabel, lineHeight: 1.5 }}>
+          <p style={{ margin: 0, fontSize: 12, color: tokens.secondaryLabel, lineHeight: 1.5 }}>
             {lowMemHosts} host{lowMemHosts !== 1 ? 's have' : ' has'} memory utilisation below 30%. Consider live-migrating VMs to consolidate and reduce active host count. Estimated saving: {lowMemHosts} × host power + IPMI management overhead.
           </p>
         </div>
@@ -1195,14 +1195,14 @@ function RecommendationsTab({
   if (recs.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-        <CheckCircle style={{ width: 48, height: 48, color: apple.green, marginBottom: 12 }} />
-        <div style={{ fontSize: 16, fontWeight: 600, color: apple.label, marginBottom: 6 }}>All systems well-provisioned</div>
-        <div style={{ fontSize: 13, color: apple.secondaryLabel }}>No significant capacity issues detected. Check back after new deployments.</div>
+        <CheckCircle style={{ width: 48, height: 48, color: tokens.green, marginBottom: 12 }} />
+        <div style={{ fontSize: 16, fontWeight: 600, color: tokens.label, marginBottom: 6 }}>All systems well-provisioned</div>
+        <div style={{ fontSize: 13, color: tokens.secondaryLabel }}>No significant capacity issues detected. Check back after new deployments.</div>
       </div>
     )
   }
 
-  const priorityColor: Record<string, string> = { critical: apple.red, high: apple.orange, medium: apple.yellow, low: apple.blue }
+  const priorityColor: Record<string, string> = { critical: tokens.red, high: tokens.orange, medium: tokens.yellow, low: tokens.blue }
   const sorted = recs.sort((a, b) => {
     const order = { critical: 0, high: 1, medium: 2, low: 3 }
     return order[a.priority] - order[b.priority]
@@ -1211,30 +1211,30 @@ function RecommendationsTab({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* Forecast header */}
-      <div style={{ background: apple.indigo + '0d', border: `0.5px solid ${apple.indigo}30`, borderRadius: apple.radius.lg, padding: '16px 20px' }}>
+      <div style={{ background: tokens.indigo + '0d', border: `0.5px solid ${tokens.indigo}30`, borderRadius: tokens.radius.lg, padding: '16px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <TrendingUp style={{ width: 16, height: 16, color: apple.indigo }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: apple.indigo }}>Capacity Forecast Summary</span>
+          <TrendingUp style={{ width: 16, height: 16, color: tokens.indigo }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: tokens.indigo }}>Capacity Forecast Summary</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
           {totalSavableCpuM > 0 && (
             <div>
-              <div style={{ fontSize: 12, color: apple.tertiaryLabel, marginBottom: 3 }}>Reclaimable CPU (right-sizing)</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: apple.indigo }}>{formatCpu(totalSavableCpuM)}</div>
-              <div style={{ fontSize: 11, color: apple.secondaryLabel }}>across {containerItems.length} analysed containers</div>
+              <div style={{ fontSize: 12, color: tokens.tertiaryLabel, marginBottom: 3 }}>Reclaimable CPU (right-sizing)</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: tokens.indigo }}>{formatCpu(totalSavableCpuM)}</div>
+              <div style={{ fontSize: 11, color: tokens.secondaryLabel }}>across {containerItems.length} analysed containers</div>
             </div>
           )}
           {totalSavableMemMi > 0 && (
             <div>
-              <div style={{ fontSize: 12, color: apple.tertiaryLabel, marginBottom: 3 }}>Reclaimable Memory</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: apple.purple }}>{formatMem(totalSavableMemMi)}</div>
-              <div style={{ fontSize: 11, color: apple.secondaryLabel }}>from over-provisioned limits</div>
+              <div style={{ fontSize: 12, color: tokens.tertiaryLabel, marginBottom: 3 }}>Reclaimable Memory</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: tokens.purple }}>{formatMem(totalSavableMemMi)}</div>
+              <div style={{ fontSize: 11, color: tokens.secondaryLabel }}>from over-provisioned limits</div>
             </div>
           )}
           <div>
-            <div style={{ fontSize: 12, color: apple.tertiaryLabel, marginBottom: 3 }}>Total Issues Found</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: apple.orange }}>{recs.length}</div>
-            <div style={{ fontSize: 11, color: apple.secondaryLabel }}>{recs.filter(r => r.priority === 'critical').length} critical · {recs.filter(r => r.priority === 'high').length} high</div>
+            <div style={{ fontSize: 12, color: tokens.tertiaryLabel, marginBottom: 3 }}>Total Issues Found</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: tokens.orange }}>{recs.length}</div>
+            <div style={{ fontSize: 11, color: tokens.secondaryLabel }}>{recs.filter(r => r.priority === 'critical').length} critical · {recs.filter(r => r.priority === 'high').length} high</div>
           </div>
         </div>
       </div>
@@ -1248,12 +1248,12 @@ function RecommendationsTab({
 
 function RecommendationCard({ rec, priorityColor }: { rec: any; priorityColor: Record<string, string> }) {
   const [expanded, setExpanded] = useState(rec.priority === 'critical')
-  const color = priorityColor[rec.priority] ?? apple.gray
+  const color = priorityColor[rec.priority] ?? tokens.gray
 
   return (
-    <div style={{ background: apple.secondaryBackground, border: `0.5px solid ${color}30`, borderRadius: apple.radius.lg, overflow: 'hidden' }}>
+    <div style={{ background: tokens.secondaryBackground, border: `0.5px solid ${color}30`, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
       <div onClick={() => setExpanded(!expanded)} style={{ padding: '14px 18px', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ width: 36, height: 36, borderRadius: apple.radius.sm, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+        <div style={{ width: 36, height: 36, borderRadius: tokens.radius.sm, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
           {rec.priority === 'critical' ? <AlertTriangle style={{ width: 18, height: 18, color }} /> :
             rec.priority === 'high' ? <Zap style={{ width: 18, height: 18, color }} /> :
               <Lightbulb style={{ width: 18, height: 18, color }} />}
@@ -1261,24 +1261,24 @@ function RecommendationCard({ rec, priorityColor }: { rec: any; priorityColor: R
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
             <Badge color={color}>{rec.priority.toUpperCase()}</Badge>
-            <Badge color={apple.gray}>{rec.category}</Badge>
-            <Badge color={apple.gray}>{rec.count} item{rec.count !== 1 ? 's' : ''}</Badge>
+            <Badge color={tokens.gray}>{rec.category}</Badge>
+            <Badge color={tokens.gray}>{rec.count} item{rec.count !== 1 ? 's' : ''}</Badge>
           </div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: apple.label }}>{rec.title}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: tokens.label }}>{rec.title}</div>
         </div>
-        {expanded ? <ChevronUp style={{ width: 14, height: 14, color: apple.gray, flexShrink: 0, marginTop: 4 }} /> : <ChevronDown style={{ width: 14, height: 14, color: apple.gray, flexShrink: 0, marginTop: 4 }} />}
+        {expanded ? <ChevronUp style={{ width: 14, height: 14, color: tokens.gray, flexShrink: 0, marginTop: 4 }} /> : <ChevronDown style={{ width: 14, height: 14, color: tokens.gray, flexShrink: 0, marginTop: 4 }} />}
       </div>
       {expanded && (
         <div style={{ padding: '0 18px 16px 18px', paddingLeft: 66 }}>
-          <p style={{ margin: '0 0 12px', fontSize: 13, color: apple.secondaryLabel, lineHeight: 1.6 }}>{rec.detail}</p>
+          <p style={{ margin: '0 0 12px', fontSize: 13, color: tokens.secondaryLabel, lineHeight: 1.6 }}>{rec.detail}</p>
           {rec.commands && rec.commands.length > 0 && (
             <>
-              <div style={{ fontSize: 11, fontWeight: 600, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
                 Example commands ({rec.commands.length} shown)
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {rec.commands.map((cmd: string, i: number) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: apple.fill, borderRadius: apple.radius.sm, padding: '7px 10px' }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: tokens.fill, borderRadius: tokens.radius.sm, padding: '7px 10px' }}>
                     <code style={{ flex: 1, fontSize: 10, color: '#c9d1d9', fontFamily: '"SF Mono", monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cmd}</code>
                     <CopyBtn text={cmd} />
                   </div>

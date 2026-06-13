@@ -11,10 +11,10 @@ import {
 } from 'lucide-react'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Apple Design Tokens
+// Aileron Design Tokens
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -90,8 +90,8 @@ export function FloatingActionButtons({
     {
       id: 'oncall',
       icon: UserCheck,
-      gradient: `linear-gradient(135deg, ${apple.green}, #30d158)`,
-      shadow: `0 8px 24px ${apple.green}40`,
+      gradient: `linear-gradient(135deg, ${tokens.green}, #30d158)`,
+      shadow: `0 8px 24px ${tokens.green}40`,
       title: 'On-Call Schedule',
       onClick: () => {
         navigate('/oncall')
@@ -102,8 +102,8 @@ export function FloatingActionButtons({
     {
       id: 'ai-chat',
       icon: Sparkles,
-      gradient: `linear-gradient(135deg, ${apple.purple}, #bf5af2)`,
-      shadow: `0 8px 24px ${apple.purple}40`,
+      gradient: `linear-gradient(135deg, ${tokens.purple}, #bf5af2)`,
+      shadow: `0 8px 24px ${tokens.purple}40`,
       title: 'AI Assistant',
       onClick: () => {
         if (onAIChatClick) {
@@ -178,7 +178,7 @@ export function FloatingActionButtons({
                     width: 24,
                     height: 24,
                     borderRadius: '50%',
-                    background: apple.red,
+                    background: tokens.red,
                     border: `2px solid var(--color-background)`,
                     display: 'flex',
                     alignItems: 'center',
@@ -186,7 +186,7 @@ export function FloatingActionButtons({
                     fontSize: 11,
                     fontWeight: 700,
                     color: '#fff',
-                    boxShadow: `0 4px 12px ${apple.red}40`,
+                    boxShadow: `0 4px 12px ${tokens.red}40`,
                   }}
                 >
                   {button.badge}
@@ -211,11 +211,11 @@ export function FloatingActionButtons({
           borderRadius: '50%',
           border: 'none',
           background: isExpanded
-            ? `linear-gradient(135deg, ${apple.red}, #ff453a)`
-            : `linear-gradient(135deg, ${apple.blue}, #00c3ff)`,
+            ? `linear-gradient(135deg, ${tokens.red}, #ff453a)`
+            : `linear-gradient(135deg, ${tokens.blue}, #00c3ff)`,
           boxShadow: isExpanded
-            ? `0 12px 40px ${apple.red}50`
-            : `0 12px 40px ${apple.blue}50`,
+            ? `0 12px 40px ${tokens.red}50`
+            : `0 12px 40px ${tokens.blue}50`,
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',

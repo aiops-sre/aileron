@@ -112,7 +112,7 @@ data:
   NAMESPACE: "aileron"
   VERSION: "v3.0.0"
   ARTIFACTORY_REGISTRY: "ghcr.io/aileron-platform/aileron-admins"
-  # Apple's corporate CA is not in container trust stores; allow insecure TLS for internal services
+  # Self-signed or private CA certs may require InsecureSkipVerify in dev; use proper CA bundle in production
   INTERNAL_TLS_INSECURE: "true"
   # NetApp ONTAP topology integration — harvest-user read-only access to both DC clusters
   NETAPP_CLUSTERS: '[{"cluster":"100.67.87.8","name":"netapp-mdn-cluster001","region":"mdn"},{"cluster":"100.67.60.23","name":"netapp-rno-cluster001","region":"rno"}]'
@@ -231,17 +231,17 @@ spec:
             configMapKeyRef:
               name: alerthub-enterprise-production-config
               key: SKIP_AI_HEALTH_CHECK
-        # DS-LDAP group-based RBAC (credentials from K8s Secret, config from ConfigMap)
+        # LDAP group-based RBAC (credentials from K8s Secret, config from ConfigMap)
         - name: LDAP_APP_ID
           valueFrom:
             secretKeyRef:
-              name: alerthub-dsldap-credentials
+              name: alerthub-ldap-credentials
               key: LDAP_APP_ID
               optional: true
         - name: LDAP_APP_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: alerthub-dsldap-credentials
+              name: alerthub-ldap-credentials
               key: LDAP_APP_PASSWORD
               optional: true
         - name: OIDC_APP_ID
@@ -250,52 +250,52 @@ spec:
               name: alerthub-hcl-credentials
               key: OIDC_APP_ID
               optional: true
-        - name: IDMS_APP_PASSWORD
+        - name: OIDC_APP_PASSWORD
           valueFrom:
             secretKeyRef:
               name: alerthub-hcl-credentials
-              key: IDMS_APP_PASSWORD
+              key: OIDC_APP_PASSWORD
               optional: true
-        - name: DSLDAP_ENABLED
+        - name: LDAP_ENABLED
           valueFrom:
             configMapKeyRef:
-              name: alerthub-dsldap-config
-              key: DSLDAP_ENABLED
+              name: alerthub-ldap-config
+              key: LDAP_ENABLED
               optional: true
-        - name: DSLDAP_SERVER_URL
+        - name: LDAP_SERVER_URL
           valueFrom:
             configMapKeyRef:
-              name: alerthub-dsldap-config
-              key: DSLDAP_SERVER_URL
+              name: alerthub-ldap-config
+              key: LDAP_SERVER_URL
               optional: true
-        - name: DSLDAP_USER_SEARCH_BASE
+        - name: LDAP_USER_SEARCH_BASE
           valueFrom:
             configMapKeyRef:
-              name: alerthub-dsldap-config
-              key: DSLDAP_USER_SEARCH_BASE
+              name: alerthub-ldap-config
+              key: LDAP_USER_SEARCH_BASE
               optional: true
-        - name: DSLDAP_CACHE_TTL_MINUTES
+        - name: LDAP_CACHE_TTL_MINUTES
           valueFrom:
             configMapKeyRef:
-              name: alerthub-dsldap-config
-              key: DSLDAP_CACHE_TTL_MINUTES
+              name: alerthub-ldap-config
+              key: LDAP_CACHE_TTL_MINUTES
               optional: true
         - name: OIDC_ADMIN_GROUPS
           valueFrom:
             configMapKeyRef:
-              name: alerthub-dsldap-config
+              name: alerthub-ldap-config
               key: OIDC_ADMIN_GROUPS
               optional: true
         - name: OIDC_OPERATOR_GROUPS
           valueFrom:
             configMapKeyRef:
-              name: alerthub-dsldap-config
+              name: alerthub-ldap-config
               key: OIDC_OPERATOR_GROUPS
               optional: true
         - name: OIDC_VIEWER_GROUPS
           valueFrom:
             configMapKeyRef:
-              name: alerthub-dsldap-config
+              name: alerthub-ldap-config
               key: OIDC_VIEWER_GROUPS
               optional: true
         - name: INTERNAL_TLS_INSECURE
@@ -503,7 +503,7 @@ spec:
 
 # Note: Using existing alerthub-secrets instead of creating new ones
 ---
-# Ingress for AlertHub Enterprise (Apple internal)
+# Ingress for AlertHub Enterprise (internal)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -532,7 +532,7 @@ spec:
 ---
 # NetworkPolicy: restrict traffic to/from alerthub pods
 # Allows ingress from same namespace + ingress-nginx
-# Allows egress to internal k8s services + Apple internal/external services
+# Allows egress to internal k8s services + internal/external services
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -569,13 +569,13 @@ spec:
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: aileron
-  # Allow HTTPS (443) outbound to all IPs — covers Apple internal corporate services:
-  # -  (Floodgate/Claude GenAI — 17.x.x.x)
-  # - hclapi.example.com (Kentaurus incident management — 17.x.x.x)
-  # - directory.example.com (IDMS CSS photo/user lookup — corp network)
-  # - , idmsac-uat.example.com (IDMS OAuth2 — corp network)
+  # Allow HTTPS (443) outbound to all IPs — covers internal corporate services:
+  # -  (OIDC Provider/Claude GenAI — 17.x.x.x)
+  # - hclapi.example.com (IncidentManager incident management — 17.x.x.x)
+  # - directory.example.com (OIDC CSS photo/user lookup — corp network)
+  # - , oidcac-uat.example.com (OIDC OAuth2 — corp network)
   # - oncall-pd.k.example.com (PagerDuty OnCall API — corp network)
-  # Apple's corporate services span 17.0.0.0/8 and VPN-only subnets;
+  # Internal services may span private IP ranges;
   # we allow all destinations on 443 since IPs are not fixed or publicly documented.
   - to:
     - ipBlock:
@@ -583,7 +583,7 @@ spec:
     ports:
     - protocol: TCP
       port: 443
-  # Allow LDAP/LDAPS to  (Apple DS-LDAP group lookup)
+  # Allow LDAP/LDAPS to  (Aileron LDAP group lookup)
   - to:
     - ipBlock:
         cidr: 0.0.0.0/0

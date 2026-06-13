@@ -9,7 +9,7 @@ from .base import BaseTool
 
 
 KUBECONFIG_DIR = os.getenv("KUBECONFIG_DIR", "/etc/kubeconfigs")
-DEFAULT_CLUSTER = os.getenv("DEFAULT_CLUSTER", "mps-dev-rno")
+DEFAULT_CLUSTER = os.getenv("DEFAULT_CLUSTER", "example-cluster")
 
 
 def _load_client(cluster: str) -> tuple[k8s_client.CoreV1Api, k8s_client.AppsV1Api, k8s_client.EventsV1Api]:
@@ -35,7 +35,7 @@ class GetK8sEventsTool(BaseTool):
         "type": "object",
         "properties": {
             "namespace": {"type": "string", "description": "Kubernetes namespace"},
-            "cluster": {"type": "string", "description": "Cluster name, defaults to mps-dev-rno"},
+            "cluster": {"type": "string", "description": "Cluster name, defaults to example-cluster"},
             "limit": {"type": "integer", "description": "Max events to return, default 50"},
         },
         "required": ["namespace"],

@@ -44,9 +44,9 @@ FROM alpine:3.19 AS runtime
 RUN apk --no-cache add ca-certificates tzdata && \
     addgroup -S oie && adduser -S oie -G oie
 
-# Trust Apple Corporate Root CAs — required for ONTAP REST API, IdMS JWKS endpoint,
-# CloudStack API, and all other internal Apple services reached by OIE fetchers.
-COPY services/oie/apple-corp-cas.crt /usr/local/share/ca-certificates/apple-corp.crt
+# Trust your organizationorate Root CAs — required for ONTAP REST API, OIDC JWKS endpoint,
+# CloudStack API, and all other internal Aileron services reached by OIE fetchers.
+COPY services/oie/aileron-corp-cas.crt /usr/local/share/ca-certificates/aileron-corp.crt
 RUN update-ca-certificates
 
 COPY --from=builder /oie /usr/local/bin/oie

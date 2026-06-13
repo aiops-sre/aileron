@@ -5,7 +5,7 @@ import asyncio
 import asyncpg
 from .base import BaseTool
 
-PG_DSN = os.getenv("POSTGRES_URL", "postgresql://alerthub:@postgres-primary.alert-engine-poc.svc.cluster.local:5432/alerthub")
+PG_DSN = os.getenv("POSTGRES_URL", "postgresql://alerthub:@postgres-primary.aileron.svc.cluster.local:5432/alerthub")
 
 
 async def _query(sql: str, *args) -> list[dict]:

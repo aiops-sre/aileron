@@ -8,10 +8,10 @@ import { useAlertsStore, startBackgroundRefresh, stopBackgroundRefresh } from '@
 import { initializeEnhancedDataLoading, cleanupEnhancedDataLoading } from '@/stores/enhancedUniversalDataStore'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Apple Design Tokens
+// Aileron Design Tokens
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const apple = {
+const tokens = {
   background: 'var(--color-background)',
 } as const
 
@@ -74,7 +74,7 @@ export function Layout({ children, className, onCallCount = 0 }: LayoutProps) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: apple.background,
+      background: tokens.background,
       display: 'flex',
       flexDirection: 'column',
     }}>

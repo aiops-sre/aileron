@@ -30,11 +30,11 @@ import { useSettingsStore } from '@/stores/settingsStore'
 import toast from 'react-hot-toast'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Apple Design Tokens (matching AdminPage)
+// Aileron Design Tokens (matching AdminPage)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const apple = {
-  // System colors (matches Apple HIG)
+const tokens = {
+  // System colors (matches Aileron HIG)
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -70,10 +70,10 @@ const apple = {
 } as const
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Apple Components
+// Aileron Components
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/** Apple iOS-style toggle switch */
+/** Aileron iOS-style toggle switch */
 function AppleToggle({ checked, onChange, disabled = false }: {
   checked: boolean
   onChange: (v: boolean) => void
@@ -92,7 +92,7 @@ function AppleToggle({ checked, onChange, disabled = false }: {
         borderRadius: 31,
         border: 'none',
         cursor: disabled ? 'default' : 'pointer',
-        background: checked ? apple.green : 'rgba(142, 142, 147, 0.24)',
+        background: checked ? tokens.green : 'rgba(142, 142, 147, 0.24)',
         transition: 'background 0.25s ease',
         flexShrink: 0,
         opacity: disabled ? 0.5 : 1,
@@ -116,7 +116,7 @@ function AppleToggle({ checked, onChange, disabled = false }: {
   )
 }
 
-/** Apple-style segmented control */
+/** Aileron-style segmented control */
 function SegmentedControl({
   segments,
   selected,
@@ -131,8 +131,8 @@ function SegmentedControl({
       style={{
         display: 'inline-flex',
         padding: 2,
-        borderRadius: apple.radius.md,
-        background: apple.fill,
+        borderRadius: tokens.radius.md,
+        background: tokens.fill,
         gap: 1,
       }}
     >
@@ -144,11 +144,11 @@ function SegmentedControl({
             onClick={() => onChange(seg.id)}
             style={{
               padding: '6px 16px',
-              borderRadius: apple.radius.sm + 2,
+              borderRadius: tokens.radius.sm + 2,
               fontSize: 13,
               fontWeight: active ? 600 : 400,
-              color: active ? apple.label : apple.secondaryLabel,
-              background: active ? apple.secondaryBackground : 'transparent',
+              color: active ? tokens.label : tokens.secondaryLabel,
+              background: active ? tokens.secondaryBackground : 'transparent',
               border: 'none',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
@@ -164,7 +164,7 @@ function SegmentedControl({
   )
 }
 
-/** Apple-style grouped list container */
+/** Aileron-style grouped list container */
 function GroupedList({ children, header, footer }: {
   children: React.ReactNode
   header?: string
@@ -176,7 +176,7 @@ function GroupedList({ children, header, footer }: {
         <div style={{
           fontSize: 13,
           fontWeight: 400,
-          color: apple.secondaryLabel,
+          color: tokens.secondaryLabel,
           padding: '0 20px 8px',
           textTransform: 'uppercase',
           letterSpacing: '0.02em',
@@ -185,9 +185,9 @@ function GroupedList({ children, header, footer }: {
         </div>
       )}
       <div style={{
-        background: apple.secondaryBackground,
-        borderRadius: apple.radius.lg,
-        border: `0.5px solid ${apple.separator}`,
+        background: tokens.secondaryBackground,
+        borderRadius: tokens.radius.lg,
+        border: `0.5px solid ${tokens.separator}`,
         overflow: 'hidden',
       }}>
         {children}
@@ -195,7 +195,7 @@ function GroupedList({ children, header, footer }: {
       {footer && (
         <div style={{
           fontSize: 12,
-          color: apple.tertiaryLabel,
+          color: tokens.tertiaryLabel,
           padding: '8px 20px 0',
           lineHeight: 1.4,
         }}>
@@ -235,10 +235,10 @@ function GroupedRow({
         padding: '12px 16px',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'background 0.15s ease',
-        borderBottom: isLast ? 'none' : `0.5px solid ${apple.separator}`,
+        borderBottom: isLast ? 'none' : `0.5px solid ${tokens.separator}`,
       }}
       onMouseEnter={(e) => {
-        if (onClick) (e.currentTarget as HTMLElement).style.background = apple.tertiaryFill
+        if (onClick) (e.currentTarget as HTMLElement).style.background = tokens.tertiaryFill
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLElement).style.background = 'transparent'
@@ -249,7 +249,7 @@ function GroupedRow({
           width: 30,
           height: 30,
           borderRadius: 7,
-          background: iconColor || apple.blue,
+          background: iconColor || tokens.blue,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -262,19 +262,19 @@ function GroupedRow({
         <div style={{
           fontSize: 15,
           fontWeight: 400,
-          color: apple.label,
+          color: tokens.label,
           lineHeight: 1.3,
         }}>
           {label}
         </div>
         {detail && (
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel, marginTop: 1 }}>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel, marginTop: 1 }}>
             {detail}
           </div>
         )}
       </div>
       {accessory || (onClick && (
-        <ChevronRight style={{ width: 14, height: 14, color: apple.quaternaryLabel, flexShrink: 0 }} />
+        <ChevronRight style={{ width: 14, height: 14, color: tokens.quaternaryLabel, flexShrink: 0 }} />
       ))}
     </div>
   )
@@ -312,7 +312,7 @@ function Sidebar({
               gap: 10,
               width: '100%',
               padding: '7px 12px',
-              borderRadius: apple.radius.sm,
+              borderRadius: tokens.radius.sm,
               border: 'none',
               cursor: 'pointer',
               background: active ? 'rgba(0, 122, 255, 0.12)' : 'transparent',
@@ -321,7 +321,7 @@ function Sidebar({
               textAlign: 'left',
             }}
             onMouseEnter={(e) => {
-              if (!active) (e.currentTarget as HTMLElement).style.background = apple.tertiaryFill
+              if (!active) (e.currentTarget as HTMLElement).style.background = tokens.tertiaryFill
             }}
             onMouseLeave={(e) => {
               if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'
@@ -342,7 +342,7 @@ function Sidebar({
             <span style={{
               fontSize: 13,
               fontWeight: active ? 600 : 400,
-              color: active ? apple.blue : apple.label,
+              color: active ? tokens.blue : tokens.label,
               flex: 1,
             }}>
               {item.label}
@@ -355,10 +355,10 @@ function Sidebar({
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Floodgate Token Status Component
+// OIDC Provider Token Status Component
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function FloodgateTokenStatus() {
+function OIDC ProviderTokenStatus() {
   const [tokenInfo, setTokenInfo] = useState<{
     hasToken: boolean
     source?: string
@@ -374,7 +374,7 @@ function FloodgateTokenStatus() {
     const checkTokenStatus = () => {
       const token = localStorage.getItem('oauth_id_token')
       const source = localStorage.getItem('oauth_source')
-      const expiryStr = localStorage.getItem('floodgate_token_expiry')
+      const expiryStr = localStorage.getItem('oidc_token_expiry')
       
       if (!token) {
         setTokenInfo({
@@ -425,44 +425,44 @@ function FloodgateTokenStatus() {
       'mas-proxy': {
         label: 'MAS Proxy (Multi-Audience)',
         icon: <Cloud style={{ width: 16, height: 16 }} />,
-        color: apple.green,
+        color: tokens.green,
       },
       'headers': {
         label: 'MAS Headers',
         icon: <Cloud style={{ width: 16, height: 16 }} />,
-        color: apple.blue,
+        color: tokens.blue,
       },
-      'floodgate-cli': {
+      'oidc-cli': {
         label: 'AppleConnect CLI',
         icon: <Monitor style={{ width: 16, height: 16 }} />,
-        color: apple.orange,
+        color: tokens.orange,
       },
       'database-cache': {
         label: 'Database Cache',
         icon: <Clock style={{ width: 16, height: 16 }} />,
-        color: apple.yellow,
+        color: tokens.yellow,
       },
       'local-mac': {
         label: 'Local Mac Service',
         icon: <Monitor style={{ width: 16, height: 16 }} />,
-        color: apple.orange,
+        color: tokens.orange,
       },
       'backend': {
         label: 'Backend Service',
         icon: <Cloud style={{ width: 16, height: 16 }} />,
-        color: apple.blue,
+        color: tokens.blue,
       },
     }
 
     return sources[source || ''] || {
       label: source || 'Unknown',
       icon: <Cloud style={{ width: 16, height: 16 }} />,
-      color: apple.gray,
+      color: tokens.gray,
     }
   }
 
   const refreshToken = () => {
-    localStorage.removeItem('floodgate_token_expiry')
+    localStorage.removeItem('oidc_token_expiry')
     localStorage.removeItem('oauth_id_token')
     localStorage.removeItem('oauth_source')
     window.location.href = '/login'
@@ -481,7 +481,7 @@ function FloodgateTokenStatus() {
             width: 30,
             height: 30,
             borderRadius: 7,
-            background: apple.red,
+            background: tokens.red,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -490,19 +490,19 @@ function FloodgateTokenStatus() {
             <XCircle style={{ width: 16, height: 16, color: '#fff' }} />
           </div>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 15, fontWeight: 500, color: apple.red, margin: 0 }}>
-              No Floodgate Token
+            <p style={{ fontSize: 15, fontWeight: 500, color: tokens.red, margin: 0 }}>
+              No OIDC Provider Token
             </p>
-            <p style={{ fontSize: 13, color: apple.tertiaryLabel, marginTop: 4, marginBottom: 12 }}>
+            <p style={{ fontSize: 13, color: tokens.tertiaryLabel, marginTop: 4, marginBottom: 12 }}>
               AI features will use demo mode. Login via MAS to get a token.
             </p>
             <button
               onClick={refreshToken}
               style={{
                 padding: '8px 16px',
-                borderRadius: apple.radius.sm,
+                borderRadius: tokens.radius.sm,
                 border: 'none',
-                background: apple.blue,
+                background: tokens.blue,
                 color: '#fff',
                 fontSize: 13,
                 fontWeight: 500,
@@ -537,7 +537,7 @@ function FloodgateTokenStatus() {
             width: 30,
             height: 30,
             borderRadius: 7,
-            background: tokenInfo.isExpired ? apple.red : apple.green,
+            background: tokenInfo.isExpired ? tokens.red : tokens.green,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -553,12 +553,12 @@ function FloodgateTokenStatus() {
             <p style={{ 
               fontSize: 15, 
               fontWeight: 500, 
-              color: tokenInfo.isExpired ? apple.red : apple.green, 
+              color: tokenInfo.isExpired ? tokens.red : tokens.green, 
               margin: 0 
             }}>
               {tokenInfo.isExpired ? 'Token Expired' : 'Token Active'}
             </p>
-            <p style={{ fontSize: 13, color: apple.tertiaryLabel, marginTop: 4 }}>
+            <p style={{ fontSize: 13, color: tokens.tertiaryLabel, marginTop: 4 }}>
               {tokenInfo.isExpired
                 ? 'Your token has expired. Login again to use AI features.'
                 : `Token valid for ${tokenInfo.timeRemaining || 'unknown time'}`}
@@ -568,9 +568,9 @@ function FloodgateTokenStatus() {
                 onClick={refreshToken}
                 style={{
                   padding: '8px 16px',
-                  borderRadius: apple.radius.sm,
+                  borderRadius: tokens.radius.sm,
                   border: 'none',
-                  background: apple.blue,
+                  background: tokens.blue,
                   color: '#fff',
                   fontSize: 13,
                   fontWeight: 500,
@@ -595,7 +595,7 @@ function FloodgateTokenStatus() {
           <div style={{ padding: '12px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ color: sourceInfo.color }}>{sourceInfo.icon}</span>
-              <p style={{ fontSize: 13, fontWeight: 500, color: apple.secondaryLabel, margin: 0 }}>
+              <p style={{ fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel, margin: 0 }}>
                 Token Source
               </p>
             </div>
@@ -608,12 +608,12 @@ function FloodgateTokenStatus() {
         <GroupedList>
           <div style={{ padding: '12px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <Clock style={{ width: 16, height: 16, color: apple.gray }} />
-              <p style={{ fontSize: 13, fontWeight: 500, color: apple.secondaryLabel, margin: 0 }}>
+              <Clock style={{ width: 16, height: 16, color: tokens.gray }} />
+              <p style={{ fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel, margin: 0 }}>
                 Expires At
               </p>
             </div>
-            <p style={{ fontSize: 15, fontWeight: 500, color: apple.label, margin: 0 }}>
+            <p style={{ fontSize: 15, fontWeight: 500, color: tokens.label, margin: 0 }}>
               {tokenInfo.expiry
                 ? new Date(tokenInfo.expiry).toLocaleString()
                 : 'Unknown'}
@@ -626,12 +626,12 @@ function FloodgateTokenStatus() {
       <GroupedList footer="Token sources are prioritized: MAS Proxy > MAS Headers > CLI > Cache > Local Service">
         <div style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <Sparkles style={{ width: 16, height: 16, color: apple.blue }} />
-            <span style={{ fontSize: 13, fontWeight: 500, color: apple.secondaryLabel }}>
+            <Sparkles style={{ width: 16, height: 16, color: tokens.blue }} />
+            <span style={{ fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel }}>
               Token Source Information
             </span>
           </div>
-          <div style={{ fontSize: 12, color: apple.tertiaryLabel, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 12, color: tokens.tertiaryLabel, lineHeight: 1.4 }}>
             <strong>MAS Proxy:</strong> Multi-audience token from MAS (fastest, recommended)<br />
             <strong>MAS Headers:</strong> OAuth token from MAS authentication headers<br />
             <strong>AppleConnect CLI:</strong> Token fetched via backend CLI command
@@ -665,8 +665,8 @@ function AppearancePanel({ settings, updateSettings }: { settings: any; updateSe
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: apple.label, margin: 0 }}>Appearance</h2>
-        <p style={{ fontSize: 13, color: apple.secondaryLabel, marginTop: 2 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: tokens.label, margin: 0 }}>Appearance</h2>
+        <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginTop: 2 }}>
           Customize the look and feel of your interface
         </p>
       </div>
@@ -693,10 +693,10 @@ function AppearancePanel({ settings, updateSettings }: { settings: any; updateSe
                 style={{
                   width: '100%',
                   aspectRatio: '1',
-                  borderRadius: apple.radius.sm,
+                  borderRadius: tokens.radius.sm,
                   border: settings.accentColor === color.value 
-                    ? `2px solid ${apple.label}` 
-                    : `1px solid ${apple.separator}`,
+                    ? `2px solid ${tokens.label}` 
+                    : `1px solid ${tokens.separator}`,
                   background: color.value,
                   cursor: 'pointer',
                   transition: 'all 0.15s',
@@ -713,7 +713,7 @@ function AppearancePanel({ settings, updateSettings }: { settings: any; updateSe
       <GroupedList>
         <GroupedRow
           icon={Monitor}
-          iconColor={apple.purple}
+          iconColor={tokens.purple}
           label="Compact Mode"
           detail="Reduce spacing for denser information display"
           accessory={
@@ -752,26 +752,26 @@ function TimezonePanel({ settings, updateSettings }: { settings: any; updateSett
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: apple.label, margin: 0 }}>Time & Region</h2>
-        <p style={{ fontSize: 13, color: apple.secondaryLabel, marginTop: 2 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: tokens.label, margin: 0 }}>Time & Region</h2>
+        <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginTop: 2 }}>
           Configure timezone and time display preferences
         </p>
       </div>
 
       <GroupedList header="Timezone">
-        <div style={{ padding: '12px 16px', borderBottom: `0.5px solid ${apple.separator}` }}>
+        <div style={{ padding: '12px 16px', borderBottom: `0.5px solid ${tokens.separator}` }}>
           <select
             value={settings.timezone}
             onChange={(e) => updateSettings({ timezone: e.target.value })}
             style={{
               width: '100%',
               height: 38,
-              borderRadius: apple.radius.md,
-              border: `0.5px solid ${apple.separator}`,
-              background: apple.tertiaryFill,
+              borderRadius: tokens.radius.md,
+              border: `0.5px solid ${tokens.separator}`,
+              background: tokens.tertiaryFill,
               padding: '0 32px 0 12px',
               fontSize: 15,
-              color: apple.label,
+              color: tokens.label,
               outline: 'none',
               appearance: 'none',
               cursor: 'pointer',
@@ -785,7 +785,7 @@ function TimezonePanel({ settings, updateSettings }: { settings: any; updateSett
           </select>
         </div>
         <div style={{ padding: '12px 16px' }}>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>
             Current time:{' '}
             {new Date().toLocaleTimeString('en-US', {
               timeZone: settings.timezone,
@@ -800,7 +800,7 @@ function TimezonePanel({ settings, updateSettings }: { settings: any; updateSett
       <GroupedList>
         <GroupedRow
           icon={Timer}
-          iconColor={apple.blue}
+          iconColor={tokens.blue}
           label="24-Hour Time Format"
           detail="Display time in 24-hour format (e.g., 13:00 instead of 1:00 PM)"
           accessory={
@@ -820,8 +820,8 @@ function NotificationsPanel({ settings, updateSettings }: { settings: any; updat
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: apple.label, margin: 0 }}>Notifications</h2>
-        <p style={{ fontSize: 13, color: apple.secondaryLabel, marginTop: 2 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: tokens.label, margin: 0 }}>Notifications</h2>
+        <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginTop: 2 }}>
           Configure alert notifications and preferences
         </p>
       </div>
@@ -829,7 +829,7 @@ function NotificationsPanel({ settings, updateSettings }: { settings: any; updat
       <GroupedList header="Notification Types">
         <GroupedRow
           icon={Volume2}
-          iconColor={apple.red}
+          iconColor={tokens.red}
           label="Sound Notifications"
           detail="Play sound when new alerts arrive"
           accessory={
@@ -841,7 +841,7 @@ function NotificationsPanel({ settings, updateSettings }: { settings: any; updat
         />
         <GroupedRow
           icon={Monitor}
-          iconColor={apple.blue}
+          iconColor={tokens.blue}
           label="Desktop Notifications"
           detail="Show browser notifications for new alerts"
           accessory={
@@ -853,7 +853,7 @@ function NotificationsPanel({ settings, updateSettings }: { settings: any; updat
         />
         <GroupedRow
           icon={Mail}
-          iconColor={apple.green}
+          iconColor={tokens.green}
           label="Email Notifications"
           detail="Receive email alerts for important events"
           accessory={
@@ -869,7 +869,7 @@ function NotificationsPanel({ settings, updateSettings }: { settings: any; updat
       <GroupedList header="Alert Severity">
         <GroupedRow
           icon={Zap}
-          iconColor={apple.red}
+          iconColor={tokens.red}
           label="Critical Alert Notifications"
           detail="Get notified immediately for critical severity alerts"
           accessory={
@@ -881,7 +881,7 @@ function NotificationsPanel({ settings, updateSettings }: { settings: any; updat
         />
         <GroupedRow
           icon={Bell}
-          iconColor={apple.orange}
+          iconColor={tokens.orange}
           label="High Priority Notifications"
           detail="Get notified for high severity alerts"
           accessory={
@@ -893,7 +893,7 @@ function NotificationsPanel({ settings, updateSettings }: { settings: any; updat
         />
         <GroupedRow
           icon={User}
-          iconColor={apple.blue}
+          iconColor={tokens.blue}
           label="Assignment Notifications"
           detail="Get notified when alerts are assigned to you"
           accessory={
@@ -913,18 +913,18 @@ function DisplayPanel({ settings, updateSettings }: { settings: any; updateSetti
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: apple.label, margin: 0 }}>Display</h2>
-        <p style={{ fontSize: 13, color: apple.secondaryLabel, marginTop: 2 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: tokens.label, margin: 0 }}>Display</h2>
+        <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginTop: 2 }}>
           Control how information is displayed
         </p>
       </div>
 
       <GroupedList header="Alert Display">
-        <div style={{ padding: '12px 16px', borderBottom: `0.5px solid ${apple.separator}` }}>
+        <div style={{ padding: '12px 16px', borderBottom: `0.5px solid ${tokens.separator}` }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 15, color: apple.label }}>Alerts Per Page</div>
-              <div style={{ fontSize: 13, color: apple.tertiaryLabel, marginTop: 1 }}>
+              <div style={{ fontSize: 15, color: tokens.label }}>Alerts Per Page</div>
+              <div style={{ fontSize: 13, color: tokens.tertiaryLabel, marginTop: 1 }}>
                 Number of alerts to display per page
               </div>
             </div>
@@ -933,12 +933,12 @@ function DisplayPanel({ settings, updateSettings }: { settings: any; updateSetti
               onChange={(e) => updateSettings({ alertsPerPage: Number(e.target.value) })}
               style={{
                 height: 32,
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.tertiaryFill,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.tertiaryFill,
                 padding: '0 24px 0 8px',
                 fontSize: 15,
-                color: apple.label,
+                color: tokens.label,
                 outline: 'none',
                 appearance: 'none',
                 cursor: 'pointer',
@@ -954,8 +954,8 @@ function DisplayPanel({ settings, updateSettings }: { settings: any; updateSetti
         <div style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 15, color: apple.label }}>Auto-Refresh Interval</div>
-              <div style={{ fontSize: 13, color: apple.tertiaryLabel, marginTop: 1 }}>
+              <div style={{ fontSize: 15, color: tokens.label }}>Auto-Refresh Interval</div>
+              <div style={{ fontSize: 13, color: tokens.tertiaryLabel, marginTop: 1 }}>
                 How often to check for new alerts
               </div>
             </div>
@@ -964,12 +964,12 @@ function DisplayPanel({ settings, updateSettings }: { settings: any; updateSetti
               onChange={(e) => updateSettings({ autoRefreshInterval: Number(e.target.value) })}
               style={{
                 height: 32,
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.tertiaryFill,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.tertiaryFill,
                 padding: '0 24px 0 8px',
                 fontSize: 15,
-                color: apple.label,
+                color: tokens.label,
                 outline: 'none',
                 appearance: 'none',
                 cursor: 'pointer',
@@ -988,7 +988,7 @@ function DisplayPanel({ settings, updateSettings }: { settings: any; updateSetti
       <GroupedList header="Content">
         <GroupedRow
           icon={Eye}
-          iconColor={apple.blue}
+          iconColor={tokens.blue}
           label="Show Resolved Alerts"
           detail="Display resolved alerts in the default view"
           accessory={
@@ -1000,7 +1000,7 @@ function DisplayPanel({ settings, updateSettings }: { settings: any; updateSetti
         />
         <GroupedRow
           icon={Settings}
-          iconColor={apple.gray}
+          iconColor={tokens.gray}
           label="Show Alert Metadata"
           detail="Display extracted metadata badges on alert cards"
           accessory={
@@ -1028,8 +1028,8 @@ function AdvancedPanel({ settings, updateSettings, onReset, onSync, isLoading, i
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: apple.label, margin: 0 }}>Advanced</h2>
-        <p style={{ fontSize: 13, color: apple.secondaryLabel, marginTop: 2 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: tokens.label, margin: 0 }}>Advanced</h2>
+        <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginTop: 2 }}>
           Advanced features and system settings
         </p>
       </div>
@@ -1039,13 +1039,13 @@ function AdvancedPanel({ settings, updateSettings, onReset, onSync, isLoading, i
         <div style={{ padding: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             {isSyncing ? (
-              <Loader2 style={{ width: 16, height: 16, color: apple.blue, animation: 'spin 1s linear infinite' }} />
+              <Loader2 style={{ width: 16, height: 16, color: tokens.blue, animation: 'spin 1s linear infinite' }} />
             ) : lastSynced ? (
-              <Cloud style={{ width: 16, height: 16, color: apple.green }} />
+              <Cloud style={{ width: 16, height: 16, color: tokens.green }} />
             ) : (
-              <CloudOff style={{ width: 16, height: 16, color: apple.gray }} />
+              <CloudOff style={{ width: 16, height: 16, color: tokens.gray }} />
             )}
-            <span style={{ fontSize: 13, color: apple.secondaryLabel }}>
+            <span style={{ fontSize: 13, color: tokens.secondaryLabel }}>
               {isSyncing 
                 ? 'Syncing to database...' 
                 : lastSynced 
@@ -1060,9 +1060,9 @@ function AdvancedPanel({ settings, updateSettings, onReset, onSync, isLoading, i
               style={{
                 flex: 1,
                 padding: '8px 16px',
-                borderRadius: apple.radius.sm,
+                borderRadius: tokens.radius.sm,
                 border: 'none',
-                background: apple.blue,
+                background: tokens.blue,
                 color: '#fff',
                 fontSize: 13,
                 fontWeight: 500,
@@ -1083,10 +1083,10 @@ function AdvancedPanel({ settings, updateSettings, onReset, onSync, isLoading, i
               style={{
                 flex: 1,
                 padding: '8px 16px',
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
-                color: apple.label,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
+                color: tokens.label,
                 fontSize: 13,
                 fontWeight: 500,
                 cursor: isSyncing ? 'default' : 'pointer',
@@ -1108,7 +1108,7 @@ function AdvancedPanel({ settings, updateSettings, onReset, onSync, isLoading, i
       <GroupedList header="Features">
         <GroupedRow
           icon={Sparkles}
-          iconColor={apple.purple}
+          iconColor={tokens.purple}
           label="AI Assistant"
           detail="Enable AI-powered chat assistant for troubleshooting"
           accessory={
@@ -1120,7 +1120,7 @@ function AdvancedPanel({ settings, updateSettings, onReset, onSync, isLoading, i
         />
         <GroupedRow
           icon={Zap}
-          iconColor={apple.orange}
+          iconColor={tokens.orange}
           label="Keyboard Shortcuts"
           detail="Enable keyboard shortcuts for faster navigation"
           accessory={
@@ -1132,7 +1132,7 @@ function AdvancedPanel({ settings, updateSettings, onReset, onSync, isLoading, i
         />
         <GroupedRow
           icon={Settings}
-          iconColor={apple.gray}
+          iconColor={tokens.gray}
           label="Debug Mode"
           detail="Show additional debugging information in console"
           accessory={
@@ -1145,10 +1145,10 @@ function AdvancedPanel({ settings, updateSettings, onReset, onSync, isLoading, i
         />
       </GroupedList>
 
-      {/* Floodgate Token Status */}
+      {/* OIDC Provider Token Status */}
       <GroupedList header="AI Token Status">
         <div style={{ padding: '16px' }}>
-          <FloodgateTokenStatus />
+          <OIDC ProviderTokenStatus />
         </div>
       </GroupedList>
     </div>
@@ -1211,25 +1211,25 @@ export function SettingsPage() {
   }
 
   const sidebarItems = [
-    { id: 'appearance', label: 'Appearance', icon: Palette, iconColor: apple.pink },
-    { id: 'timezone', label: 'Time & Region', icon: Globe, iconColor: apple.blue },
-    { id: 'notifications', label: 'Notifications', icon: Bell, iconColor: apple.orange },
-    { id: 'display', label: 'Display', icon: Monitor, iconColor: apple.green },
-    { id: 'advanced', label: 'Advanced', icon: Zap, iconColor: apple.purple },
+    { id: 'appearance', label: 'Appearance', icon: Palette, iconColor: tokens.pink },
+    { id: 'timezone', label: 'Time & Region', icon: Globe, iconColor: tokens.blue },
+    { id: 'notifications', label: 'Notifications', icon: Bell, iconColor: tokens.orange },
+    { id: 'display', label: 'Display', icon: Monitor, iconColor: tokens.green },
+    { id: 'advanced', label: 'Advanced', icon: Zap, iconColor: tokens.purple },
   ]
 
   if (isLoading) {
     return (
       <div style={{
         minHeight: '100vh',
-        background: apple.background,
+        background: tokens.background,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
       }}>
         <div style={{ textAlign: 'center' }}>
-          <Loader2 style={{ width: 32, height: 32, color: apple.blue, animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-          <p style={{ fontSize: 15, color: apple.secondaryLabel }}>Loading Settings...</p>
+          <Loader2 style={{ width: 32, height: 32, color: tokens.blue, animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+          <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>Loading Settings...</p>
         </div>
       </div>
     )
@@ -1238,7 +1238,7 @@ export function SettingsPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: apple.background,
+      background: tokens.background,
     }}>
       {/* macOS System Settings layout: sidebar + content */}
       <div style={{
@@ -1258,7 +1258,7 @@ export function SettingsPage() {
           <div style={{
             fontSize: 28,
             fontWeight: 700,
-            color: apple.label,
+            color: tokens.label,
             padding: '4px 12px 20px',
             letterSpacing: '-0.02em',
           }}>
@@ -1275,17 +1275,17 @@ export function SettingsPage() {
               alignItems: 'center',
               gap: 6,
               padding: '6px 8px',
-              borderRadius: apple.radius.sm,
-              background: apple.tertiaryFill,
+              borderRadius: tokens.radius.sm,
+              background: tokens.tertiaryFill,
             }}>
               {isSyncing ? (
-                <Loader2 style={{ width: 12, height: 12, color: apple.blue, animation: 'spin 1s linear infinite' }} />
+                <Loader2 style={{ width: 12, height: 12, color: tokens.blue, animation: 'spin 1s linear infinite' }} />
               ) : lastSynced ? (
-                <Cloud style={{ width: 12, height: 12, color: apple.green }} />
+                <Cloud style={{ width: 12, height: 12, color: tokens.green }} />
               ) : (
-                <CloudOff style={{ width: 12, height: 12, color: apple.gray }} />
+                <CloudOff style={{ width: 12, height: 12, color: tokens.gray }} />
               )}
-              <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>
+              <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>
                 {isSyncing ? 'Syncing...' : lastSynced ? 'Synced' : 'Local only'}
               </span>
             </div>

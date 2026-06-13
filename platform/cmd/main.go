@@ -40,8 +40,8 @@ import (
 	"github.com/aileron-platform/aileron/platform/internal/services/audit"
 	apikeyssvc "github.com/aileron-platform/aileron/platform/internal/services/apikeys"
 	"github.com/aileron-platform/aileron/platform/internal/services/correlation"
-	dsldapsvc "github.com/aileron-platform/aileron/platform/internal/services/dsldap"
-	"github.com/aileron-platform/aileron/platform/internal/services/floodgate"
+	ldapsvc "github.com/aileron-platform/aileron/platform/internal/services/ldap"
+	"github.com/aileron-platform/aileron/platform/internal/services/oidc"
 	"github.com/aileron-platform/aileron/platform/internal/services/incidents"
 	"github.com/aileron-platform/aileron/platform/internal/services/jwt"
 	"github.com/aileron-platform/aileron/platform/internal/services/kubesense"
@@ -136,7 +136,7 @@ func main() {
 	ssoManager := sso.NewSSOManager(ssoConfig)
 
 	aiService := ai.NewAIService(config.AIServiceURL, config.AIAPIKey)
-	floodgateService := floodgate.NewFloodgateService()
+	oidcService := oidc.NewOIDC ProviderService()
 
 	// Register services in the registry
 	serviceRegistry.RegisterService("rbac", rbacService)
@@ -284,24 +284,24 @@ func main() {
 		wireTopologyFetcher(neo4jDriver)
 	}
 
-	// Initialize IDMS authentication (Apple IdMS OAuth2 + DS-LDAP RBAC)
-	idmsConfig := idms.DefaultConfig()
-	idmsConfig.Enabled = getEnv("IDMS_AUTH_ENABLED", "true") == "true"
-	idmsConfig.AutoProvision = getEnv("IDMS_AUTO_PROVISION", "true") == "true"
-	idmsConfig.DefaultRole = getEnv("IDMS_DEFAULT_ROLE", "viewer")
-	idmsConfig.StrictMode = getEnv("IDMS_STRICT_MODE", "false") == "true"
-	idmsProvisioner := idms.NewUserProvisioner(database, idmsConfig)
+	// Initialize OIDC authentication (Aileron OIDC OAuth2 + LDAP RBAC)
+	oidcConfig := oidc.DefaultConfig()
+	oidcConfig.Enabled = getEnv("OIDC_AUTH_ENABLED", "true") == "true"
+	oidcConfig.AutoProvision = getEnv("OIDC_AUTO_PROVISION", "true") == "true"
+	oidcConfig.DefaultRole = getEnv("OIDC_DEFAULT_ROLE", "viewer")
+	oidcConfig.StrictMode = getEnv("OIDC_STRICT_MODE", "false") == "true"
+	oidcProvisioner := oidc.NewUserProvisioner(database, oidcConfig)
 
 	// Initialize Corporate OAuth 2.0 client
 	oauthConfig := &oauth.OAuthConfig{
-		IdMSBaseURL:      getEnv("OIDC_PROVIDER_URL", ""),
+		OIDCBaseURL:      getEnv("OIDC_PROVIDER_URL", ""),
 		ClientID:         getEnv("OAUTH_CLIENT_ID", "7jdvu5f1gxuuckpbdb5s7jw6tcwpf3"),
 		ClientSecret:     getEnv("OAUTH_CLIENT_SECRET", ""),
-		Audiences:        []string{"sre-command-center", "sear-floodgate"},
+		Audiences:        []string{"sre-command-center", "sear-oidc"},
 		RequiredScopes:   []string{"dsid", "offline_access", "groups"},
-		RequiredGroups:   []string{"aileron-operators", "floodgate-google-models-access", "floodgate-anthropic-access"},
-		FloodgateAppID:   "928148",
-		FloodgateBaseURL: "",
+		RequiredGroups:   []string{"aileron-operators", "oidc-google-models-access", "oidc-anthropic-access"},
+		OIDC ProviderAppID:   "928148",
+		OIDC ProviderBaseURL: "",
 	}
 	oauthClient := oauth.NewOAuthClient(oauthConfig)
 
@@ -432,13 +432,13 @@ func main() {
 	// feedbackSvc is constructed later — set it after both are ready.
 	notificationHandler := handlers.NewNotificationHandler(database)
 	configHandler := handlers.NewConfigHandler(database)
-	aiHandler := handlers.NewAIHandler(floodgateService, database)
+	aiHandler := handlers.NewAIHandler(oidcService, database)
 
 	// Aurora Integration: Use Enhanced Webhook Handler with Aurora correlation
 	enhancedWebhookHandler := handlers.NewEnhancedWebhookHandler(alertService, correlationEngine)
 	correlationHandler := handlers.NewEnhancedCorrelationHandler(correlationEngine, database)
 	workflowHandler := handlers.NewWorkflowHandler(workflowEngine, database)
-	idmsHandler := handlers.NewIDMSHandler(idmsConfig, idmsProvisioner, jwtService, rbacService, database, oauthClient,
+	oidcHandler := handlers.NewOIDCHandler(oidcConfig, oidcProvisioner, jwtService, rbacService, database, oauthClient,
 		getEnv("APP_BASE_URL", "https://aileron.example.com"),
 		getEnv("OAUTH_CALLBACK_URL", "https://aileron.example.com/api/v1/auth"),
 		redisCache,
@@ -603,31 +603,31 @@ func main() {
 	apiKeyAuthMiddleware := middleware.NewAPIKeyAuth(apiKeySvc)
 	auditLogger := middleware.NewAuditLogger(database)
 
-	// DS-LDAP group-based RBAC enrichment (optional, controlled by DSLDAP_ENABLED=true)
+	// LDAP group-based RBAC enrichment (optional, controlled by LDAP_ENABLED=true)
 	// Credentials LDAP_APP_ID and LDAP_APP_PASSWORD are loaded from K8s Secret
-	// alerthub-dsldap-credentials (see k8s/ldap-credentials-secret.yaml).
-	ldapSvc := dsldapsvc.New(dsldapsvc.Config{
-		Enabled:        config.DSLDAPEnabled,
-		ServerURL:      config.DSLDAPServerURL,
-		AppID:          config.DSLDAPAppID,
-		AppPassword:    config.DSLDAPAppPassword,
-		UserSearchBase: config.DSLDAPUserSearchBase,
-		CacheTTL:       time.Duration(config.DSLDAPCacheTTLMins) * time.Minute,
-		AdminGroups:    splitCSV(config.DSLDAPAdminGroups),
-		OperatorGroups: splitCSV(config.DSLDAPOperatorGroups),
-		ViewerGroups:   splitCSV(config.DSLDAPViewerGroups),
+	// alerthub-ldap-credentials (see k8s/ldap-credentials-secret.yaml).
+	ldapSvc := ldapsvc.New(ldapsvc.Config{
+		Enabled:        config.LDAPEnabled,
+		ServerURL:      config.LDAPServerURL,
+		AppID:          config.LDAPAppID,
+		AppPassword:    config.LDAPAppPassword,
+		UserSearchBase: config.LDAPUserSearchBase,
+		CacheTTL:       time.Duration(config.LDAPCacheTTLMins) * time.Minute,
+		AdminGroups:    splitCSV(config.LDAPAdminGroups),
+		OperatorGroups: splitCSV(config.LDAPOperatorGroups),
+		ViewerGroups:   splitCSV(config.LDAPViewerGroups),
 	})
 	if ldapSvc != nil {
 		ldapSvc.SetDB(database) // enables live DB-backed grouprole mapping reloads
 		authMiddleware.SetLDAPService(ldapSvc)
 		roleHandler.SetLDAPService(ldapSvc)   // triggers mapping reload after admin UI changes
-		idmsHandler.SetLDAPService(ldapSvc)    // fetch groups from DS-LDAP when IDMS token omits them
-		log.Printf("DS-LDAP: enabled, server=%s appID=%s cacheTTL=%dm",
-			config.DSLDAPServerURL, config.DSLDAPAppID, config.DSLDAPCacheTTLMins)
+		oidcHandler.SetLDAPService(ldapSvc)    // fetch groups from LDAP when OIDC token omits them
+		log.Printf("LDAP: enabled, server=%s appID=%s cacheTTL=%dm",
+			config.LDAPServerURL, config.LDAPAppID, config.LDAPCacheTTLMins)
 		log.Printf("   admin-groups=%s  operator-groups=%s  viewer-groups=%s",
-			config.DSLDAPAdminGroups, config.DSLDAPOperatorGroups, config.DSLDAPViewerGroups)
+			config.LDAPAdminGroups, config.LDAPOperatorGroups, config.LDAPViewerGroups)
 	} else {
-		log.Printf("DS-LDAP: disabled (set DSLDAP_ENABLED=true to enable group-based RBAC)")
+		log.Printf("LDAP: disabled (set LDAP_ENABLED=true to enable group-based RBAC)")
 	}
 
 	// Setup router with Redis cache and AI service integration
@@ -649,7 +649,7 @@ func main() {
 		hclIncidentHandler,
 		authMiddleware,
 		auditService,
-		idmsHandler,
+		oidcHandler,
 		oauthHandler,
 		infraTopoHandler,
 		enhancedTopoConfigHandler,
@@ -660,12 +660,12 @@ func main() {
 		topologyHandler,
 		websocketHandler,
 		splunkWebhookHandler,
-		idmsConfig,
+		oidcConfig,
 		redisCache,
 		deduplicationHandler,
 		feedbackSvc,
 		aiopsHandler,
-		ldapSvc,            // DS-LDAP service (nil when disabled)
+		ldapSvc,            // LDAP service (nil when disabled)
 		enterpriseAPIHandler,
 		apiKeyAuthMiddleware,
 		auditLogger,
@@ -737,8 +737,8 @@ func main() {
 	log.Printf("LDAP: %s (enabled: %v)", config.LDAPServer, config.LDAPEnabled)
 	log.Printf("AI Service: %s", config.AIServiceURL)
 	log.Printf("Redis: %s (enabled: %v)", config.RedisAddr, redisCache != nil)
-	log.Printf("OAuth: IdMS=%s, Client=%s", oauthConfig.IdMSBaseURL, oauthConfig.ClientID)
-	log.Printf("Floodgate: %s (App ID: %s)", oauthConfig.FloodgateBaseURL, oauthConfig.FloodgateAppID)
+	log.Printf("OAuth: OIDC=%s, Client=%s", oauthConfig.OIDCBaseURL, oauthConfig.ClientID)
+	log.Printf("OIDC Provider: %s (App ID: %s)", oauthConfig.OIDC ProviderBaseURL, oauthConfig.OIDC ProviderAppID)
 	log.Printf("Topology: Infrastructure + Service mapping enabled")
 	log.Printf("Environment: %s", config.Environment)
 	log.Printf("Kafka: %s (always-on)", getEnv("KAFKA_BROKERS", "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092"))
@@ -819,17 +819,17 @@ type Config struct {
 	LDAPUserFilter   string
 	LDAPUseTLS       bool
 
-	// DS-LDAP (Apple Directory Service — group-based RBAC)
-	// Credentials stored in K8s Secret alerthub-dsldap-credentials
-	DSLDAPEnabled        bool
-	DSLDAPAppID          string // LDAP_APP_ID from K8s secret
-	DSLDAPAppPassword    string // LDAP_APP_PASSWORD from K8s secret
-	DSLDAPServerURL      string // default: 
-	DSLDAPUserSearchBase string // default: ou=people,o=apple
-	DSLDAPCacheTTLMins   int    // default: 5
-	DSLDAPAdminGroups    string // comma-sep AD group CNs admin role
-	DSLDAPOperatorGroups string // comma-sep AD group CNs operator role
-	DSLDAPViewerGroups   string // comma-sep AD group CNs viewer role
+	// LDAP (Aileron Directory Service — group-based RBAC)
+	// Credentials stored in K8s Secret alerthub-ldap-credentials
+	LDAPEnabled        bool
+	LDAPAppID          string // LDAP_APP_ID from K8s secret
+	LDAPAppPassword    string // LDAP_APP_PASSWORD from K8s secret
+	LDAPServerURL      string // default: 
+	LDAPUserSearchBase string // default: ou=people,dc=example,dc=com
+	LDAPCacheTTLMins   int    // default: 5
+	LDAPAdminGroups    string // comma-sep AD group CNs admin role
+	LDAPOperatorGroups string // comma-sep AD group CNs operator role
+	LDAPViewerGroups   string // comma-sep AD group CNs viewer role
 
 	// AI
 	AIServiceURL string
@@ -842,7 +842,7 @@ type Config struct {
 	RedisEnabled  bool
 
 	// OAuth 2.0
-	IdMSBaseURL       string
+	OIDCBaseURL       string
 	OAuthClientID     string
 	OAuthClientSecret string
 }
@@ -868,16 +868,16 @@ func loadConfig() *Config {
 		LDAPBindPassword:  getEnv("LDAP_BIND_PASSWORD", ""),
 		LDAPUserFilter:    getEnv("LDAP_USER_FILTER", "(sAMAccountName=%s)"),
 		LDAPUseTLS:        getEnv("LDAP_USE_TLS", "true") == "true",
-		// DS-LDAP (Apple Directory Service RBAC)
-		DSLDAPEnabled:        getEnv("DSLDAP_ENABLED", "false") == "true",
-		DSLDAPAppID:          getEnv("LDAP_APP_ID", ""),
-		DSLDAPAppPassword:    getEnv("LDAP_APP_PASSWORD", ""),
-		DSLDAPServerURL:      getEnv("DSLDAP_SERVER_URL", ""),
-		DSLDAPUserSearchBase: getEnv("DSLDAP_USER_SEARCH_BASE", "ou=people,o=apple"),
-		DSLDAPCacheTTLMins:   getEnvInt("DSLDAP_CACHE_TTL_MINUTES", 5),
-		DSLDAPAdminGroups:    getEnv("OIDC_ADMIN_GROUPS", "aileron-admins"),
-		DSLDAPOperatorGroups: getEnv("OIDC_OPERATOR_GROUPS", "aileron-operators,aileron-operators"),
-		DSLDAPViewerGroups:   getEnv("OIDC_VIEWER_GROUPS", "aileron-viewers"),
+		// LDAP (Aileron Directory Service RBAC)
+		LDAPEnabled:        getEnv("LDAP_ENABLED", "false") == "true",
+		LDAPAppID:          getEnv("LDAP_APP_ID", ""),
+		LDAPAppPassword:    getEnv("LDAP_APP_PASSWORD", ""),
+		LDAPServerURL:      getEnv("LDAP_SERVER_URL", ""),
+		LDAPUserSearchBase: getEnv("LDAP_USER_SEARCH_BASE", "ou=people,dc=example,dc=com"),
+		LDAPCacheTTLMins:   getEnvInt("LDAP_CACHE_TTL_MINUTES", 5),
+		LDAPAdminGroups:    getEnv("OIDC_ADMIN_GROUPS", "aileron-admins"),
+		LDAPOperatorGroups: getEnv("OIDC_OPERATOR_GROUPS", "aileron-operators,aileron-operators"),
+		LDAPViewerGroups:   getEnv("OIDC_VIEWER_GROUPS", "aileron-viewers"),
 		// AI_SERVICE_URL now points at Ollama — AnalyzeAlert routes to /api/generate.
 		// The namespace-aware default matches LLMEnricher so both use the same pod.
 		AIServiceURL: func() string {
@@ -895,7 +895,7 @@ func loadConfig() *Config {
 		RedisPassword:     getEnv("REDIS_PASSWORD", ""),
 		RedisDB:           getEnvInt("REDIS_DB", 0),
 		RedisEnabled:      getEnv("REDIS_ENABLED", "true") == "true",
-		IdMSBaseURL:       getEnv("OIDC_PROVIDER_URL", ""),
+		OIDCBaseURL:       getEnv("OIDC_PROVIDER_URL", ""),
 		OAuthClientID:     getEnv("OAUTH_CLIENT_ID", "7jdvu5f1gxuuckpbdb5s7jw6tcwpf3"),
 		OAuthClientSecret: getEnv("OAUTH_CLIENT_SECRET", ""),
 	}
@@ -962,7 +962,7 @@ func setupRouter(
 	hclIncidentHandler *handlers.HCLIncidentHandler,
 	authMiddleware *middleware.AuthMiddleware,
 	auditService *audit.AuditService,
-	idmsHandler *handlers.IDMSHandler,
+	oidcHandler *handlers.OIDCHandler,
 	oauthHandler *handlers.OAuthHandler,
 	infraTopoHandler *handlers.InfraTopologyHandler,
 	enhancedTopoConfigHandler *handlers.EnhancedTopologyConfigHandler,
@@ -973,12 +973,12 @@ func setupRouter(
 	topologyHandler *handlers.TopologyHandler,
 	websocketHandler *handlers.WebSocketHandler,
 	splunkWebhookHandler *handlers.SplunkWebhookHandler,
-	idmsConfig *idms.Config,
+	oidcConfig *oidc.Config,
 	redisCache *cache.RedisCache,
 	deduplicationHandler *handlers.DeduplicationHandler,
 	feedbackSvc *correlation.CorrelationFeedbackService,
 	aiopsHandler *handlers.AIOpsHandler,
-	ldapSvc *dsldapsvc.Service,
+	ldapSvc *ldapsvc.Service,
 	enterpriseAPIHandler *handlers.EnterpriseAPIHandler,
 	apiKeyAuthMiddleware *middleware.APIKeyAuth,
 	auditLogger *middleware.AuditLogger,
@@ -1030,7 +1030,7 @@ func setupRouter(
 		log.Println("Redis caching middleware enabled")
 	}
 
-	// MAS Authentication middleware removed — using IdMS OAuth2 code flow exclusively
+	// MAS Authentication middleware removed — using OIDC OAuth2 code flow exclusively
 
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
@@ -1709,7 +1709,7 @@ func setupRouter(
 			workflowHandler.RegisterRoutes(protected)
 			hclIncidentHandler.RegisterRoutes(protected)
 			deduplicationHandler.RegisterRoutes(protected)
-			oauthHandler.RegisterRoutes(protected)                            // OAuth and Floodgate proxy
+			oauthHandler.RegisterRoutes(protected)                            // OAuth and OIDC Provider proxy
 
 			// Correlation feedback loop routes 
 			corrFeedback := protected.Group("/correlation/feedback")
@@ -2183,16 +2183,16 @@ func setupRouter(
 			}
 		}
 
-		// IDMS OAuth2 routes (public — no JWT required, handles its own state)
-		// Callback is registered at /api/v1/auth to match the redirect_uri configured in IDMS.
-		idmsAuth := v1.Group("/auth/oidc")
+		// OIDC OAuth2 routes (public — no JWT required, handles its own state)
+		// Callback is registered at /api/v1/auth to match the redirect_uri configured in OIDC.
+		oidcAuth := v1.Group("/auth/oidc")
 		{
-			idmsAuth.GET("", idmsHandler.IDMSLogin)                // Initiate OAuth2 redirect to IDMS
-			idmsAuth.GET("/callback", idmsHandler.IDMSCallback)    // IDMS callback exchange code
-			idmsAuth.GET("/exchange", idmsHandler.IDMSExchange)    // Redeem exchange code for JWT
-			idmsAuth.GET("/settings", idmsHandler.GetIDMSSettings)
-			// Returns the current user's synced DS-LDAP groups
-			idmsAuth.GET("/groups", authMiddleware.Authenticate(), func(c *gin.Context) {
+			oidcAuth.GET("", oidcHandler.OIDCLogin)                // Initiate OAuth2 redirect to OIDC
+			oidcAuth.GET("/callback", oidcHandler.OIDCCallback)    // OIDC callback exchange code
+			oidcAuth.GET("/exchange", oidcHandler.OIDCExchange)    // Redeem exchange code for JWT
+			oidcAuth.GET("/settings", oidcHandler.GetOIDCSettings)
+			// Returns the current user's synced LDAP groups
+			oidcAuth.GET("/groups", authMiddleware.Authenticate(), func(c *gin.Context) {
 				userIDVal, _ := c.Get("user_id")
 				rows, err := db.QueryContext(c.Request.Context(),
 					`SELECT mas_group, synced_at FROM user_mas_groups WHERE user_id = $1 ORDER BY mas_group`, userIDVal)
@@ -2211,12 +2211,12 @@ func setupRouter(
 				}
 				c.JSON(200, gin.H{"success": true, "data": gin.H{"groups": groups}})
 			})
-			// Silent Floodgate token refresh (requires app JWT — uses stored IDMS token in Redis)
-			idmsAuth.GET("/floodgate-refresh", authMiddleware.Authenticate(), idmsHandler.RefreshFloodgateToken)
+			// Silent OIDC Provider token refresh (requires app JWT — uses stored OIDC token in Redis)
+			oidcAuth.GET("/oidc-refresh", authMiddleware.Authenticate(), oidcHandler.RefreshOIDC ProviderToken)
 		}
 
-		// IDMS OAuth2 callback — also registered at /api/v1/auth (the URI registered in IDMS)
-		v1.GET("/auth", idmsHandler.IDMSCallback)
+		// OIDC OAuth2 callback — also registered at /api/v1/auth (the URI registered in OIDC)
+		v1.GET("/auth", oidcHandler.OIDCCallback)
 
 		// LLM, Infra, Alert Sources admin routes (require admin role)
 		llmInfraHandler := handlers.NewLLMInfraHandler(db)
@@ -2335,20 +2335,20 @@ func setupRouter(
 				},
 				func() map[string]interface{} {
 					if ldapSvc == nil {
-						return map[string]interface{}{"name": "DS-LDAP Directory", "type": "directory",
+						return map[string]interface{}{"name": "LDAP Directory", "type": "directory",
 							"status": "disabled", "healthy": true, "response_time_ms": int64(0),
 							"endpoint": "", "last_checked": now.Format(time.RFC3339),
-							"error": "DSLDAP_ENABLED=false"}
+							"error": "LDAP_ENABLED=false"}
 					}
 					start := time.Now()
 					err := ldapSvc.Ping()
 					ms := time.Since(start).Milliseconds()
 					if err != nil {
-						return map[string]interface{}{"name": "DS-LDAP Directory", "type": "directory",
+						return map[string]interface{}{"name": "LDAP Directory", "type": "directory",
 							"status": "unhealthy", "healthy": false, "response_time_ms": ms,
 							"endpoint": ldapSvc.ServerURL(), "last_checked": now.Format(time.RFC3339), "error": err.Error()}
 					}
-					return map[string]interface{}{"name": "DS-LDAP Directory", "type": "directory",
+					return map[string]interface{}{"name": "LDAP Directory", "type": "directory",
 						"status": "healthy", "healthy": true, "response_time_ms": ms,
 						"endpoint": ldapSvc.ServerURL(), "last_checked": now.Format(time.RFC3339)}
 				},

@@ -125,12 +125,12 @@ kubectl exec -n aileron-agent deploy/kubesense-postgres -- \
 
 ## Step 3: Create Required Secrets
 
-### 3a. Whisper secrets (database credentials)
+### 3a. SecretsManager secrets (database credentials)
 
-KubeSense services read credentials via the Whisper secret injection system. Create the secret in the `aileron-agent` namespace:
+KubeSense services read credentials via the SecretsManager secret injection system. Create the secret in the `aileron-agent` namespace:
 
 ```bash
-kubectl create secret generic kubesense-whisper \
+kubectl create secret generic kubesense-secrets_manager \
   --namespace aileron-agent \
   --from-literal=DATABASE_URL="postgres://kubesense:<password>@kubesense-postgres.aileron-agent.svc.cluster.local:5432/kubesense?sslmode=disable" \
   --from-literal=NEO4J_PASSWORD="<neo4j-password>"
@@ -139,7 +139,7 @@ kubectl create secret generic kubesense-whisper \
 ### 3b. Buildkit secrets
 
 ```bash
-# GitLab PAT for source clone (must have read_repository access to interactive-service-delivery/KubeSense)
+# GitLab PAT for source clone (must have read_repository access to aiops-sre/KubeSense)
 kubectl create secret generic interactive-git-token \
   --namespace buildkit \
   --from-literal=token=<gitlab-personal-access-token>

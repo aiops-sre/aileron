@@ -4,11 +4,11 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl libsnappy-dev ca-certificates git && rm -rf /var/lib/apt/lists/*
 
-# Trust Apple Corporate Root CAs (required for Floodgate, IdMS, and all internal Apple services).
+# Trust your organizationorate Root CAs (required for OIDC Provider, OIDC, and all internal Aileron services).
 # Fetched fresh from the canonical source at build time so the bundle is always current.
 # The COPY below brings in the pre-fetched bundle for air-gapped / offline builds;
 # the RUN below overwrites it if the repo is reachable (CI builds with SSH key).
-COPY apple-corp-cas.crt /usr/local/share/ca-certificates/apple-corp.crt
+COPY aileron-corp-cas.crt /usr/local/share/ca-certificates/aileron-corp.crt
 RUN update-ca-certificates
 
 COPY requirements.txt .
@@ -20,7 +20,7 @@ COPY . .
 RUN touch agent/__init__.py learning/__init__.py models/__init__.py
 
 ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app
-# Direct Python HTTP libraries to the system CA bundle (includes Apple Corporate roots above)
+# Direct Python HTTP libraries to the system CA bundle (includes your organizationorate roots above)
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 

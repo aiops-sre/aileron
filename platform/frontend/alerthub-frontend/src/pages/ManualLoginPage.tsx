@@ -5,7 +5,7 @@ import { Eye, EyeOff, Loader2, Lock, Shield } from 'lucide-react'
 import { useEnhancedAuthStore } from '@/stores/enhancedAuthStore'
 import toast from 'react-hot-toast'
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   red: '#FF3B30',
   label: 'var(--color-text)',
@@ -66,20 +66,20 @@ export function ManualLoginPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: apple.background,
+      background: tokens.background,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+      fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
     }}>
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         style={{
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.xl,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.xl,
+          border: `0.5px solid ${tokens.separator}`,
           padding: 40,
           width: '90%',
           maxWidth: 380,
@@ -91,7 +91,7 @@ export function ManualLoginPage() {
           <div style={{
             width: 56,
             height: 56,
-            borderRadius: apple.radius.lg,
+            borderRadius: tokens.radius.lg,
             background: `linear-gradient(135deg, #636366, #3A3A3C)`,
             display: 'inline-flex',
             alignItems: 'center',
@@ -100,11 +100,11 @@ export function ManualLoginPage() {
           }}>
             <Lock style={{ width: 24, height: 24, color: '#fff' }} />
           </div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: apple.label, margin: 0 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: tokens.label, margin: 0 }}>
             Manual Login
           </h1>
-          <p style={{ fontSize: 13, color: apple.tertiaryLabel, margin: '6px 0 0', lineHeight: 1.4 }}>
-            Emergency access — normally sign in via Apple SSO
+          <p style={{ fontSize: 13, color: tokens.tertiaryLabel, margin: '6px 0 0', lineHeight: 1.4 }}>
+            Emergency access — normally sign in via Aileron SSO
           </p>
         </div>
 
@@ -120,10 +120,10 @@ export function ManualLoginPage() {
               style={{
                 width: '100%',
                 padding: '12px 14px',
-                borderRadius: apple.radius.md,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
-                color: apple.label,
+                borderRadius: tokens.radius.md,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
+                color: tokens.label,
                 fontSize: 15,
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -141,10 +141,10 @@ export function ManualLoginPage() {
               style={{
                 width: '100%',
                 padding: '12px 44px 12px 14px',
-                borderRadius: apple.radius.md,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
-                color: apple.label,
+                borderRadius: tokens.radius.md,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
+                color: tokens.label,
                 fontSize: 15,
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -155,7 +155,7 @@ export function ManualLoginPage() {
               onClick={() => setShowPassword((p) => !p)}
               style={{
                 position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', cursor: 'pointer', color: apple.tertiaryLabel,
+                background: 'none', border: 'none', cursor: 'pointer', color: tokens.tertiaryLabel,
                 display: 'flex', alignItems: 'center',
               }}
             >
@@ -169,8 +169,8 @@ export function ManualLoginPage() {
             style={{
               width: '100%',
               padding: '13px',
-              borderRadius: apple.radius.md,
-              background: isLoading || !username || !password ? 'rgba(142,142,147,0.3)' : apple.blue,
+              borderRadius: tokens.radius.md,
+              background: isLoading || !username || !password ? 'rgba(142,142,147,0.3)' : tokens.blue,
               color: '#fff',
               fontSize: 15,
               fontWeight: 600,
@@ -190,10 +190,10 @@ export function ManualLoginPage() {
         <div style={{ marginTop: 20, textAlign: 'center' }}>
           <a
             href="/api/v1/auth/oidc"
-            style={{ fontSize: 13, color: apple.blue, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+            style={{ fontSize: 13, color: tokens.blue, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}
           >
             <Shield size={13} />
-            Sign in with Apple SSO instead
+            Sign in with Aileron SSO instead
           </a>
         </div>
       </motion.div>

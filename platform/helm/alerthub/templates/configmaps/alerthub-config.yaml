@@ -73,12 +73,12 @@ data:
   NETAPP_CLUSTERS: {{ .Values.backend.netappClusters | quote }}
 
   # -----------------------------------------------------------------------
-  # IDMS OAuth2 SSO
+  # OIDC OAuth2 SSO
   # -----------------------------------------------------------------------
-  IDMS_AUTH_ENABLED: {{ .Values.config.idmsEnabled | quote }}
-  IDMS_AUTO_PROVISION: {{ .Values.config.idmsAutoProvision | quote }}
-  IDMS_DEFAULT_ROLE: {{ .Values.config.idmsDefaultRole | quote }}
-  IDMS_STRICT_MODE: {{ .Values.config.idmsStrictMode | quote }}
+  OIDC_AUTH_ENABLED: {{ .Values.config.oidcEnabled | quote }}
+  OIDC_AUTO_PROVISION: {{ .Values.config.oidcAutoProvision | quote }}
+  OIDC_DEFAULT_ROLE: {{ .Values.config.oidcDefaultRole | quote }}
+  OIDC_STRICT_MODE: {{ .Values.config.oidcStrictMode | quote }}
 
   # -----------------------------------------------------------------------
   # TLS / security

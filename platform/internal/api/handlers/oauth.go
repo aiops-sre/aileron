@@ -141,9 +141,9 @@ func (h *OAuthHandler) RefreshToken(c *gin.Context) {
 // FLOODGATE PROXY ENDPOINTS
 // ============================================================================
 
-// ProxyToFloodgate forwards requests to Floodgate with user identity
-// ALL /api/v1/floodgate/*
-func (h *OAuthHandler) ProxyToFloodgate(c *gin.Context) {
+// ProxyToOIDC Provider forwards requests to OIDC Provider with user identity
+// ALL /api/v1/oidc/*
+func (h *OAuthHandler) ProxyToOIDC Provider(c *gin.Context) {
 	// Extract user information from context (set by MAS middleware)
 	userID := ""
 	userIP := ""
@@ -169,20 +169,20 @@ func (h *OAuthHandler) ProxyToFloodgate(c *gin.Context) {
 	if userIP == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "User IP required for Floodgate requests",
+			"message": "User IP required for OIDC Provider requests",
 		})
 		return
 	}
 
-	// Get Floodgate path from URL
-	floodgatePath := strings.TrimPrefix(c.Request.URL.Path, "/api/v1/floodgate")
-	if floodgatePath == "" {
-		floodgatePath = "/"
+	// Get OIDC Provider path from URL
+	oidcPath := strings.TrimPrefix(c.Request.URL.Path, "/api/v1/oidc")
+	if oidcPath == "" {
+		oidcPath = "/"
 	}
 
 	// Add query parameters
 	if c.Request.URL.RawQuery != "" {
-		floodgatePath += "?" + c.Request.URL.RawQuery
+		oidcPath += "?" + c.Request.URL.RawQuery
 	}
 
 	// Read request body
@@ -201,10 +201,10 @@ func (h *OAuthHandler) ProxyToFloodgate(c *gin.Context) {
 		return
 	}
 
-	// Create Floodgate request
-	floodgateReq := &oauth.FloodgateRequest{
+	// Create OIDC Provider request
+	oidcReq := &oauth.OIDC ProviderRequest{
 		Method:        c.Request.Method,
-		Path:          floodgatePath,
+		Path:          oidcPath,
 		Headers:       make(map[string]string),
 		Body:          body,
 		UserIP:        userIP,
@@ -215,16 +215,16 @@ func (h *OAuthHandler) ProxyToFloodgate(c *gin.Context) {
 	// Copy relevant headers
 	for key := range c.Request.Header {
 		if key != "Authorization" && key != "Host" {
-			floodgateReq.Headers[key] = c.GetHeader(key)
+			oidcReq.Headers[key] = c.GetHeader(key)
 		}
 	}
 
-	// Proxy to Floodgate
-	resp, err := h.oauthClient.ProxyToFloodgate(c.Request.Context(), floodgateReq)
+	// Proxy to OIDC Provider
+	resp, err := h.oauthClient.ProxyToOIDC Provider(c.Request.Context(), oidcReq)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{
 			"success": false,
-			"message": "Floodgate request failed: " + err.Error(),
+			"message": "OIDC Provider request failed: " + err.Error(),
 		})
 		return
 	}
@@ -292,9 +292,9 @@ func (h *OAuthHandler) RegisterRoutes(protected *gin.RouterGroup) {
 		oauth.DELETE("/cache/:user_id", h.ClearUserToken)
 	}
 
-	// Floodgate proxy - all methods
-	floodgate := protected.Group("/floodgate")
+	// OIDC Provider proxy - all methods
+	oidc := protected.Group("/oidc")
 	{
-		floodgate.Any("/*path", h.ProxyToFloodgate)
+		oidc.Any("/*path", h.ProxyToOIDC Provider)
 	}
 }

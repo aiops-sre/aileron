@@ -47,9 +47,9 @@ stringData:
   insecure: "true"
 ```
 
-### 3. Whisper secrets
+### 3. SecretsManager secrets
 
-KubeSense services read database credentials via the Whisper secret injection system (same pattern as AlertHub):
+KubeSense services read database credentials via the SecretsManager secret injection system (same pattern as AlertHub):
 
 | Secret key | Used by |
 |---|---|
@@ -371,7 +371,7 @@ When AlertHub publishes an investigation request and receives a result from `kub
    ```
    Expected: `kubesense-api: published N APM golden signals to kubesense.apm.golden-signals`
 
-2. If `kubesense-api: Kafka unavailable — signal publishing disabled`, the `KAFKA_BROKERS` env var is not set or Kafka is unreachable. Check the Whisper secret injection.
+2. If `kubesense-api: Kafka unavailable — signal publishing disabled`, the `KAFKA_BROKERS` env var is not set or Kafka is unreachable. Check the SecretsManager secret injection.
 
 3. If the publisher runs but AlertHub tabs are empty, check the AlertHub `kubesense` consumer service is running and consuming the correct Kafka groups.
 

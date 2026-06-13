@@ -12,19 +12,19 @@ import (
 	"github.com/aileron-platform/aileron/platform/internal/services/incidents"
 )
 
-// HCLIncidentHandler handles HCL incident operations via Kentaurus API
+// HCLIncidentHandler handles External incident operations via IncidentManager API
 type HCLIncidentHandler struct {
-	kentaurusClient *incidents.KentaurusClient
+	incident_managerClient *incidents.IncidentManagerClient
 }
 
-// NewHCLIncidentHandler creates a new HCL incident handler
+// NewHCLIncidentHandler creates a new External incident handler
 func NewHCLIncidentHandler() *HCLIncidentHandler {
 	return &HCLIncidentHandler{
-		kentaurusClient: incidents.NewKentaurusClient(),
+		incident_managerClient: incidents.NewIncidentManagerClient(),
 	}
 }
 
-// CreateHCLIncident creates a new HCL incident via Kentaurus API
+// CreateHCLIncident creates a new External incident via IncidentManager API
 func (h *HCLIncidentHandler) CreateHCLIncident(c *gin.Context) {
 	var req incidents.CreateIncidentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -35,23 +35,23 @@ func (h *HCLIncidentHandler) CreateHCLIncident(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.kentaurusClient.CreateIncident(c.Request.Context(), &req)
+	resp, err := h.incident_managerClient.CreateIncident(c.Request.Context(), &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"message": "Failed to create HCL incident: " + err.Error(),
+			"message": "Failed to create External incident: " + err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
-		"message": "HCL incident created successfully",
+		"message": "External incident created successfully",
 		"data":    resp.Result.Data,
 	})
 }
 
-// hclQueryFrontendRequest is the payload the frontend KentaurusService sends
+// hclQueryFrontendRequest is the payload the frontend IncidentManagerService sends
 type hclQueryFrontendRequest struct {
 	Module  string `json:"module"`
 	Number  string `json:"number"`
@@ -74,7 +74,7 @@ type hclQueryFrontendRequest struct {
 	SortByField string `json:"sortByField"`
 }
 
-// QueryHCLIncidents queries HCL incidents via Kentaurus API
+// QueryHCLIncidents queries External incidents via IncidentManager API
 func (h *HCLIncidentHandler) QueryHCLIncidents(c *gin.Context) {
 	var body hclQueryFrontendRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -85,7 +85,7 @@ func (h *HCLIncidentHandler) QueryHCLIncidents(c *gin.Context) {
 		return
 	}
 
-	// Build the Kentaurus query string.
+	// Build the IncidentManager query string.
 	// Always scope to aileron-admins — append any extra filters from the request.
 	query := body.Query
 	if query == "" {
@@ -134,7 +134,7 @@ func (h *HCLIncidentHandler) QueryHCLIncidents(c *gin.Context) {
 	if count == 0 {
 		count = 100
 	}
-	// Kentaurus hard-caps count at 100; sending more triggers a warning state
+	// IncidentManager hard-caps count at 100; sending more triggers a warning state
 	if count > 100 {
 		count = 100
 	}
@@ -154,13 +154,13 @@ func (h *HCLIncidentHandler) QueryHCLIncidents(c *gin.Context) {
 		SortByField: body.SortByField,
 	}
 
-	resp, err := h.kentaurusClient.QueryIncidents(c.Request.Context(), req)
+	resp, err := h.incident_managerClient.QueryIncidents(c.Request.Context(), req)
 	if err != nil {
-		log.Printf("[HCL] Kentaurus query failed: %v", err)
+		log.Printf("[HCL] IncidentManager query failed: %v", err)
 		// Degrade gracefully so the UI still shows local incidents
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": "HCL incidents unavailable: " + err.Error(),
+			"message": "External incidents unavailable: " + err.Error(),
 			"result": gin.H{
 				"data": []interface{}{},
 				"meta": gin.H{"queryResultCount": 0, "resultCount": 0},
@@ -169,12 +169,12 @@ func (h *HCLIncidentHandler) QueryHCLIncidents(c *gin.Context) {
 		return
 	}
 
-	log.Printf("[HCL] Kentaurus query success: resultCount=%d queryResultCount=%d",
+	log.Printf("[HCL] IncidentManager query success: resultCount=%d queryResultCount=%d",
 		resp.Result.Meta.ResultCount, resp.Result.Meta.QueryResultCount)
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetHCLIncident gets a specific HCL incident by number via Kentaurus API
+// GetHCLIncident gets a specific External incident by number via IncidentManager API
 func (h *HCLIncidentHandler) GetHCLIncident(c *gin.Context) {
 	number := c.Param("number")
 	if number == "" {
@@ -193,11 +193,11 @@ func (h *HCLIncidentHandler) GetHCLIncident(c *gin.Context) {
 		Offset: 0,
 	}
 
-	resp, err := h.kentaurusClient.QueryIncidents(c.Request.Context(), req)
+	resp, err := h.incident_managerClient.QueryIncidents(c.Request.Context(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"message": "Failed to get HCL incident: " + err.Error(),
+			"message": "Failed to get External incident: " + err.Error(),
 		})
 		return
 	}
@@ -205,7 +205,7 @@ func (h *HCLIncidentHandler) GetHCLIncident(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// UpdateHCLIncident updates an HCL incident via Kentaurus API
+// UpdateHCLIncident updates an External incident via IncidentManager API
 func (h *HCLIncidentHandler) UpdateHCLIncident(c *gin.Context) {
 	ticketID := c.Param("ticketId")
 	if ticketID == "" {
@@ -227,23 +227,23 @@ func (h *HCLIncidentHandler) UpdateHCLIncident(c *gin.Context) {
 
 	req.TicketID = ticketID
 
-	resp, err := h.kentaurusClient.UpdateIncident(c.Request.Context(), &req)
+	resp, err := h.incident_managerClient.UpdateIncident(c.Request.Context(), &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"message": "Failed to update HCL incident: " + err.Error(),
+			"message": "Failed to update External incident: " + err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "HCL incident updated successfully",
+		"message": "External incident updated successfully",
 		"data":    resp.Result.Data,
 	})
 }
 
-// ReopenHCLIncident reopens an HCL incident via Kentaurus API
+// ReopenHCLIncident reopens an External incident via IncidentManager API
 func (h *HCLIncidentHandler) ReopenHCLIncident(c *gin.Context) {
 	number := c.Param("number")
 	if number == "" {
@@ -267,23 +267,23 @@ func (h *HCLIncidentHandler) ReopenHCLIncident(c *gin.Context) {
 	req.Action = "reopen"
 	req.Module = "incident"
 
-	resp, err := h.kentaurusClient.ReopenIncident(c.Request.Context(), &req)
+	resp, err := h.incident_managerClient.ReopenIncident(c.Request.Context(), &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"message": "Failed to reopen HCL incident: " + err.Error(),
+			"message": "Failed to reopen External incident: " + err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "HCL incident reopened successfully",
+		"message": "External incident reopened successfully",
 		"data":    resp.Result.Data,
 	})
 }
 
-// RegisterRoutes registers HCL incident routes
+// RegisterRoutes registers External incident routes
 func (h *HCLIncidentHandler) RegisterRoutes(router *gin.RouterGroup) {
 	hcl := router.Group("/incidents/hcl")
 	{

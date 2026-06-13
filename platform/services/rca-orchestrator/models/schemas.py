@@ -80,9 +80,9 @@ class Investigation(BaseModel):
     confirmed: bool = False
     feedback_score: Optional[int] = None  # 1-5
     # LLM provider config (per-investigation, not persisted beyond active session)
-    llm_provider: Optional[str] = None   # "local" | "floodgate"
+    llm_provider: Optional[str] = None   # "local" | "oidc"
     llm_model: Optional[str] = None      # e.g. "claude-sonnet-4-6"
-    llm_token: Optional[str] = None      # Floodgate OAuth token (not persisted to DB)
+    llm_token: Optional[str] = None      # OIDC Provider OAuth token (not persisted to DB)
     # V2 orchestrator metadata
     orchestrator_version: Optional[str] = None   # "v1" | "v2"
     v2_domain: Optional[str] = None
@@ -126,8 +126,8 @@ class StartInvestigationRequest(BaseModel):
     cluster: Optional[str] = None
     service: Optional[str] = None
     # Optional LLM override — when omitted the orchestrator uses its configured default (Ollama)
-    llm_provider: Optional[str] = None   # "local" | "floodgate"
+    llm_provider: Optional[str] = None   # "local" | "oidc"
     llm_model: Optional[str] = None      # e.g. "claude-sonnet-4-6"
-    llm_token: Optional[str] = None      # Floodgate OAuth token
+    llm_token: Optional[str] = None      # OIDC Provider OAuth token
     # V2: Go engine deterministic context — populated by the Go alert pipeline
     go_context: Optional[dict[str, Any]] = None

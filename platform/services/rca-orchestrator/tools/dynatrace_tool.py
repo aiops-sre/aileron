@@ -5,7 +5,7 @@ import asyncio
 import aiohttp
 from .base import BaseTool
 
-DT_URL = os.getenv("DYNATRACE_URL", "https://mps-dynatrace-hybrid.k.miao.apple.com")
+DT_URL = os.getenv("DYNATRACE_URL", "https://mps-dynatrace-hybrid.k.miao.example.com")
 DT_TOKEN = os.getenv("DYNATRACE_TOKEN", "")
 
 _PLACEHOLDER = "dynatrace_api_token_placeholder"

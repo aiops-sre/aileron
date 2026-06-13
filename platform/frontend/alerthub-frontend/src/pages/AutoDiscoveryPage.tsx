@@ -22,10 +22,10 @@ import {
 } from 'lucide-react'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Apple Design Tokens
+// Aileron Design Tokens
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -82,10 +82,10 @@ interface DiscoveryTarget {
 function ServiceCard({ service }: { service: DiscoveredService }) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return apple.green
-      case 'degraded': return apple.orange
-      case 'unhealthy': return apple.red
-      default: return apple.gray
+      case 'healthy': return tokens.green
+      case 'degraded': return tokens.orange
+      case 'unhealthy': return tokens.red
+      default: return tokens.gray
     }
   }
 
@@ -108,9 +108,9 @@ function ServiceCard({ service }: { service: DiscoveredService }) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
       style={{
-        background: apple.secondaryBackground,
-        border: `0.5px solid ${apple.separator}`,
-        borderRadius: apple.radius.lg,
+        background: tokens.secondaryBackground,
+        border: `0.5px solid ${tokens.separator}`,
+        borderRadius: tokens.radius.lg,
         padding: 16,
         cursor: 'pointer',
         transition: 'all 0.2s ease',
@@ -121,7 +121,7 @@ function ServiceCard({ service }: { service: DiscoveredService }) {
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.boxShadow = 'none'
-        e.currentTarget.style.borderColor = apple.separator
+        e.currentTarget.style.borderColor = tokens.separator
       }}
     >
       {/* Header */}
@@ -129,7 +129,7 @@ function ServiceCard({ service }: { service: DiscoveredService }) {
         <div style={{
           width: 40,
           height: 40,
-          borderRadius: apple.radius.md,
+          borderRadius: tokens.radius.md,
           background: getStatusColor(service.status),
           display: 'flex',
           alignItems: 'center',
@@ -138,10 +138,10 @@ function ServiceCard({ service }: { service: DiscoveredService }) {
           <TypeIcon style={{ width: 20, height: 20, color: '#fff' }} />
         </div>
         <div style={{ flex: 1 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, color: apple.label, margin: 0 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: tokens.label, margin: 0 }}>
             {service.name}
           </h3>
-          <p style={{ fontSize: 12, color: apple.secondaryLabel, margin: 0 }}>
+          <p style={{ fontSize: 12, color: tokens.secondaryLabel, margin: 0 }}>
             {service.host}:{service.port}
           </p>
         </div>
@@ -172,8 +172,8 @@ function ServiceCard({ service }: { service: DiscoveredService }) {
           fontWeight: 500,
           padding: '2px 6px',
           borderRadius: 4,
-          background: apple.fill,
-          color: apple.secondaryLabel,
+          background: tokens.fill,
+          color: tokens.secondaryLabel,
           textTransform: 'capitalize',
         }}>
           {service.type.replace('-', ' ')}
@@ -184,8 +184,8 @@ function ServiceCard({ service }: { service: DiscoveredService }) {
             fontWeight: 500,
             padding: '2px 6px',
             borderRadius: 4,
-            background: apple.fill,
-            color: apple.secondaryLabel,
+            background: tokens.fill,
+            color: tokens.secondaryLabel,
           }}>
             v{service.version}
           </span>
@@ -202,8 +202,8 @@ function ServiceCard({ service }: { service: DiscoveredService }) {
                 fontSize: 10,
                 padding: '1px 4px',
                 borderRadius: 3,
-                background: apple.tertiaryFill,
-                color: apple.tertiaryLabel,
+                background: tokens.tertiaryFill,
+                color: tokens.tertiaryLabel,
               }}
             >
               {tag}
@@ -212,7 +212,7 @@ function ServiceCard({ service }: { service: DiscoveredService }) {
           {service.tags.length > 3 && (
             <span style={{
               fontSize: 10,
-              color: apple.tertiaryLabel,
+              color: tokens.tertiaryLabel,
             }}>
               +{service.tags.length - 3} more
             </span>
@@ -223,7 +223,7 @@ function ServiceCard({ service }: { service: DiscoveredService }) {
       {/* Last Seen */}
       <div style={{ 
         fontSize: 11, 
-        color: apple.tertiaryLabel,
+        color: tokens.tertiaryLabel,
         display: 'flex',
         alignItems: 'center',
         gap: 4,
@@ -242,37 +242,37 @@ function DiscoveryTargetCard({ target, onToggle, onRun }: {
 }) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'running': return apple.blue
-      case 'idle': return apple.gray
-      case 'error': return apple.red
-      default: return apple.gray
+      case 'running': return tokens.blue
+      case 'idle': return tokens.gray
+      case 'error': return tokens.red
+      default: return tokens.gray
     }
   }
 
   return (
     <div style={{
-      background: apple.secondaryBackground,
-      border: `0.5px solid ${apple.separator}`,
-      borderRadius: apple.radius.lg,
+      background: tokens.secondaryBackground,
+      border: `0.5px solid ${tokens.separator}`,
+      borderRadius: tokens.radius.lg,
       padding: 16,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
         <div style={{
           width: 36,
           height: 36,
-          borderRadius: apple.radius.sm,
-          background: target.enabled ? getStatusColor(target.status) : apple.fill,
+          borderRadius: tokens.radius.sm,
+          background: target.enabled ? getStatusColor(target.status) : tokens.fill,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-          <Search style={{ width: 18, height: 18, color: target.enabled ? '#fff' : apple.tertiaryLabel }} />
+          <Search style={{ width: 18, height: 18, color: target.enabled ? '#fff' : tokens.tertiaryLabel }} />
         </div>
         <div style={{ flex: 1 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: apple.label, margin: 0 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: tokens.label, margin: 0 }}>
             {target.name}
           </h3>
-          <p style={{ fontSize: 12, color: apple.secondaryLabel, margin: 0 }}>
+          <p style={{ fontSize: 12, color: tokens.secondaryLabel, margin: 0 }}>
             {target.endpoint} • {target.servicesFound} services
           </p>
         </div>
@@ -283,9 +283,9 @@ function DiscoveryTargetCard({ target, onToggle, onRun }: {
             style={{
               width: 28,
               height: 28,
-              borderRadius: apple.radius.sm,
+              borderRadius: tokens.radius.sm,
               border: 'none',
-              background: target.status === 'running' ? apple.gray : apple.blue,
+              background: target.status === 'running' ? tokens.gray : tokens.blue,
               color: '#fff',
               cursor: target.status === 'running' ? 'default' : 'pointer',
               display: 'flex',
@@ -305,10 +305,10 @@ function DiscoveryTargetCard({ target, onToggle, onRun }: {
             style={{
               width: 28,
               height: 28,
-              borderRadius: apple.radius.sm,
-              border: `0.5px solid ${apple.separator}`,
-              background: target.enabled ? apple.green : apple.fill,
-              color: target.enabled ? '#fff' : apple.label,
+              borderRadius: tokens.radius.sm,
+              border: `0.5px solid ${tokens.separator}`,
+              background: target.enabled ? tokens.green : tokens.fill,
+              color: target.enabled ? '#fff' : tokens.label,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -324,7 +324,7 @@ function DiscoveryTargetCard({ target, onToggle, onRun }: {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 6, fontSize: 11, color: apple.tertiaryLabel }}>
+      <div style={{ display: 'flex', gap: 6, fontSize: 11, color: tokens.tertiaryLabel }}>
         <span>Last: {new Date(target.lastRun).toLocaleString()}</span>
         {target.nextRun && (
           <>
@@ -467,7 +467,7 @@ export function AutoDiscoveryPage() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: apple.background,
+        background: tokens.background,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -476,11 +476,11 @@ export function AutoDiscoveryPage() {
           <Loader2 style={{ 
             width: 32, 
             height: 32, 
-            color: apple.blue, 
+            color: tokens.blue, 
             animation: 'spin 1s linear infinite', 
             margin: '0 auto 16px' 
           }} />
-          <p style={{ fontSize: 15, color: apple.secondaryLabel }}>
+          <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>
             Discovering services...
           </p>
         </div>
@@ -496,7 +496,7 @@ export function AutoDiscoveryPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: apple.background,
+      background: tokens.background,
     }}>
       <div style={{
         maxWidth: 1200,
@@ -506,10 +506,10 @@ export function AutoDiscoveryPage() {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: apple.label, margin: 0 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: tokens.label, margin: 0 }}>
               Auto Discovery
             </h1>
-            <p style={{ fontSize: 15, color: apple.secondaryLabel, marginTop: 4 }}>
+            <p style={{ fontSize: 15, color: tokens.secondaryLabel, marginTop: 4 }}>
               Automatically discover and monitor services in your infrastructure
             </p>
           </div>
@@ -521,10 +521,10 @@ export function AutoDiscoveryPage() {
                 alignItems: 'center',
                 gap: 6,
                 padding: '8px 12px',
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
-                color: apple.label,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
+                color: tokens.label,
                 fontSize: 13,
                 fontWeight: 500,
                 cursor: 'pointer',
@@ -540,9 +540,9 @@ export function AutoDiscoveryPage() {
                 alignItems: 'center',
                 gap: 6,
                 padding: '8px 12px',
-                borderRadius: apple.radius.sm,
+                borderRadius: tokens.radius.sm,
                 border: 'none',
-                background: apple.blue,
+                background: tokens.blue,
                 color: '#fff',
                 fontSize: 13,
                 fontWeight: 500,
@@ -563,72 +563,72 @@ export function AutoDiscoveryPage() {
           marginBottom: 24,
         }}>
           <div style={{
-            background: apple.secondaryBackground,
-            border: `0.5px solid ${apple.separator}`,
-            borderRadius: apple.radius.md,
+            background: tokens.secondaryBackground,
+            border: `0.5px solid ${tokens.separator}`,
+            borderRadius: tokens.radius.md,
             padding: '12px 16px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: apple.label, marginBottom: 2 }}>
+            <div style={{ fontSize: 24, fontWeight: 700, color: tokens.label, marginBottom: 2 }}>
               {services.length}
             </div>
-            <div style={{ fontSize: 11, color: apple.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: 11, color: tokens.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Total Services
             </div>
           </div>
           <div style={{
-            background: apple.secondaryBackground,
-            border: `0.5px solid ${apple.separator}`,
-            borderRadius: apple.radius.md,
+            background: tokens.secondaryBackground,
+            border: `0.5px solid ${tokens.separator}`,
+            borderRadius: tokens.radius.md,
             padding: '12px 16px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: apple.green, marginBottom: 2 }}>
+            <div style={{ fontSize: 24, fontWeight: 700, color: tokens.green, marginBottom: 2 }}>
               {healthyCount}
             </div>
-            <div style={{ fontSize: 11, color: apple.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: 11, color: tokens.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Healthy
             </div>
           </div>
           <div style={{
-            background: apple.secondaryBackground,
-            border: `0.5px solid ${apple.separator}`,
-            borderRadius: apple.radius.md,
+            background: tokens.secondaryBackground,
+            border: `0.5px solid ${tokens.separator}`,
+            borderRadius: tokens.radius.md,
             padding: '12px 16px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: apple.orange, marginBottom: 2 }}>
+            <div style={{ fontSize: 24, fontWeight: 700, color: tokens.orange, marginBottom: 2 }}>
               {degradedCount}
             </div>
-            <div style={{ fontSize: 11, color: apple.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: 11, color: tokens.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Degraded
             </div>
           </div>
           <div style={{
-            background: apple.secondaryBackground,
-            border: `0.5px solid ${apple.separator}`,
-            borderRadius: apple.radius.md,
+            background: tokens.secondaryBackground,
+            border: `0.5px solid ${tokens.separator}`,
+            borderRadius: tokens.radius.md,
             padding: '12px 16px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: apple.red, marginBottom: 2 }}>
+            <div style={{ fontSize: 24, fontWeight: 700, color: tokens.red, marginBottom: 2 }}>
               {unhealthyCount}
             </div>
-            <div style={{ fontSize: 11, color: apple.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: 11, color: tokens.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Unhealthy
             </div>
           </div>
           <div style={{
-            background: apple.secondaryBackground,
-            border: `0.5px solid ${apple.separator}`,
-            borderRadius: apple.radius.md,
+            background: tokens.secondaryBackground,
+            border: `0.5px solid ${tokens.separator}`,
+            borderRadius: tokens.radius.md,
             padding: '12px 16px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: apple.blue, marginBottom: 2 }}>
+            <div style={{ fontSize: 24, fontWeight: 700, color: tokens.blue, marginBottom: 2 }}>
               {activeTargets}
             </div>
-            <div style={{ fontSize: 11, color: apple.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: 11, color: tokens.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Active Targets
             </div>
           </div>
@@ -636,7 +636,7 @@ export function AutoDiscoveryPage() {
 
         {/* Discovery Targets */}
         <div style={{ marginBottom: 32 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, color: apple.label, marginBottom: 16 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: tokens.label, marginBottom: 16 }}>
             Discovery Targets
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12 }}>
@@ -654,10 +654,10 @@ export function AutoDiscoveryPage() {
         {/* Services Section */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: apple.label, margin: 0 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: tokens.label, margin: 0 }}>
               Discovered Services
             </h2>
-            <p style={{ fontSize: 13, color: apple.secondaryLabel }}>
+            <p style={{ fontSize: 13, color: tokens.secondaryLabel }}>
               {filteredServices.length} of {services.length} services
             </p>
           </div>
@@ -672,7 +672,7 @@ export function AutoDiscoveryPage() {
                 transform: 'translateY(-50%)',
                 width: 16,
                 height: 16,
-                color: apple.tertiaryLabel,
+                color: tokens.tertiaryLabel,
                 pointerEvents: 'none',
               }} />
               <input
@@ -683,13 +683,13 @@ export function AutoDiscoveryPage() {
                 style={{
                   width: '100%',
                   height: 36,
-                  borderRadius: apple.radius.md,
+                  borderRadius: tokens.radius.md,
                   border: 'none',
-                  background: apple.fill,
+                  background: tokens.fill,
                   paddingLeft: 34,
                   paddingRight: 12,
                   fontSize: 14,
-                  color: apple.label,
+                  color: tokens.label,
                   outline: 'none',
                 }}
               />
@@ -700,12 +700,12 @@ export function AutoDiscoveryPage() {
               onChange={(e) => setSelectedType(e.target.value)}
               style={{
                 height: 36,
-                borderRadius: apple.radius.md,
+                borderRadius: tokens.radius.md,
                 border: 'none',
-                background: apple.fill,
+                background: tokens.fill,
                 padding: '0 24px 0 12px',
                 fontSize: 13,
-                color: apple.label,
+                color: tokens.label,
                 outline: 'none',
                 appearance: 'none',
                 cursor: 'pointer',
@@ -724,12 +724,12 @@ export function AutoDiscoveryPage() {
               onChange={(e) => setSelectedStatus(e.target.value)}
               style={{
                 height: 36,
-                borderRadius: apple.radius.md,
+                borderRadius: tokens.radius.md,
                 border: 'none',
-                background: apple.fill,
+                background: tokens.fill,
                 padding: '0 24px 0 12px',
                 fontSize: 13,
-                color: apple.label,
+                color: tokens.label,
                 outline: 'none',
                 appearance: 'none',
                 cursor: 'pointer',
@@ -750,10 +750,10 @@ export function AutoDiscoveryPage() {
               }}
               style={{
                 padding: '8px 12px',
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
-                color: apple.secondaryLabel,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
+                color: tokens.secondaryLabel,
                 fontSize: 13,
                 cursor: 'pointer',
                 display: 'flex',
@@ -770,15 +770,15 @@ export function AutoDiscoveryPage() {
             <div style={{
               textAlign: 'center',
               padding: '80px 20px',
-              background: apple.secondaryBackground,
-              borderRadius: apple.radius.lg,
-              border: `0.5px solid ${apple.separator}`,
+              background: tokens.secondaryBackground,
+              borderRadius: tokens.radius.lg,
+              border: `0.5px solid ${tokens.separator}`,
             }}>
-              <Server style={{ width: 48, height: 48, color: apple.quaternaryLabel, margin: '0 auto 16px' }} />
-              <h3 style={{ fontSize: 17, fontWeight: 500, color: apple.label, margin: '0 0 8px' }}>
+              <Server style={{ width: 48, height: 48, color: tokens.quaternaryLabel, margin: '0 auto 16px' }} />
+              <h3 style={{ fontSize: 17, fontWeight: 500, color: tokens.label, margin: '0 0 8px' }}>
                 {searchQuery || selectedType || selectedStatus ? 'No matching services' : 'No services discovered'}
               </h3>
-              <p style={{ fontSize: 13, color: apple.tertiaryLabel }}>
+              <p style={{ fontSize: 13, color: tokens.tertiaryLabel }}>
                 {searchQuery || selectedType || selectedStatus 
                   ? 'Try adjusting your search criteria.'
                   : 'Run discovery targets to find services in your infrastructure.'

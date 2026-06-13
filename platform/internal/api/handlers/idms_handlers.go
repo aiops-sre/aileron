@@ -16,7 +16,7 @@ import (
 	jwtpkg "github.com/aileron-platform/aileron/platform/internal/services/jwt"
 	"github.com/aileron-platform/aileron/platform/internal/services/oauth"
 	"github.com/aileron-platform/aileron/platform/internal/services/rbac"
-	dsldap "github.com/aileron-platform/aileron/platform/internal/services/dsldap"
+	ldap "github.com/aileron-platform/aileron/platform/internal/services/ldap"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -77,32 +77,32 @@ func (s *oauth2MemStore) cleanup() {
 	}
 }
 
-// IDMSHandler handles IDMS OAuth2 authorization code flow and Floodgate token exchange.
-type IDMSHandler struct {
-	config      *idms.Config
-	provisioner *idms.UserProvisioner
+// OIDCHandler handles OIDC OAuth2 authorization code flow and OIDC Provider token exchange.
+type OIDCHandler struct {
+	config      *oidc.Config
+	provisioner *oidc.UserProvisioner
 	jwtService  *jwtpkg.JWTService
 	rbacService *rbac.RBACService
 	db          *sql.DB
 	oauthClient *oauth.OAuthClient
 	appBaseURL  string
-	callbackURL string // full redirect URI registered in IDMS
+	callbackURL string // full redirect URI registered in OIDC
 	redis       *cache.RedisCache
 	stateStore  *oauth2MemStore // in-memory fallback when Redis unavailable
 	codeStore   *oauth2MemStore
-	ldapSvc     *dsldap.Service // optional; used to fetch groups when IDMS token omits them
+	ldapSvc     *ldap.Service // optional; used to fetch groups when OIDC token omits them
 }
 
-// SetLDAPService wires in the DS-LDAP group-lookup client.
-func (h *IDMSHandler) SetLDAPService(svc *dsldap.Service) { h.ldapSvc = svc }
+// SetLDAPService wires in the LDAP group-lookup client.
+func (h *OIDCHandler) SetLDAPService(svc *ldap.Service) { h.ldapSvc = svc }
 
-// NewIDMSHandler creates a new IDMS OAuth2 handler.
-// callbackURL is the redirect URI registered in IDMS (e.g. https://host/api/v1/auth).
-func NewIDMSHandler(config *idms.Config, provisioner *idms.UserProvisioner, jwtService *jwtpkg.JWTService, rbacService *rbac.RBACService, db *sql.DB, oauthClient *oauth.OAuthClient, appBaseURL string, callbackURL string, redisCache *cache.RedisCache) *IDMSHandler {
+// NewOIDCHandler creates a new OIDC OAuth2 handler.
+// callbackURL is the redirect URI registered in OIDC (e.g. https://host/api/v1/auth).
+func NewOIDCHandler(config *oidc.Config, provisioner *oidc.UserProvisioner, jwtService *jwtpkg.JWTService, rbacService *rbac.RBACService, db *sql.DB, oauthClient *oauth.OAuthClient, appBaseURL string, callbackURL string, redisCache *cache.RedisCache) *OIDCHandler {
 	if callbackURL == "" {
 		callbackURL = appBaseURL + "/api/v1/auth/oidc/callback"
 	}
-	return &IDMSHandler{
+	return &OIDCHandler{
 		config:      config,
 		provisioner: provisioner,
 		jwtService:  jwtService,
@@ -118,62 +118,62 @@ func NewIDMSHandler(config *idms.Config, provisioner *idms.UserProvisioner, jwtS
 }
 
 // storeOAuthState stores OAuth state in Redis (primary) with in-memory fallback.
-func (h *IDMSHandler) storeOAuthState(key string, data map[string]string, ttl time.Duration) {
+func (h *OIDCHandler) storeOAuthState(key string, data map[string]string, ttl time.Duration) {
 	if h.redis != nil {
-		if err := h.redis.Set("idms:state:"+key, data, ttl); err != nil {
+		if err := h.redis.Set("oidc:state:"+key, data, ttl); err != nil {
 			log.Printf("Redis state store failed (state will be pod-local only): %v", err)
 		}
 	}
 	h.stateStore.set(key, data, ttl)
 }
 
-func (h *IDMSHandler) loadOAuthState(key string) (map[string]string, bool) {
+func (h *OIDCHandler) loadOAuthState(key string) (map[string]string, bool) {
 	if h.redis != nil {
 		var data map[string]string
-		if err := h.redis.Get("idms:state:"+key, &data); err == nil && data != nil {
+		if err := h.redis.Get("oidc:state:"+key, &data); err == nil && data != nil {
 			return data, true
 		}
 	}
 	return h.stateStore.get(key)
 }
 
-func (h *IDMSHandler) deleteOAuthState(key string) {
+func (h *OIDCHandler) deleteOAuthState(key string) {
 	if h.redis != nil {
-		_ = h.redis.Delete("idms:state:" + key)
+		_ = h.redis.Delete("oidc:state:" + key)
 	}
 	h.stateStore.delete(key)
 }
 
 // storeOAuthCode stores one-time exchange code in Redis (primary) with in-memory fallback.
-func (h *IDMSHandler) storeOAuthCode(key string, data map[string]string, ttl time.Duration) {
+func (h *OIDCHandler) storeOAuthCode(key string, data map[string]string, ttl time.Duration) {
 	if h.redis != nil {
-		if err := h.redis.Set("idms:code:"+key, data, ttl); err != nil {
+		if err := h.redis.Set("oidc:code:"+key, data, ttl); err != nil {
 			log.Printf("Redis code store failed, using memory: %v", err)
 		}
 	}
 	h.codeStore.set(key, data, ttl)
 }
 
-func (h *IDMSHandler) loadOAuthCode(key string) (map[string]string, bool) {
+func (h *OIDCHandler) loadOAuthCode(key string) (map[string]string, bool) {
 	if h.redis != nil {
 		var data map[string]string
-		if err := h.redis.Get("idms:code:"+key, &data); err == nil && data != nil {
+		if err := h.redis.Get("oidc:code:"+key, &data); err == nil && data != nil {
 			return data, true
 		}
 	}
 	return h.codeStore.get(key)
 }
 
-func (h *IDMSHandler) deleteOAuthCode(key string) {
+func (h *OIDCHandler) deleteOAuthCode(key string) {
 	if h.redis != nil {
-		_ = h.redis.Delete("idms:code:" + key)
+		_ = h.redis.Delete("oidc:code:" + key)
 	}
 	h.codeStore.delete(key)
 }
 
-// GetIDMSSettings returns IDMS/auth settings from database (public endpoint).
+// GetOIDCSettings returns OIDC/auth settings from database (public endpoint).
 // GET /api/v1/auth/oidc/settings
-func (h *IDMSHandler) GetIDMSSettings(c *gin.Context) {
+func (h *OIDCHandler) GetOIDCSettings(c *gin.Context) {
 	settings := make(map[string]string)
 
 	rows, err := h.db.Query("SELECT key, value FROM mas_settings")
@@ -199,9 +199,9 @@ func (h *IDMSHandler) GetIDMSSettings(c *gin.Context) {
 	})
 }
 
-// IDMSLogin initiates IDMS OAuth2 authorization code flow.
+// OIDCLogin initiates OIDC OAuth2 authorization code flow.
 // GET /api/v1/auth/oidc
-func (h *IDMSHandler) IDMSLogin(c *gin.Context) {
+func (h *OIDCHandler) OIDCLogin(c *gin.Context) {
 	if h.oauthClient == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"success": false,
@@ -211,7 +211,7 @@ func (h *IDMSHandler) IDMSLogin(c *gin.Context) {
 	}
 
 	if !h.oauthClient.IsConfigured() {
-		log.Printf("IDMS Login: OAUTH_CLIENT_SECRET is not set — cannot initiate OAuth2 flow")
+		log.Printf("OIDC Login: OAUTH_CLIENT_SECRET is not set — cannot initiate OAuth2 flow")
 		c.Redirect(http.StatusFound, "/manual-login?error=oauth_not_configured&error_description="+
 			url.QueryEscape("OAUTH_CLIENT_SECRET is not set. Contact your administrator."))
 		return
@@ -230,22 +230,22 @@ func (h *IDMSHandler) IDMSLogin(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"message": "Failed to build IDMS authorization URL: " + err.Error(),
+			"message": "Failed to build OIDC authorization URL: " + err.Error(),
 		})
 		return
 	}
 
-	log.Printf("IDMS OAuth2 login initiated, redirecting to IDMS")
+	log.Printf("OIDC OAuth2 login initiated, redirecting to OIDC")
 	c.Redirect(http.StatusFound, authURL)
 }
 
-// IDMSCallback handles the IDMS OAuth2 authorization code callback.
+// OIDCCallback handles the OIDC OAuth2 authorization code callback.
 // Registered at both GET /api/v1/auth (backward-compat) and GET /api/v1/auth/oidc/callback.
-func (h *IDMSHandler) IDMSCallback(c *gin.Context) {
+func (h *OIDCHandler) OIDCCallback(c *gin.Context) {
 	errorParam := c.Query("error")
 	if errorParam != "" {
 		desc := c.Query("error_description")
-		log.Printf("IDMS OAuth error: %s - %s", errorParam, desc)
+		log.Printf("OIDC OAuth error: %s - %s", errorParam, desc)
 		redirectURL := "/manual-login?error=" + url.QueryEscape(errorParam)
 		if desc != "" {
 			redirectURL += "&error_description=" + url.QueryEscape(desc)
@@ -257,14 +257,14 @@ func (h *IDMSHandler) IDMSCallback(c *gin.Context) {
 	code := c.Query("code")
 	state := c.Query("state")
 	if code == "" || state == "" {
-		log.Printf("IDMS callback: missing code or state — restarting OAuth flow")
+		log.Printf("OIDC callback: missing code or state — restarting OAuth flow")
 		c.Redirect(http.StatusFound, "/api/v1/auth/oidc?redirect=%2Fdashboard")
 		return
 	}
 
 	stateData, ok := h.loadOAuthState(state)
 	if !ok {
-		log.Printf("IDMS callback: invalid or expired state %s — restarting OAuth flow", state)
+		log.Printf("OIDC callback: invalid or expired state %s — restarting OAuth flow", state)
 		c.Redirect(http.StatusFound, h.appBaseURL+"/api/v1/auth/oidc?redirect=%2Fdashboard")
 		return
 	}
@@ -278,47 +278,47 @@ func (h *IDMSHandler) IDMSCallback(c *gin.Context) {
 	redirectURI := h.callbackURL
 	tokens, userClaims, err := h.oauthClient.ExchangeCodeForTokens(c.Request.Context(), code, redirectURI)
 	if err != nil {
-		log.Printf("IDMS token exchange failed: %v", err)
+		log.Printf("OIDC token exchange failed: %v", err)
 		c.Redirect(http.StatusFound, "/api/v1/auth/oidc?redirect="+url.QueryEscape(redirectTo))
 		return
 	}
 
-	idmsUser := &idms.UserContext{
+	oidcUser := &oidc.UserContext{
 		Username:        userClaims.AccountName,
 		Email:           userClaims.Email,
 		FullName:        userClaims.Name,
 		Groups:          userClaims.Groups,
-		AuthMethod:      "idms-oauth2",
+		AuthMethod:      "oidc-oauth2",
 		AuthenticatedAt: time.Now(),
 	}
-	if idmsUser.Username == "" {
-		idmsUser.Username = userClaims.Email
+	if oidcUser.Username == "" {
+		oidcUser.Username = userClaims.Email
 	}
 
-	// Strip empty-string group entries that IDMS sometimes emits.
+	// Strip empty-string group entries that OIDC sometimes emits.
 	var cleanGroups []string
-	for _, g := range idmsUser.Groups {
+	for _, g := range oidcUser.Groups {
 		if strings.TrimSpace(g) != "" {
 			cleanGroups = append(cleanGroups, g)
 		}
 	}
-	log.Printf("auth: IDMS groups for %s: raw=%v clean=%v", idmsUser.Username, idmsUser.Groups, cleanGroups)
-	idmsUser.Groups = cleanGroups
+	log.Printf("auth: OIDC groups for %s: raw=%v clean=%v", oidcUser.Username, oidcUser.Groups, cleanGroups)
+	oidcUser.Groups = cleanGroups
 
-	// IDMS tokens often omit the groups claim; fall back to DS-LDAP.
-	if len(idmsUser.Groups) == 0 && h.ldapSvc != nil {
-		if ldapGroups, err := h.ldapSvc.GetUserGroups(idmsUser.Email); err == nil && len(ldapGroups) > 0 {
-			idmsUser.Groups = ldapGroups
-			log.Printf("auth: fetched %d groups from DS-LDAP for %s: %v", len(ldapGroups), idmsUser.Username, ldapGroups)
+	// OIDC tokens often omit the groups claim; fall back to LDAP.
+	if len(oidcUser.Groups) == 0 && h.ldapSvc != nil {
+		if ldapGroups, err := h.ldapSvc.GetUserGroups(oidcUser.Email); err == nil && len(ldapGroups) > 0 {
+			oidcUser.Groups = ldapGroups
+			log.Printf("auth: fetched %d groups from LDAP for %s: %v", len(ldapGroups), oidcUser.Username, ldapGroups)
 		} else if err != nil {
-			log.Printf("auth: DS-LDAP group lookup failed for %s (non-fatal): %v", idmsUser.Username, err)
+			log.Printf("auth: LDAP group lookup failed for %s (non-fatal): %v", oidcUser.Username, err)
 		} else {
-			log.Printf("auth: DS-LDAP returned 0 groups for %s — role will use DB fallback", idmsUser.Username)
+			log.Printf("auth: LDAP returned 0 groups for %s — role will use DB fallback", oidcUser.Username)
 		}
 	}
 
-	if err := h.provisioner.ProvisionUser(idmsUser); err != nil {
-		log.Printf("IDMS user provisioning failed for %s: %v", idmsUser.Username, err)
+	if err := h.provisioner.ProvisionUser(oidcUser); err != nil {
+		log.Printf("OIDC user provisioning failed for %s: %v", oidcUser.Username, err)
 		c.Redirect(http.StatusFound, "/manual-login?error=provision_failed&error_description="+
 			url.QueryEscape("Failed to provision user account. Please contact your administrator."))
 		return
@@ -351,92 +351,92 @@ func (h *IDMSHandler) IDMSCallback(c *gin.Context) {
 		LEFT JOIN roles r ON u.role_id = r.id
 		WHERE u.username = $1 OR u.email = $2
 		LIMIT 1
-	`, idmsUser.Username, idmsUser.Email).Scan(&userID, &email, &roleName)
+	`, oidcUser.Username, oidcUser.Email).Scan(&userID, &email, &roleName)
 	if err != nil {
-		log.Printf("IDMS callback: user not found after provision for %s: %v", idmsUser.Username, err)
+		log.Printf("OIDC callback: user not found after provision for %s: %v", oidcUser.Username, err)
 		c.Redirect(http.StatusFound, "/api/v1/auth/oidc?redirect="+url.QueryEscape(redirectTo))
 		return
 	}
 
-	jwtTokens, err := h.jwtService.GenerateTokenPair(userID, idmsUser.Username, email, roleName, []string{"alerts.view"})
+	jwtTokens, err := h.jwtService.GenerateTokenPair(userID, oidcUser.Username, email, roleName, []string{"alerts.view"})
 	if err != nil {
-		log.Printf("IDMS callback: JWT generation failed for %s: %v", idmsUser.Username, err)
+		log.Printf("OIDC callback: JWT generation failed for %s: %v", oidcUser.Username, err)
 		c.Redirect(http.StatusFound, "/api/v1/auth/oidc?redirect="+url.QueryEscape(redirectTo))
 		return
 	}
 
-	idmsToken := ""
-	idmsRefreshToken := ""
+	oidcToken := ""
+	oidcRefreshToken := ""
 	if tokens != nil {
-		idmsToken = tokens.AccessToken
-		idmsRefreshToken = tokens.RefreshToken
+		oidcToken = tokens.AccessToken
+		oidcRefreshToken = tokens.RefreshToken
 	}
-	log.Printf("IDMS tokens for %s: access_len=%d refresh_len=%d", idmsUser.Username, len(idmsToken), len(idmsRefreshToken))
+	log.Printf("OIDC tokens for %s: access_len=%d refresh_len=%d", oidcUser.Username, len(oidcToken), len(oidcRefreshToken))
 
 	if h.redis != nil {
-		if idmsToken != "" {
+		if oidcToken != "" {
 			tokenTTL := 55 * time.Minute
 			if tokens.ExpiresIn > 0 {
 				tokenTTL = time.Duration(tokens.ExpiresIn-30) * time.Second
 			}
-			if err := h.redis.Set("idms:token:"+userID.String(), idmsToken, tokenTTL); err != nil {
-				log.Printf("Failed to cache IDMS token for user %s: %v", userID, err)
+			if err := h.redis.Set("oidc:token:"+userID.String(), oidcToken, tokenTTL); err != nil {
+				log.Printf("Failed to cache OIDC token for user %s: %v", userID, err)
 			}
 		}
-		// Store IDMS refresh token for Floodgate exchange — consent for audience=sear-floodgate
-		// is carried by the refresh token and produces a valid Floodgate id_token.
-		if idmsRefreshToken != "" {
-			if err := h.redis.Set("idms:refresh:"+userID.String(), idmsRefreshToken, 7*24*time.Hour); err != nil {
-				log.Printf("Failed to cache IDMS refresh token for user %s: %v", userID, err)
+		// Store OIDC refresh token for OIDC Provider exchange — consent for audience=sear-oidc
+		// is carried by the refresh token and produces a valid OIDC Provider id_token.
+		if oidcRefreshToken != "" {
+			if err := h.redis.Set("oidc:refresh:"+userID.String(), oidcRefreshToken, 7*24*time.Hour); err != nil {
+				log.Printf("Failed to cache OIDC refresh token for user %s: %v", userID, err)
 			}
 		}
 		if userClaims != nil && userClaims.Picture != "" {
 			if err := h.redis.Set("user:photo:"+userID.String(), userClaims.Picture, 24*time.Hour); err != nil {
 				log.Printf("Failed to cache profile picture for user %s: %v", userID, err)
 			} else {
-				log.Printf("Profile picture cached for %s", idmsUser.Username)
+				log.Printf("Profile picture cached for %s", oidcUser.Username)
 			}
 		}
 	}
 
-	// Exchange IDMS refresh token (or access token) for a Floodgate id_token.
+	// Exchange OIDC refresh token (or access token) for a OIDC Provider id_token.
 	// The id_token from the initial code exchange is scoped to the alerthub client only;
-	// a separate exchange targeting audience=sear-floodgate is required.
-	floodgateToken := ""
-	floodgateExpiresIn := 0
+	// a separate exchange targeting audience=sear-oidc is required.
+	oidcToken := ""
+	oidcExpiresIn := 0
 	if h.oauthClient != nil {
 		var fgTok *oauth.TokenResponse
 		var fgErr error
 
-		if idmsRefreshToken != "" {
-			fgTok, fgErr = h.oauthClient.ExchangeRefreshForFloodgate(c.Request.Context(), idmsRefreshToken)
+		if oidcRefreshToken != "" {
+			fgTok, fgErr = h.oauthClient.ExchangeRefreshForOIDC Provider(c.Request.Context(), oidcRefreshToken)
 			if fgErr != nil {
-				log.Printf("Floodgate refresh exchange failed for %s: %v — trying access token exchange", idmsUser.Username, fgErr)
+				log.Printf("OIDC Provider refresh exchange failed for %s: %v — trying access token exchange", oidcUser.Username, fgErr)
 			}
 		}
 
-		if fgTok == nil && idmsToken != "" {
-			fgTok, fgErr = h.oauthClient.ExchangeTokenForFloodgate(c.Request.Context(), idmsToken, userID.String())
+		if fgTok == nil && oidcToken != "" {
+			fgTok, fgErr = h.oauthClient.ExchangeTokenForOIDC Provider(c.Request.Context(), oidcToken, userID.String())
 			if fgErr != nil {
-				log.Printf("Floodgate token exchange failed for %s (non-fatal): %v", idmsUser.Username, fgErr)
+				log.Printf("OIDC Provider token exchange failed for %s (non-fatal): %v", oidcUser.Username, fgErr)
 			}
 		}
 
 		if fgTok != nil && (fgTok.IdToken != "" || fgTok.AccessToken != "") {
-			floodgateToken = fgTok.IdToken
-			if floodgateToken == "" {
-				floodgateToken = fgTok.AccessToken
+			oidcToken = fgTok.IdToken
+			if oidcToken == "" {
+				oidcToken = fgTok.AccessToken
 			}
-			floodgateExpiresIn = fgTok.ExpiresIn
-			log.Printf("Floodgate token obtained for %s (expires_in=%ds, has_id_token=%v)", idmsUser.Username, fgTok.ExpiresIn, fgTok.IdToken != "")
+			oidcExpiresIn = fgTok.ExpiresIn
+			log.Printf("OIDC Provider token obtained for %s (expires_in=%ds, has_id_token=%v)", oidcUser.Username, fgTok.ExpiresIn, fgTok.IdToken != "")
 		}
 
-		if floodgateToken != "" && h.redis != nil {
+		if oidcToken != "" && h.redis != nil {
 			fgTTL := 55 * time.Minute
-			if floodgateExpiresIn > 0 {
-				fgTTL = time.Duration(floodgateExpiresIn-30) * time.Second
+			if oidcExpiresIn > 0 {
+				fgTTL = time.Duration(oidcExpiresIn-30) * time.Second
 			}
-			_ = h.redis.Set("floodgate:token:"+userID.String(), floodgateToken, fgTTL)
+			_ = h.redis.Set("oidc:token:"+userID.String(), oidcToken, fgTTL)
 		}
 	}
 
@@ -446,26 +446,26 @@ func (h *IDMSHandler) IDMSCallback(c *gin.Context) {
 		"refresh_token":        jwtTokens.RefreshToken,
 		"user_id":              userID.String(),
 		"email":                email,
-		"full_name":            idmsUser.FullName,
+		"full_name":            oidcUser.FullName,
 		"role_name":            roleName,
 		"redirect":             redirectTo,
-		"idms_token":           idmsToken,
-		"floodgate_token":      floodgateToken,
-		"floodgate_expires_in": strconv.Itoa(floodgateExpiresIn),
+		"oidc_token":           oidcToken,
+		"oidc_token":      oidcToken,
+		"oidc_expires_in": strconv.Itoa(oidcExpiresIn),
 	}
 	h.storeOAuthCode(exchangeCode, codeData, 2*time.Minute)
 
-	log.Printf("IDMS OAuth2 login successful for %s (role: %s)", idmsUser.Username, roleName)
+	log.Printf("OIDC OAuth2 login successful for %s (role: %s)", oidcUser.Username, roleName)
 	callbackURL := "/oauth/callback?exchange_code=" + url.QueryEscape(exchangeCode) +
 		"&exchange_endpoint=" + url.QueryEscape("/api/v1/auth/oidc/exchange") +
 		"&redirect=" + url.QueryEscape(redirectTo)
 	c.Redirect(http.StatusFound, callbackURL)
 }
 
-// RefreshFloodgateToken silently exchanges the stored IDMS token for a fresh Floodgate token.
-// Called by the frontend when the Floodgate token is about to expire.
-// GET /api/v1/auth/oidc/floodgate-refresh
-func (h *IDMSHandler) RefreshFloodgateToken(c *gin.Context) {
+// RefreshOIDC ProviderToken silently exchanges the stored OIDC token for a fresh OIDC Provider token.
+// Called by the frontend when the OIDC Provider token is about to expire.
+// GET /api/v1/auth/oidc/oidc-refresh
+func (h *OIDCHandler) RefreshOIDC ProviderToken(c *gin.Context) {
 	userIDRaw, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": "Not authenticated"})
@@ -479,27 +479,27 @@ func (h *IDMSHandler) RefreshFloodgateToken(c *gin.Context) {
 	}
 
 	var cachedFG string
-	if err := h.redis.Get("floodgate:token:"+userIDStr, &cachedFG); err == nil && cachedFG != "" {
+	if err := h.redis.Get("oidc:token:"+userIDStr, &cachedFG); err == nil && cachedFG != "" {
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
 			"data": gin.H{
-				"floodgate_token": cachedFG,
+				"oidc_token": cachedFG,
 				"source":          "cache",
 			},
 		})
 		return
 	}
 
-	var idmsRefresh string
-	_ = h.redis.Get("idms:refresh:"+userIDStr, &idmsRefresh)
+	var oidcRefresh string
+	_ = h.redis.Get("oidc:refresh:"+userIDStr, &oidcRefresh)
 
-	var idmsToken string
-	_ = h.redis.Get("idms:token:"+userIDStr, &idmsToken)
+	var oidcToken string
+	_ = h.redis.Get("oidc:token:"+userIDStr, &oidcToken)
 
-	if idmsRefresh == "" && idmsToken == "" {
+	if oidcRefresh == "" && oidcToken == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"success": false,
-			"message": "IDMS session expired — please re-authenticate",
+			"message": "OIDC session expired — please re-authenticate",
 		})
 		return
 	}
@@ -507,20 +507,20 @@ func (h *IDMSHandler) RefreshFloodgateToken(c *gin.Context) {
 	var fgTok *oauth.TokenResponse
 	var err error
 
-	if idmsRefresh != "" {
-		fgTok, err = h.oauthClient.ExchangeRefreshForFloodgate(c.Request.Context(), idmsRefresh)
+	if oidcRefresh != "" {
+		fgTok, err = h.oauthClient.ExchangeRefreshForOIDC Provider(c.Request.Context(), oidcRefresh)
 		if err != nil {
-			log.Printf("Floodgate refresh exchange failed for user %s: %v — trying access token", userIDStr, err)
+			log.Printf("OIDC Provider refresh exchange failed for user %s: %v — trying access token", userIDStr, err)
 		}
 	}
-	if fgTok == nil && idmsToken != "" {
-		fgTok, err = h.oauthClient.ExchangeTokenForFloodgate(c.Request.Context(), idmsToken, userIDStr)
+	if fgTok == nil && oidcToken != "" {
+		fgTok, err = h.oauthClient.ExchangeTokenForOIDC Provider(c.Request.Context(), oidcToken, userIDStr)
 	}
 	if err != nil || fgTok == nil {
-		log.Printf("Floodgate refresh failed for user %s: %v", userIDStr, err)
+		log.Printf("OIDC Provider refresh failed for user %s: %v", userIDStr, err)
 		c.JSON(http.StatusForbidden, gin.H{
 			"success": false,
-			"message": "Floodgate token exchange failed — user may not have Floodgate access",
+			"message": "OIDC Provider token exchange failed — user may not have OIDC Provider access",
 		})
 		return
 	}
@@ -533,24 +533,24 @@ func (h *IDMSHandler) RefreshFloodgateToken(c *gin.Context) {
 	if fgCredential == "" {
 		fgCredential = fgTok.AccessToken
 	}
-	if err := h.redis.Set("floodgate:token:"+userIDStr, fgCredential, fgTTL); err != nil {
-		log.Printf("Failed to cache refreshed Floodgate token for user %s: %v", userIDStr, err)
+	if err := h.redis.Set("oidc:token:"+userIDStr, fgCredential, fgTTL); err != nil {
+		log.Printf("Failed to cache refreshed OIDC Provider token for user %s: %v", userIDStr, err)
 	}
 
-	log.Printf("Floodgate token refreshed for user %s (expires_in=%ds, has_id_token=%v)", userIDStr, fgTok.ExpiresIn, fgTok.IdToken != "")
+	log.Printf("OIDC Provider token refreshed for user %s (expires_in=%ds, has_id_token=%v)", userIDStr, fgTok.ExpiresIn, fgTok.IdToken != "")
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
-			"floodgate_token": fgCredential,
+			"oidc_token": fgCredential,
 			"expires_in":      fgTok.ExpiresIn,
 			"source":          "exchange",
 		},
 	})
 }
 
-// IDMSExchange redeems a one-time exchange code for JWT tokens.
+// OIDCExchange redeems a one-time exchange code for JWT tokens.
 // GET /api/v1/auth/oidc/exchange
-func (h *IDMSHandler) IDMSExchange(c *gin.Context) {
+func (h *OIDCHandler) OIDCExchange(c *gin.Context) {
 	code := c.Query("code")
 	if code == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Missing code parameter"})
@@ -578,10 +578,10 @@ func (h *IDMSHandler) IDMSExchange(c *gin.Context) {
 				"role_name": data["role_name"],
 			},
 			"redirect":             data["redirect"],
-			"idms_token":           data["idms_token"],
-			"floodgate_token":      data["floodgate_token"],
-			"floodgate_expires_in": func() int {
-				if v, err := strconv.Atoi(data["floodgate_expires_in"]); err == nil && v > 0 {
+			"oidc_token":           data["oidc_token"],
+			"oidc_token":      data["oidc_token"],
+			"oidc_expires_in": func() int {
+				if v, err := strconv.Atoi(data["oidc_expires_in"]); err == nil && v > 0 {
 					return v
 				}
 				return 3300

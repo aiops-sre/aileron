@@ -69,7 +69,7 @@ func main() {
 	// Fail-closed: in production an empty API token means all routes are unprotected.
 	// Warn loudly so the misconfiguration is caught at startup, not at breach time.
 	if apiToken == "" {
-		log.Printf("SECURITY WARNING: KUBESENSE_API_TOKEN is not set — all API routes are unauthenticated. Set this secret via Whisper before exposing the service.")
+		log.Printf("SECURITY WARNING: KUBESENSE_API_TOKEN is not set — all API routes are unauthenticated. Set this secret via SecretsManager before exposing the service.")
 	}
 
 	// Metrics — Prometheus scrape endpoint (:9090/metrics) or OTel OTLP push.

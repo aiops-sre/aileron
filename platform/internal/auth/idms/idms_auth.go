@@ -1,4 +1,4 @@
-package idms
+package oidc
 
 import (
 	"crypto/hmac"
@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// UserContext holds IDMS user information extracted from headers or OAuth2 claims.
+// UserContext holds OIDC user information extracted from headers or OAuth2 claims.
 type UserContext struct {
 	Username        string    `json:"username"`
 	Email           string    `json:"email"`
@@ -20,11 +20,11 @@ type UserContext struct {
 	MappedRoles     []string  `json:"mapped_roles"`
 	IsAdmin         bool      `json:"is_admin"`
 	IsSRE           bool      `json:"is_sre"`
-	AuthMethod      string    `json:"auth_method"` // "idms-oauth2" or "jwt"
+	AuthMethod      string    `json:"auth_method"` // "oidc-oauth2" or "jwt"
 	AuthenticatedAt time.Time `json:"authenticated_at"`
 }
 
-// Config holds IDMS authentication configuration.
+// Config holds OIDC authentication configuration.
 type Config struct {
 	Enabled       bool
 	AutoProvision bool
@@ -32,10 +32,10 @@ type Config struct {
 	AdminGroups   []string
 	SREGroups     []string
 	GroupMappings map[string]GroupMapping
-	StrictMode    bool // Require IDMS even when JWT present
+	StrictMode    bool // Require OIDC even when JWT present
 }
 
-// GroupMapping defines how DS-LDAP groups map to AlertHub roles.
+// GroupMapping defines how LDAP groups map to AlertHub roles.
 type GroupMapping struct {
 	LDAPGroup    string
 	AlertHubRole string
@@ -43,8 +43,8 @@ type GroupMapping struct {
 	AutoProvision bool
 }
 
-// DefaultConfig returns default IDMS configuration.
-// Groups are resolved at runtime from DS-LDAP and DB ldap_group_role_mappings;
+// DefaultConfig returns default OIDC configuration.
+// Groups are resolved at runtime from LDAP and DB ldap_group_role_mappings;
 // the hardcoded mappings here are only used when neither source is available.
 func DefaultConfig() *Config {
 	return &Config{
@@ -83,19 +83,19 @@ func DefaultConfig() *Config {
 	}
 }
 
-// Middleware extracts IDMS user identity injected by the NGINX Ingress via
+// Middleware extracts OIDC user identity injected by the NGINX Ingress via
 // X-Forwarded-User / X-Forwarded-Mail / X-Forwarded-Groups headers.
 // When headers are absent the middleware falls through to JWT auth.
 func Middleware(config *Config) gin.HandlerFunc {
-	// ingressSecret is set via IDMS_INGRESS_SECRET env var.
+	// ingressSecret is set via OIDC_INGRESS_SECRET env var.
 	// NGINX must inject X-Internal-Auth: <same-secret> on every proxied request.
 	// This prevents in-cluster callers from forging identity headers by bypassing NGINX.
-	ingressSecret := os.Getenv("IDMS_INGRESS_SECRET")
+	ingressSecret := os.Getenv("OIDC_INGRESS_SECRET")
 
 	return func(c *gin.Context) {
 		// Guard: when a shared secret is configured, verify that this request
 		// came through the trusted NGINX ingress (not a direct in-cluster caller).
-		// Strip IDMS headers from any request that fails the check so the JWT
+		// Strip OIDC headers from any request that fails the check so the JWT
 		// middleware further down the chain runs instead.
 		if ingressSecret != "" {
 			internalAuth := c.GetHeader("X-Internal-Auth")
@@ -138,7 +138,7 @@ func Middleware(config *Config) gin.HandlerFunc {
 			if config.Enabled && config.StrictMode {
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"error":   "Unauthorized",
-					"message": "IDMS authentication required",
+					"message": "OIDC authentication required",
 				})
 				c.Abort()
 				return
@@ -148,7 +148,7 @@ func Middleware(config *Config) gin.HandlerFunc {
 		}
 
 		if strings.Contains(c.Request.URL.Path, "/auth/oidc/") {
-			log.Printf("IDMS Middleware: User=%s, Email=%s, Groups=%s, HasOAuthToken=%v",
+			log.Printf("OIDC Middleware: User=%s, Email=%s, Groups=%s, HasOAuthToken=%v",
 				username, email, groupsHeader, oauthIDToken != "")
 		}
 
@@ -172,11 +172,11 @@ func Middleware(config *Config) gin.HandlerFunc {
 			MappedRoles:     mappedRoles,
 			IsAdmin:         isAdmin,
 			IsSRE:           isSRE,
-			AuthMethod:      "idms",
+			AuthMethod:      "oidc",
 			AuthenticatedAt: time.Now(),
 		}
 
-		c.Set("idms_user", userContext)
+		c.Set("oidc_user", userContext)
 		c.Set("user", userContext)
 
 		if oauthIDToken != "" {
@@ -187,7 +187,7 @@ func Middleware(config *Config) gin.HandlerFunc {
 	}
 }
 
-// RequireAuth middleware ensures IDMS or JWT authentication is present.
+// RequireAuth middleware ensures OIDC or JWT authentication is present.
 func RequireAuth(config *Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, exists := GetUserFromContext(c)
@@ -203,7 +203,7 @@ func RequireAuth(config *Config) gin.HandlerFunc {
 	}
 }
 
-// RequireGroups middleware ensures user has at least one of the required DS-LDAP groups.
+// RequireGroups middleware ensures user has at least one of the required LDAP groups.
 func RequireGroups(config *Config, requiredGroups ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, exists := GetUserFromContext(c)
@@ -283,9 +283,9 @@ func RequireSRE(config *Config) gin.HandlerFunc {
 	}
 }
 
-// GetUserFromContext retrieves IDMS user context from Gin context.
+// GetUserFromContext retrieves OIDC user context from Gin context.
 func GetUserFromContext(c *gin.Context) (*UserContext, bool) {
-	if u, exists := c.Get("idms_user"); exists {
+	if u, exists := c.Get("oidc_user"); exists {
 		if user, ok := u.(*UserContext); ok {
 			return user, true
 		}
@@ -298,7 +298,7 @@ func GetUserFromContext(c *gin.Context) (*UserContext, bool) {
 	return nil, false
 }
 
-// MapGroupsToRoles maps DS-LDAP groups to AlertHub roles using priority ordering.
+// MapGroupsToRoles maps LDAP groups to AlertHub roles using priority ordering.
 func MapGroupsToRoles(groups []string, config *Config) []string {
 	roleMap := make(map[string]int)
 

@@ -30,7 +30,7 @@ import {
   Star,
   Send
 } from 'lucide-react'
-import { useAppleDesign, glassmorphismCSS } from '@/lib/apple-design-system'
+import { useAppleDesign, glassmorphismCSS } from '@/lib/design-system'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import type { Alert, EnhancedIncident, AIAnalysis, RealTimeUpdate } from '@/types'
 
@@ -97,7 +97,7 @@ interface AutonomousDecision {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigation }) => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
   const [expandedStep, setExpandedStep] = useState<string | null>(null)
 
   const getStepIcon = (status: string) => {
@@ -111,37 +111,37 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
 
   const getStepColor = (status: string) => {
     switch (status) {
-      case 'completed': return apple.colors.green
-      case 'processing': return apple.colors.blue
-      case 'failed': return apple.colors.red
-      default: return apple.colors.gray
+      case 'completed': return tokens.colors.green
+      case 'processing': return tokens.colors.blue
+      case 'failed': return tokens.colors.red
+      default: return tokens.colors.gray
     }
   }
 
   return (
     <div style={{
       ...glassmorphismCSS('premium'),
-      borderRadius: apple.radius['2xl'],
-      padding: apple.spacing.xl,
-      marginBottom: apple.spacing.lg,
+      borderRadius: tokens.radius['2xl'],
+      padding: tokens.spacing.xl,
+      marginBottom: tokens.spacing.lg,
     }}>
       {/* Investigation Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: apple.spacing.lg,
+        marginBottom: tokens.spacing.lg,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: apple.spacing.md }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.md }}>
           <div style={{
             width: 56,
             height: 56,
-            borderRadius: apple.radius.xl,
+            borderRadius: tokens.radius.xl,
             background: investigation.status === 'streaming' 
-              ? apple.colors.gradients.blueToIndigo
+              ? tokens.colors.gradients.blueToIndigo
               : investigation.status === 'completed'
-              ? apple.colors.gradients.greenToTeal
-              : apple.colors.gradients.orangeToRed,
+              ? tokens.colors.gradients.greenToTeal
+              : tokens.colors.gradients.orangeToRed,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -160,16 +160,16 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
           
           <div>
             <h3 style={{
-              fontSize: apple.typography.sizes.title3,
-              fontWeight: apple.typography.weights.bold,
-              color: apple.colors.label,
+              fontSize: tokens.typography.sizes.title3,
+              fontWeight: tokens.typography.weights.bold,
+              color: tokens.colors.label,
               margin: 0,
             }}>
               AI Investigation #{investigation.id.slice(-6)}
             </h3>
             <p style={{
-              fontSize: apple.typography.sizes.subhead,
-              color: apple.colors.secondaryLabel,
+              fontSize: tokens.typography.sizes.subhead,
+              color: tokens.colors.secondaryLabel,
               margin: 0,
             }}>
               {investigation.status === 'streaming' ? 'Analyzing in real-time...' :
@@ -179,16 +179,16 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: apple.spacing.sm }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm }}>
           <div style={{
             padding: '8px 16px',
-            borderRadius: apple.radius.lg,
+            borderRadius: tokens.radius.lg,
             background: `${getStepColor(investigation.status)}20`,
             border: `1px solid ${getStepColor(investigation.status)}40`,
           }}>
             <span style={{
-              fontSize: apple.typography.sizes.footnote,
-              fontWeight: apple.typography.weights.bold,
+              fontSize: tokens.typography.sizes.footnote,
+              fontWeight: tokens.typography.weights.bold,
               color: getStepColor(investigation.status),
             }}>
               {Math.round(investigation.confidence)}% confidence
@@ -201,7 +201,7 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: apple.spacing.sm,
+        gap: tokens.spacing.sm,
       }}>
         {investigation.streamingSteps.map((step, index) => {
           const StepIcon = getStepIcon(step.status)
@@ -217,20 +217,20 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
               <div
                 onClick={() => setExpandedStep(isExpanded ? null : step.step)}
                 style={{
-                  padding: apple.spacing.md,
-                  borderRadius: apple.radius.lg,
-                  background: apple.colors.fill,
-                  border: `1px solid ${apple.colors.separator}`,
+                  padding: tokens.spacing.md,
+                  borderRadius: tokens.radius.lg,
+                  background: tokens.colors.fill,
+                  border: `1px solid ${tokens.colors.separator}`,
                   cursor: 'pointer',
                   transition: 'all 200ms ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = apple.colors.secondaryFill
+                  e.currentTarget.style.background = tokens.colors.secondaryFill
                   e.currentTarget.style.borderColor = getStepColor(step.status)
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = apple.colors.fill
-                  e.currentTarget.style.borderColor = apple.colors.separator
+                  e.currentTarget.style.background = tokens.colors.fill
+                  e.currentTarget.style.borderColor = tokens.colors.separator
                 }}
               >
                 <div style={{
@@ -238,11 +238,11 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
                   alignItems: 'center',
                   justifyContent: 'space-between',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: apple.spacing.sm }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm }}>
                     <div style={{
                       width: 32,
                       height: 32,
-                      borderRadius: apple.radius.md,
+                      borderRadius: tokens.radius.md,
                       background: getStepColor(step.status),
                       display: 'flex',
                       alignItems: 'center',
@@ -262,15 +262,15 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
                     
                     <div>
                       <div style={{
-                        fontSize: apple.typography.sizes.callout,
-                        fontWeight: apple.typography.weights.semibold,
-                        color: apple.colors.label,
+                        fontSize: tokens.typography.sizes.callout,
+                        fontWeight: tokens.typography.weights.semibold,
+                        color: tokens.colors.label,
                       }}>
                         {step.step}
                       </div>
                       <div style={{
-                        fontSize: apple.typography.sizes.caption1,
-                        color: apple.colors.tertiaryLabel,
+                        fontSize: tokens.typography.sizes.caption1,
+                        color: tokens.colors.tertiaryLabel,
                       }}>
                         {new Date(step.timestamp).toLocaleTimeString()}
                       </div>
@@ -279,8 +279,8 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
 
                   {step.confidence && (
                     <div style={{
-                      fontSize: apple.typography.sizes.footnote,
-                      fontWeight: apple.typography.weights.semibold,
+                      fontSize: tokens.typography.sizes.footnote,
+                      fontWeight: tokens.typography.weights.semibold,
                       color: getStepColor(step.status),
                     }}>
                       {Math.round(step.confidence)}%
@@ -295,15 +295,15 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       style={{
-                        marginTop: apple.spacing.md,
-                        padding: apple.spacing.md,
-                        borderRadius: apple.radius.sm,
-                        background: apple.colors.tertiaryFill,
+                        marginTop: tokens.spacing.md,
+                        padding: tokens.spacing.md,
+                        borderRadius: tokens.radius.sm,
+                        background: tokens.colors.tertiaryFill,
                       }}
                     >
                       <div style={{
-                        fontSize: apple.typography.sizes.subhead,
-                        color: apple.colors.secondaryLabel,
+                        fontSize: tokens.typography.sizes.subhead,
+                        color: tokens.colors.secondaryLabel,
                         lineHeight: 1.5,
                       }}>
                         {step.result}
@@ -319,28 +319,28 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
 
       {/* Investigation Results */}
       {investigation.status === 'completed' && investigation.analysis && (
-        <div style={{ marginTop: apple.spacing.lg }}>
+        <div style={{ marginTop: tokens.spacing.lg }}>
           <div style={{
-            padding: apple.spacing.lg,
-            borderRadius: apple.radius.lg,
+            padding: tokens.spacing.lg,
+            borderRadius: tokens.radius.lg,
             background: 'rgba(52, 199, 89, 0.1)',
             border: '1px solid rgba(52, 199, 89, 0.2)',
           }}>
             <h4 style={{
-              fontSize: apple.typography.sizes.headline,
-              fontWeight: apple.typography.weights.bold,
-              color: apple.colors.green,
+              fontSize: tokens.typography.sizes.headline,
+              fontWeight: tokens.typography.weights.bold,
+              color: tokens.colors.green,
               margin: '0 0 12px',
             }}>
               Analysis Complete
             </h4>
             
             {investigation.analysis.rootCause && (
-              <div style={{ marginBottom: apple.spacing.md }}>
+              <div style={{ marginBottom: tokens.spacing.md }}>
                 <div style={{
-                  fontSize: apple.typography.sizes.footnote,
-                  fontWeight: apple.typography.weights.semibold,
-                  color: apple.colors.secondaryLabel,
+                  fontSize: tokens.typography.sizes.footnote,
+                  fontWeight: tokens.typography.weights.semibold,
+                  color: tokens.colors.secondaryLabel,
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px',
                   marginBottom: 4,
@@ -348,8 +348,8 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
                   Root Cause
                 </div>
                 <div style={{
-                  fontSize: apple.typography.sizes.subhead,
-                  color: apple.colors.label,
+                  fontSize: tokens.typography.sizes.subhead,
+                  color: tokens.colors.label,
                   lineHeight: 1.4,
                 }}>
                   {investigation.analysis.rootCause}
@@ -358,11 +358,11 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
             )}
 
             {investigation.analysis.recommendations && (
-              <div style={{ marginBottom: apple.spacing.md }}>
+              <div style={{ marginBottom: tokens.spacing.md }}>
                 <div style={{
-                  fontSize: apple.typography.sizes.footnote,
-                  fontWeight: apple.typography.weights.semibold,
-                  color: apple.colors.secondaryLabel,
+                  fontSize: tokens.typography.sizes.footnote,
+                  fontWeight: tokens.typography.weights.semibold,
+                  color: tokens.colors.secondaryLabel,
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px',
                   marginBottom: 8,
@@ -381,15 +381,15 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
                         display: 'flex',
                         alignItems: 'flex-start',
                         gap: 8,
-                        fontSize: apple.typography.sizes.subhead,
-                        color: apple.colors.label,
+                        fontSize: tokens.typography.sizes.subhead,
+                        color: tokens.colors.label,
                         lineHeight: 1.4,
                       }}
                     >
                       <Target style={{ 
                         width: 16, 
                         height: 16, 
-                        color: apple.colors.blue,
+                        color: tokens.colors.blue,
                         marginTop: 2,
                         flexShrink: 0
                       }} />
@@ -404,21 +404,21 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: apple.spacing.md,
-              marginTop: apple.spacing.lg,
-              padding: apple.spacing.md,
-              borderRadius: apple.radius.sm,
-              background: apple.colors.fill,
+              gap: tokens.spacing.md,
+              marginTop: tokens.spacing.lg,
+              padding: tokens.spacing.md,
+              borderRadius: tokens.radius.sm,
+              background: tokens.colors.fill,
             }}>
               <span style={{
-                fontSize: apple.typography.sizes.footnote,
-                fontWeight: apple.typography.weights.medium,
-                color: apple.colors.secondaryLabel,
+                fontSize: tokens.typography.sizes.footnote,
+                fontWeight: tokens.typography.weights.medium,
+                color: tokens.colors.secondaryLabel,
               }}>
                 Was this analysis helpful?
               </span>
               
-              <div style={{ display: 'flex', gap: apple.spacing.sm }}>
+              <div style={{ display: 'flex', gap: tokens.spacing.sm }}>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -427,12 +427,12 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
                     alignItems: 'center',
                     gap: 4,
                     padding: '6px 12px',
-                    borderRadius: apple.radius.sm,
+                    borderRadius: tokens.radius.sm,
                     border: 'none',
-                    background: apple.colors.green,
+                    background: tokens.colors.green,
                     color: '#fff',
-                    fontSize: apple.typography.sizes.caption1,
-                    fontWeight: apple.typography.weights.semibold,
+                    fontSize: tokens.typography.sizes.caption1,
+                    fontWeight: tokens.typography.weights.semibold,
                     cursor: 'pointer',
                   }}
                 >
@@ -448,12 +448,12 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
                     alignItems: 'center',
                     gap: 4,
                     padding: '6px 12px',
-                    borderRadius: apple.radius.sm,
-                    border: `1px solid ${apple.colors.separator}`,
-                    background: apple.colors.fill,
-                    color: apple.colors.secondaryLabel,
-                    fontSize: apple.typography.sizes.caption1,
-                    fontWeight: apple.typography.weights.semibold,
+                    borderRadius: tokens.radius.sm,
+                    border: `1px solid ${tokens.colors.separator}`,
+                    background: tokens.colors.fill,
+                    color: tokens.colors.secondaryLabel,
+                    fontSize: tokens.typography.sizes.caption1,
+                    fontWeight: tokens.typography.weights.semibold,
                     cursor: 'pointer',
                   }}
                 >
@@ -470,7 +470,7 @@ const AIInvestigationStream = ({ investigation }: { investigation: AIInvestigati
 }
 
 const LearningSystemDashboard = ({ metrics }: { metrics: LearningSystemMetrics }) => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
 
   const learningMetrics = [
     {
@@ -478,45 +478,45 @@ const LearningSystemDashboard = ({ metrics }: { metrics: LearningSystemMetrics }
       value: `${metrics.averageAccuracy.toFixed(1)}%`,
       trend: { value: metrics.improvementTrend, isUp: metrics.improvementTrend > 0 },
       icon: Target,
-      color: apple.colors.blue,
+      color: tokens.colors.blue,
     },
     {
       label: 'Automation Rate',
       value: `${metrics.automationRate.toFixed(1)}%`,
       icon: Zap,
-      color: apple.colors.orange,
+      color: tokens.colors.orange,
     },
     {
       label: 'Human Feedback',
       value: metrics.humanFeedbackCount.toLocaleString(),
       icon: Users,
-      color: apple.colors.green,
+      color: tokens.colors.green,
     },
     {
       label: 'Model Version',
       value: metrics.modelVersion,
       icon: Brain,
-      color: apple.colors.purple,
+      color: tokens.colors.purple,
     }
   ]
 
   return (
     <div style={{
       ...glassmorphismCSS('premium'),
-      borderRadius: apple.radius['2xl'],
-      padding: apple.spacing.xl,
+      borderRadius: tokens.radius['2xl'],
+      padding: tokens.spacing.xl,
     }}>
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: apple.spacing.md,
-        marginBottom: apple.spacing.xl,
+        gap: tokens.spacing.md,
+        marginBottom: tokens.spacing.xl,
       }}>
         <div style={{
           width: 52,
           height: 52,
-          borderRadius: apple.radius.xl,
-          background: apple.colors.gradients.purpleToPink,
+          borderRadius: tokens.radius.xl,
+          background: tokens.colors.gradients.purpleToPink,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -525,16 +525,16 @@ const LearningSystemDashboard = ({ metrics }: { metrics: LearningSystemMetrics }
         </div>
         <div>
           <h3 style={{
-            fontSize: apple.typography.sizes.title3,
-            fontWeight: apple.typography.weights.bold,
-            color: apple.colors.label,
+            fontSize: tokens.typography.sizes.title3,
+            fontWeight: tokens.typography.weights.bold,
+            color: tokens.colors.label,
             margin: 0,
           }}>
             Continuous Learning System
           </h3>
           <p style={{
-            fontSize: apple.typography.sizes.subhead,
-            color: apple.colors.secondaryLabel,
+            fontSize: tokens.typography.sizes.subhead,
+            color: tokens.colors.secondaryLabel,
             margin: 0,
           }}>
             AI model improvement and performance tracking
@@ -545,7 +545,7 @@ const LearningSystemDashboard = ({ metrics }: { metrics: LearningSystemMetrics }
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: apple.spacing.lg,
+        gap: tokens.spacing.lg,
       }}>
         {learningMetrics.map((metric, index) => (
           <motion.div
@@ -554,8 +554,8 @@ const LearningSystemDashboard = ({ metrics }: { metrics: LearningSystemMetrics }
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
             style={{
-              padding: apple.spacing.lg,
-              borderRadius: apple.radius.lg,
+              padding: tokens.spacing.lg,
+              borderRadius: tokens.radius.lg,
               background: `${metric.color}10`,
               border: `1px solid ${metric.color}30`,
               textAlign: 'center',
@@ -564,7 +564,7 @@ const LearningSystemDashboard = ({ metrics }: { metrics: LearningSystemMetrics }
             <div style={{
               width: 40,
               height: 40,
-              borderRadius: apple.radius.md,
+              borderRadius: tokens.radius.md,
               background: metric.color,
               display: 'flex',
               alignItems: 'center',
@@ -575,8 +575,8 @@ const LearningSystemDashboard = ({ metrics }: { metrics: LearningSystemMetrics }
             </div>
             
             <div style={{
-              fontSize: apple.typography.sizes.title2,
-              fontWeight: apple.typography.weights.bold,
+              fontSize: tokens.typography.sizes.title2,
+              fontWeight: tokens.typography.weights.bold,
               color: metric.color,
               lineHeight: 1,
               marginBottom: 4,
@@ -585,8 +585,8 @@ const LearningSystemDashboard = ({ metrics }: { metrics: LearningSystemMetrics }
             </div>
             
             <div style={{
-              fontSize: apple.typography.sizes.caption1,
-              color: apple.colors.secondaryLabel,
+              fontSize: tokens.typography.sizes.caption1,
+              color: tokens.colors.secondaryLabel,
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
             }}>
@@ -604,12 +604,12 @@ const LearningSystemDashboard = ({ metrics }: { metrics: LearningSystemMetrics }
                 <TrendingUp style={{
                   width: 12,
                   height: 12,
-                  color: metric.trend.isUp ? apple.colors.green : apple.colors.red
+                  color: metric.trend.isUp ? tokens.colors.green : tokens.colors.red
                 }} />
                 <span style={{
-                  fontSize: apple.typography.sizes.caption2,
-                  fontWeight: apple.typography.weights.semibold,
-                  color: metric.trend.isUp ? apple.colors.green : apple.colors.red,
+                  fontSize: tokens.typography.sizes.caption2,
+                  fontWeight: tokens.typography.weights.semibold,
+                  color: metric.trend.isUp ? tokens.colors.green : tokens.colors.red,
                 }}>
                   {metric.trend.value > 0 ? '+' : ''}{metric.trend.value.toFixed(1)}%
                 </span>
@@ -627,7 +627,7 @@ const LearningSystemDashboard = ({ metrics }: { metrics: LearningSystemMetrics }
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const AutonomousAIOpsCommandCenter = () => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
   const [activeInvestigations, setActiveInvestigations] = useState<AIInvestigation[]>([])
   const [learningMetrics, setLearningMetrics] = useState<LearningSystemMetrics | null>(null)
   const [autonomousDecisions, setAutonomousDecisions] = useState<AutonomousDecision[]>([])
@@ -667,8 +667,8 @@ export const AutonomousAIOpsCommandCenter = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: apple.colors.background,
-      padding: apple.spacing.lg,
+      background: tokens.colors.background,
+      padding: tokens.spacing.lg,
     }}>
       <motion.div
         initial={{ opacity: 0 }}
@@ -683,16 +683,16 @@ export const AutonomousAIOpsCommandCenter = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: apple.spacing.xl,
+          marginBottom: tokens.spacing.xl,
         }}>
           <div>
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               style={{
-                fontSize: apple.typography.sizes.largeTitle,
-                fontWeight: apple.typography.weights.black,
-                color: apple.colors.label,
+                fontSize: tokens.typography.sizes.largeTitle,
+                fontWeight: tokens.typography.weights.black,
+                color: tokens.colors.label,
                 margin: 0,
               }}
             >
@@ -703,8 +703,8 @@ export const AutonomousAIOpsCommandCenter = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
               style={{
-                fontSize: apple.typography.sizes.callout,
-                color: apple.colors.secondaryLabel,
+                fontSize: tokens.typography.sizes.callout,
+                color: tokens.colors.secondaryLabel,
                 margin: '8px 0 0',
               }}
             >
@@ -712,26 +712,26 @@ export const AutonomousAIOpsCommandCenter = () => {
             </motion.p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: apple.spacing.md }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.md }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: 6,
               padding: '8px 16px',
-              borderRadius: apple.radius.lg,
+              borderRadius: tokens.radius.lg,
               background: isAutoMode ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 149, 0, 0.1)',
-              border: `1px solid ${isAutoMode ? apple.colors.green : apple.colors.orange}40`,
+              border: `1px solid ${isAutoMode ? tokens.colors.green : tokens.colors.orange}40`,
             }}>
               <div style={{
                 width: 8,
                 height: 8,
-                borderRadius: apple.radius.full,
-                background: isAutoMode ? apple.colors.green : apple.colors.orange,
+                borderRadius: tokens.radius.full,
+                background: isAutoMode ? tokens.colors.green : tokens.colors.orange,
               }} />
               <span style={{
-                fontSize: apple.typography.sizes.footnote,
-                fontWeight: apple.typography.weights.semibold,
-                color: isAutoMode ? apple.colors.green : apple.colors.orange,
+                fontSize: tokens.typography.sizes.footnote,
+                fontWeight: tokens.typography.weights.semibold,
+                color: isAutoMode ? tokens.colors.green : tokens.colors.orange,
               }}>
                 {isAutoMode ? 'AUTONOMOUS MODE' : 'MANUAL MODE'}
               </span>
@@ -746,12 +746,12 @@ export const AutonomousAIOpsCommandCenter = () => {
                 alignItems: 'center',
                 gap: 6,
                 padding: '8px 16px',
-                borderRadius: apple.radius.lg,
-                border: `1px solid ${apple.colors.separator}`,
-                background: apple.colors.fill,
-                color: apple.colors.label,
-                fontSize: apple.typography.sizes.footnote,
-                fontWeight: apple.typography.weights.semibold,
+                borderRadius: tokens.radius.lg,
+                border: `1px solid ${tokens.colors.separator}`,
+                background: tokens.colors.fill,
+                color: tokens.colors.label,
+                fontSize: tokens.typography.sizes.footnote,
+                fontWeight: tokens.typography.weights.semibold,
                 cursor: 'pointer',
               }}
             >
@@ -763,7 +763,7 @@ export const AutonomousAIOpsCommandCenter = () => {
 
         {/* Learning System Dashboard */}
         {learningMetrics && (
-          <div style={{ marginBottom: apple.spacing.xl }}>
+          <div style={{ marginBottom: tokens.spacing.xl }}>
             <LearningSystemDashboard metrics={learningMetrics} />
           </div>
         )}
@@ -773,24 +773,24 @@ export const AutonomousAIOpsCommandCenter = () => {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: apple.spacing.md,
-            marginBottom: apple.spacing.lg,
+            gap: tokens.spacing.md,
+            marginBottom: tokens.spacing.lg,
           }}>
             <h2 style={{
-              fontSize: apple.typography.sizes.title2,
-              fontWeight: apple.typography.weights.bold,
-              color: apple.colors.label,
+              fontSize: tokens.typography.sizes.title2,
+              fontWeight: tokens.typography.weights.bold,
+              color: tokens.colors.label,
               margin: 0,
             }}>
               Live AI Investigations
             </h2>
             <div style={{
               padding: '4px 12px',
-              borderRadius: apple.radius.sm,
-              background: apple.colors.blue,
+              borderRadius: tokens.radius.sm,
+              background: tokens.colors.blue,
               color: '#fff',
-              fontSize: apple.typography.sizes.caption1,
-              fontWeight: apple.typography.weights.bold,
+              fontSize: tokens.typography.sizes.caption1,
+              fontWeight: tokens.typography.weights.bold,
             }}>
               {activeInvestigations.length} Active
             </div>
@@ -799,19 +799,19 @@ export const AutonomousAIOpsCommandCenter = () => {
           {activeInvestigations.length === 0 ? (
             <div style={{
               ...glassmorphismCSS('card'),
-              borderRadius: apple.radius['2xl'],
-              padding: apple.spacing.xl,
+              borderRadius: tokens.radius['2xl'],
+              padding: tokens.spacing.xl,
               textAlign: 'center',
             }}>
               <Eye style={{ 
                 width: 48, 
                 height: 48, 
-                color: apple.colors.quaternaryLabel,
+                color: tokens.colors.quaternaryLabel,
                 margin: '0 auto 16px'
               }} />
               <p style={{
-                fontSize: apple.typography.sizes.callout,
-                color: apple.colors.secondaryLabel,
+                fontSize: tokens.typography.sizes.callout,
+                color: tokens.colors.secondaryLabel,
                 margin: 0,
               }}>
                 No active investigations. AI is monitoring for new alerts...
@@ -821,7 +821,7 @@ export const AutonomousAIOpsCommandCenter = () => {
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: apple.spacing.lg,
+              gap: tokens.spacing.lg,
             }}>
               {activeInvestigations.map(investigation => (
                 <AIInvestigationStream

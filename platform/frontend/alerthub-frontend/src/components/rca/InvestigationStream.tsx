@@ -188,7 +188,7 @@ export function InvestigationStream({ investigationId }: { investigationId: stri
   }
 
   return (
-    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif', padding: 24, maxWidth: 900 }}>
+    <div style={{ fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", sans-serif', padding: 24, maxWidth: 900 }}>
       {/* Phase progress bar */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, alignItems: 'center' }}>
         {PHASE_ORDER.filter(p => p !== 'queued').map((phase, i) => {

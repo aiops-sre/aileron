@@ -13,7 +13,7 @@ import {
   Layers,
   Network
 } from 'lucide-react'
-import { useAppleDesign, glassmorphismCSS } from '@/lib/apple-design-system'
+import { useAppleDesign, glassmorphismCSS } from '@/lib/design-system'
 import { AdvancedRealTimeDashboard } from '@/components/AdvancedRealTimeDashboard'
 import { AutonomousAIOpsCommandCenter } from '@/components/AutonomousAIOpsCommandCenter'
 
@@ -100,19 +100,19 @@ const TabNavigation = ({
   activeTab: DashboardTab
   onTabChange: (tab: DashboardTab) => void 
 }) => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
 
   return (
     <div style={{
       ...glassmorphismCSS('premium'),
-      borderRadius: apple.radius['2xl'],
-      padding: apple.spacing.md,
-      marginBottom: apple.spacing.xl,
+      borderRadius: tokens.radius['2xl'],
+      padding: tokens.spacing.md,
+      marginBottom: tokens.spacing.xl,
     }}>
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: apple.spacing.sm,
+        gap: tokens.spacing.sm,
       }}>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id
@@ -128,15 +128,15 @@ const TabNavigation = ({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: apple.spacing.sm,
-                padding: apple.spacing.lg,
-                borderRadius: apple.radius.xl,
+                gap: tokens.spacing.sm,
+                padding: tokens.spacing.lg,
+                borderRadius: tokens.radius.xl,
                 border: isActive 
                   ? `2px solid ${tab.color}`
-                  : `1px solid ${apple.colors.separator}`,
+                  : `1px solid ${tokens.colors.separator}`,
                 background: isActive 
                   ? `${tab.color}15` 
-                  : apple.colors.fill,
+                  : tokens.colors.fill,
                 cursor: 'pointer',
                 transition: 'all 200ms ease',
                 position: 'relative',
@@ -153,7 +153,7 @@ const TabNavigation = ({
                   bottom: 0,
                   background: tab.gradient,
                   opacity: 0.05,
-                  borderRadius: apple.radius.xl,
+                  borderRadius: tokens.radius.xl,
                 }} />
               )}
 
@@ -161,8 +161,8 @@ const TabNavigation = ({
               <div style={{
                 width: 44,
                 height: 44,
-                borderRadius: apple.radius.lg,
-                background: isActive ? tab.gradient || tab.color : apple.colors.secondaryFill,
+                borderRadius: tokens.radius.lg,
+                background: isActive ? tab.gradient || tab.color : tokens.colors.secondaryFill,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -172,23 +172,23 @@ const TabNavigation = ({
                 <TabIcon style={{ 
                   width: 22, 
                   height: 22, 
-                  color: isActive ? '#fff' : apple.colors.secondaryLabel
+                  color: isActive ? '#fff' : tokens.colors.secondaryLabel
                 }} />
               </div>
 
               {/* Text */}
               <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
                 <div style={{
-                  fontSize: apple.typography.sizes.callout,
-                  fontWeight: apple.typography.weights.semibold,
-                  color: isActive ? tab.color : apple.colors.label,
+                  fontSize: tokens.typography.sizes.callout,
+                  fontWeight: tokens.typography.weights.semibold,
+                  color: isActive ? tab.color : tokens.colors.label,
                   marginBottom: 4,
                 }}>
                   {tab.label}
                 </div>
                 <div style={{
-                  fontSize: apple.typography.sizes.caption1,
-                  color: apple.colors.tertiaryLabel,
+                  fontSize: tokens.typography.sizes.caption1,
+                  color: tokens.colors.tertiaryLabel,
                   lineHeight: 1.3,
                 }}>
                   {tab.description}
@@ -202,11 +202,11 @@ const TabNavigation = ({
                   animate={{ opacity: 1, scale: 1 }}
                   style={{
                     position: 'absolute',
-                    top: apple.spacing.sm,
-                    right: apple.spacing.sm,
+                    top: tokens.spacing.sm,
+                    right: tokens.spacing.sm,
                     width: 8,
                     height: 8,
-                    borderRadius: apple.radius.full,
+                    borderRadius: tokens.radius.full,
                     background: tab.color,
                     boxShadow: `0 0 12px ${tab.color}60`,
                   }}
@@ -225,13 +225,13 @@ const TabNavigation = ({
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const SmartCorrelationsView = () => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
   
   return (
     <div style={{
       ...glassmorphismCSS('premium'),
-      borderRadius: apple.radius['2xl'],
-      padding: apple.spacing.xl,
+      borderRadius: tokens.radius['2xl'],
+      padding: tokens.spacing.xl,
       textAlign: 'center',
     }}>
       <Network style={{ 
@@ -241,16 +241,16 @@ const SmartCorrelationsView = () => {
         margin: '0 auto 24px'
       }} />
       <h3 style={{
-        fontSize: apple.typography.sizes.title2,
-        fontWeight: apple.typography.weights.bold,
-        color: apple.colors.label,
+        fontSize: tokens.typography.sizes.title2,
+        fontWeight: tokens.typography.weights.bold,
+        color: tokens.colors.label,
         margin: '0 0 16px',
       }}>
         Enhanced Correlation Intelligence
       </h3>
       <p style={{
-        fontSize: apple.typography.sizes.callout,
-        color: apple.colors.secondaryLabel,
+        fontSize: tokens.typography.sizes.callout,
+        color: tokens.colors.secondaryLabel,
         margin: 0,
         lineHeight: 1.5,
       }}>
@@ -262,13 +262,13 @@ const SmartCorrelationsView = () => {
 }
 
 const AdvancedAnalyticsView = () => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
   
   return (
     <div style={{
       ...glassmorphismCSS('premium'),
-      borderRadius: apple.radius['2xl'],
-      padding: apple.spacing.xl,
+      borderRadius: tokens.radius['2xl'],
+      padding: tokens.spacing.xl,
       textAlign: 'center',
     }}>
       <BarChart3 style={{ 
@@ -278,16 +278,16 @@ const AdvancedAnalyticsView = () => {
         margin: '0 auto 24px'
       }} />
       <h3 style={{
-        fontSize: apple.typography.sizes.title2,
-        fontWeight: apple.typography.weights.bold,
-        color: apple.colors.label,
+        fontSize: tokens.typography.sizes.title2,
+        fontWeight: tokens.typography.weights.bold,
+        color: tokens.colors.label,
         margin: '0 0 16px',
       }}>
         Advanced Analytics & Learning
       </h3>
       <p style={{
-        fontSize: apple.typography.sizes.callout,
-        color: apple.colors.secondaryLabel,
+        fontSize: tokens.typography.sizes.callout,
+        color: tokens.colors.secondaryLabel,
         margin: 0,
         lineHeight: 1.5,
       }}>
@@ -299,13 +299,13 @@ const AdvancedAnalyticsView = () => {
 }
 
 const LiveTopologyView = () => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
   
   return (
     <div style={{
       ...glassmorphismCSS('premium'),
-      borderRadius: apple.radius['2xl'],
-      padding: apple.spacing.xl,
+      borderRadius: tokens.radius['2xl'],
+      padding: tokens.spacing.xl,
       textAlign: 'center',
     }}>
       <Layers style={{ 
@@ -315,16 +315,16 @@ const LiveTopologyView = () => {
         margin: '0 auto 24px'
       }} />
       <h3 style={{
-        fontSize: apple.typography.sizes.title2,
-        fontWeight: apple.typography.weights.bold,
-        color: apple.colors.label,
+        fontSize: tokens.typography.sizes.title2,
+        fontWeight: tokens.typography.weights.bold,
+        color: tokens.colors.label,
         margin: '0 0 16px',
       }}>
         Complete Platform Visibility
       </h3>
       <p style={{
-        fontSize: apple.typography.sizes.callout,
-        color: apple.colors.secondaryLabel,
+        fontSize: tokens.typography.sizes.callout,
+        color: tokens.colors.secondaryLabel,
         margin: 0,
         lineHeight: 1.5,
       }}>
@@ -336,13 +336,13 @@ const LiveTopologyView = () => {
 }
 
 const LearningEngineView = () => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
   
   return (
     <div style={{
       ...glassmorphismCSS('premium'),
-      borderRadius: apple.radius['2xl'],
-      padding: apple.spacing.xl,
+      borderRadius: tokens.radius['2xl'],
+      padding: tokens.spacing.xl,
       textAlign: 'center',
     }}>
       <Target style={{ 
@@ -352,16 +352,16 @@ const LearningEngineView = () => {
         margin: '0 auto 24px'
       }} />
       <h3 style={{
-        fontSize: apple.typography.sizes.title2,
-        fontWeight: apple.typography.weights.bold,
-        color: apple.colors.label,
+        fontSize: tokens.typography.sizes.title2,
+        fontWeight: tokens.typography.weights.bold,
+        color: tokens.colors.label,
         margin: '0 0 16px',
       }}>
         Continuous Learning Engine
       </h3>
       <p style={{
-        fontSize: apple.typography.sizes.callout,
-        color: apple.colors.secondaryLabel,
+        fontSize: tokens.typography.sizes.callout,
+        color: tokens.colors.secondaryLabel,
         margin: 0,
         lineHeight: 1.5,
       }}>
@@ -377,7 +377,7 @@ const LearningEngineView = () => {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const RevolutionaryAIOpsDashboard = () => {
-  const apple = useAppleDesign()
+  const aileron = useDesignTokens()
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
 
   const renderTabContent = () => {
@@ -402,8 +402,8 @@ export const RevolutionaryAIOpsDashboard = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: apple.colors.background,
-      padding: apple.spacing.lg,
+      background: tokens.colors.background,
+      padding: tokens.spacing.lg,
     }}>
       <motion.div
         initial={{ opacity: 0 }}
@@ -418,15 +418,15 @@ export const RevolutionaryAIOpsDashboard = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: apple.spacing.xl,
+          marginBottom: tokens.spacing.xl,
         }}>
           <div>
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               style={{
-                fontSize: apple.typography.sizes.largeTitle + 6,
-                fontWeight: apple.typography.weights.black,
+                fontSize: tokens.typography.sizes.largeTitle + 6,
+                fontWeight: tokens.typography.weights.black,
                 background: 'linear-gradient(135deg, #007AFF 0%, #AF52DE 50%, #FF2D92 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
@@ -442,9 +442,9 @@ export const RevolutionaryAIOpsDashboard = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
               style={{
-                fontSize: apple.typography.sizes.title3,
-                fontWeight: apple.typography.weights.semibold,
-                color: apple.colors.secondaryLabel,
+                fontSize: tokens.typography.sizes.title3,
+                fontWeight: tokens.typography.weights.semibold,
+                color: tokens.colors.secondaryLabel,
                 margin: '8px 0 0',
               }}
             >
@@ -452,27 +452,27 @@ export const RevolutionaryAIOpsDashboard = () => {
             </motion.p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: apple.spacing.md }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.md }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: 6,
               padding: '8px 16px',
-              borderRadius: apple.radius.lg,
+              borderRadius: tokens.radius.lg,
               background: 'rgba(52, 199, 89, 0.1)',
-              border: `1px solid ${apple.colors.green}40`,
+              border: `1px solid ${tokens.colors.green}40`,
             }}>
               <div style={{
                 width: 8,
                 height: 8,
-                borderRadius: apple.radius.full,
-                background: apple.colors.green,
+                borderRadius: tokens.radius.full,
+                background: tokens.colors.green,
                 animation: 'pulse 2s infinite',
               }} />
               <span style={{
-                fontSize: apple.typography.sizes.footnote,
-                fontWeight: apple.typography.weights.bold,
-                color: apple.colors.green,
+                fontSize: tokens.typography.sizes.footnote,
+                fontWeight: tokens.typography.weights.bold,
+                color: tokens.colors.green,
               }}>
                 LIVE BACKEND
               </span>
@@ -480,12 +480,12 @@ export const RevolutionaryAIOpsDashboard = () => {
 
             <div style={{
               padding: '8px 16px',
-              borderRadius: apple.radius.lg,
+              borderRadius: tokens.radius.lg,
               background: 'rgba(0, 122, 255, 0.1)',
-              border: `1px solid ${apple.colors.blue}40`,
-              fontSize: apple.typography.sizes.footnote,
-              fontWeight: apple.typography.weights.semibold,
-              color: apple.colors.blue,
+              border: `1px solid ${tokens.colors.blue}40`,
+              fontSize: tokens.typography.sizes.footnote,
+              fontWeight: tokens.typography.weights.semibold,
+              color: tokens.colors.blue,
             }}>
               Redis: 774+ Commands • Infrastructure Analysis Every Minute
             </div>
@@ -513,18 +513,18 @@ export const RevolutionaryAIOpsDashboard = () => {
 
         {/* Footer */}
         <div style={{
-          marginTop: apple.spacing.xl,
+          marginTop: tokens.spacing.xl,
           textAlign: 'center',
-          padding: apple.spacing.lg,
-          borderRadius: apple.radius.xl,
-          background: apple.colors.fill,
+          padding: tokens.spacing.lg,
+          borderRadius: tokens.radius.xl,
+          background: tokens.colors.fill,
         }}>
           <p style={{
-            fontSize: apple.typography.sizes.footnote,
-            color: apple.colors.tertiaryLabel,
+            fontSize: tokens.typography.sizes.footnote,
+            color: tokens.colors.tertiaryLabel,
             margin: 0,
           }}>
-            🎯 Revolutionary AIOps Platform • Apple-Themed Design • Real-Time Intelligence • 
+            🎯 Revolutionary AIOps Platform • Aileron Design System • Real-Time Intelligence • 
             Autonomous Operations • Continuous Learning • Enterprise-Ready
           </p>
         </div>

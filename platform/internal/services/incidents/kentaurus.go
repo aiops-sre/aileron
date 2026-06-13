@@ -18,29 +18,29 @@ import (
 )
 
 const (
-	KentaurusAPIURL     = ""
-	KentaurusConsumerID = "928952"
-	WhisperURL          = "/v1/my-secrets/kentaurus-token?buckets=Help-Central"
-	// Kentaurus tokens have a 100-minute TTL; refresh 10 minutes before expiry
+	IncidentManagerAPIURL     = ""
+	IncidentManagerConsumerID = "928952"
+	SecretsManagerURL          = "/v1/my-secrets/incident_manager-token?buckets=Help-Central"
+	// IncidentManager tokens have a 100-minute TTL; refresh 10 minutes before expiry
 	tokenTTL           = 100 * time.Minute
 	tokenRefreshBuffer = 10 * time.Minute
 	// Fallback fixed TTL when the token format doesn't contain an embedded timestamp
 	tokenFallbackTTL = 90 * time.Minute
 )
 
-// KentaurusClient handles Kentaurus API interactions
-type KentaurusClient struct {
+// IncidentManagerClient handles IncidentManager API interactions
+type IncidentManagerClient struct {
 	httpClient    *http.Client
-	whisperClient *http.Client // separate client with mTLS cert for Whisper
+	secrets_managerClient *http.Client // separate client with mTLS cert for SecretsManager
 	mu            sync.RWMutex
 	cachedToken   string
 	tokenExpiry   time.Time
-	tokenSource   string // "whisper" or "idms"
+	tokenSource   string // "secrets_manager" or "oidc"
 }
 
-// NewKentaurusClient creates a new Kentaurus API client
-func NewKentaurusClient() *KentaurusClient {
-	c := &KentaurusClient{
+// NewIncidentManagerClient creates a new IncidentManager API client
+func NewIncidentManagerClient() *IncidentManagerClient {
+	c := &IncidentManagerClient{
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 			Transport: &http.Transport{
@@ -48,26 +48,26 @@ func NewKentaurusClient() *KentaurusClient {
 			},
 		},
 	}
-	c.whisperClient = c.buildWhisperClient()
+	c.secrets_managerClient = c.buildSecretsManagerClient()
 	return c
 }
 
-// buildWhisperClient builds an http.Client with the mTLS cert for Whisper.
+// buildSecretsManagerClient builds an http.Client with the mTLS cert for SecretsManager.
 // Cert paths come from env vars (mounted from K8s secret); falls back to
 // well-known in-pod paths used by the init container.
-func (c *KentaurusClient) buildWhisperClient() *http.Client {
+func (c *IncidentManagerClient) buildSecretsManagerClient() *http.Client {
 	certPath := os.Getenv("WHISPER_CLIENT_CERT")
 	keyPath := os.Getenv("WHISPER_CLIENT_KEY")
 	if certPath == "" {
-		certPath = "/secrets/whisper/tls.crt"
+		certPath = "/secrets/secrets_manager/tls.crt"
 	}
 	if keyPath == "" {
-		keyPath = "/secrets/whisper/tls.key"
+		keyPath = "/secrets/secrets_manager/tls.key"
 	}
 
 	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
 	if err != nil {
-		// Cert not available — whisperClient will be nil, fall back to IDMS
+		// Cert not available — secrets_managerClient will be nil, fall back to OIDC
 		return nil
 	}
 
@@ -82,7 +82,7 @@ func (c *KentaurusClient) buildWhisperClient() *http.Client {
 	}
 }
 
-// parseTokenExpiry extracts the generation timestamp from the Kentaurus token format
+// parseTokenExpiry extracts the generation timestamp from the IncidentManager token format
 // (<base64>=:<sessionid>:<epochmillis>:<version>) and returns expiry = generation + TTL - buffer.
 // Falls back to now + fallbackTTL if the token doesn't match the expected format.
 func parseTokenExpiry(token string) time.Time {
@@ -97,9 +97,9 @@ func parseTokenExpiry(token string) time.Time {
 	return time.Now().Add(tokenFallbackTTL)
 }
 
-// getToken returns a valid Kentaurus auth token.
-// Prefers Whisper (auto-rotated); falls back to IDMS token generation.
-func (c *KentaurusClient) getToken(ctx context.Context) (string, error) {
+// getToken returns a valid IncidentManager auth token.
+// Prefers SecretsManager (auto-rotated); falls back to OIDC token generation.
+func (c *IncidentManagerClient) getToken(ctx context.Context) (string, error) {
 	c.mu.RLock()
 	if c.cachedToken != "" && time.Now().Before(c.tokenExpiry) {
 		tok := c.cachedToken
@@ -121,16 +121,16 @@ func (c *KentaurusClient) getToken(ctx context.Context) (string, error) {
 		err    error
 	)
 
-	if c.whisperClient != nil {
-		token, err = c.fetchTokenFromWhisper(ctx)
+	if c.secrets_managerClient != nil {
+		token, err = c.fetchTokenFromSecretsManager(ctx)
 		if token != "" {
-			source = "whisper"
+			source = "secrets_manager"
 		}
 	}
 	if token == "" {
-		token, err = c.fetchTokenFromIDMS(ctx)
+		token, err = c.fetchTokenFromOIDC(ctx)
 		if token != "" {
-			source = "idms"
+			source = "oidc"
 		}
 	}
 	if err != nil {
@@ -143,39 +143,39 @@ func (c *KentaurusClient) getToken(ctx context.Context) (string, error) {
 	return token, nil
 }
 
-// fetchTokenFromWhisper reads the auto-rotated token from Apple Whisper secrets.
-func (c *KentaurusClient) fetchTokenFromWhisper(ctx context.Context) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", WhisperURL, nil)
+// fetchTokenFromSecretsManager reads the auto-rotated token from Aileron SecretsManager secrets.
+func (c *IncidentManagerClient) fetchTokenFromSecretsManager(ctx context.Context) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", SecretsManagerURL, nil)
 	if err != nil {
-		return "", fmt.Errorf("whisper request build failed: %w", err)
+		return "", fmt.Errorf("secrets_manager request build failed: %w", err)
 	}
 
-	resp, err := c.whisperClient.Do(req)
+	resp, err := c.secrets_managerClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("whisper request failed: %w", err)
+		return "", fmt.Errorf("secrets_manager request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("whisper read failed: %w", err)
+		return "", fmt.Errorf("secrets_manager read failed: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("whisper returned %d: %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("secrets_manager returned %d: %s", resp.StatusCode, string(body))
 	}
 
 	var result struct {
 		Secret string `json:"secret"`
 	}
 	if err := json.Unmarshal(body, &result); err != nil {
-		return "", fmt.Errorf("whisper parse failed: %w", err)
+		return "", fmt.Errorf("secrets_manager parse failed: %w", err)
 	}
 	if result.Secret == "" {
-		return "", fmt.Errorf("whisper returned empty secret")
+		return "", fmt.Errorf("secrets_manager returned empty secret")
 	}
 
-	// Whisper stores the token base64-encoded
+	// SecretsManager stores the token base64-encoded
 	decoded, err := base64.StdEncoding.DecodeString(result.Secret)
 	if err != nil {
 		// Not base64 — use as-is
@@ -184,15 +184,15 @@ func (c *KentaurusClient) fetchTokenFromWhisper(ctx context.Context) (string, er
 	return string(decoded), nil
 }
 
-// fetchTokenFromIDMS generates a short-lived token via Apple IDMS app-to-app auth.
-func (c *KentaurusClient) fetchTokenFromIDMS(ctx context.Context) (string, error) {
+// fetchTokenFromOIDC generates a short-lived token via Aileron OIDC app-to-app auth.
+func (c *IncidentManagerClient) fetchTokenFromOIDC(ctx context.Context) (string, error) {
 	appID := os.Getenv("OIDC_APP_ID")
-	appPassword := os.Getenv("IDMS_APP_PASSWORD")
+	appPassword := os.Getenv("OIDC_APP_PASSWORD")
 	if appID == "" {
-		appID = KentaurusConsumerID
+		appID = IncidentManagerConsumerID
 	}
 	if appPassword == "" {
-		return "", fmt.Errorf("neither Whisper cert nor IDMS_APP_PASSWORD is configured")
+		return "", fmt.Errorf("neither SecretsManager cert nor OIDC_APP_PASSWORD is configured")
 	}
 
 	payload := map[string]interface{}{
@@ -207,10 +207,10 @@ func (c *KentaurusClient) fetchTokenFromIDMS(ctx context.Context) (string, error
 
 	body, _ := json.Marshal(payload)
 	req, err := http.NewRequestWithContext(ctx, "POST",
-		"https://idmsservice.example.com/auth/apptoapp/token/generate",
+		"https://oidcservice.example.com/auth/apptoapp/token/generate",
 		bytes.NewBuffer(body))
 	if err != nil {
-		return "", fmt.Errorf("IDMS request build failed: %w", err)
+		return "", fmt.Errorf("OIDC request build failed: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
@@ -218,28 +218,28 @@ func (c *KentaurusClient) fetchTokenFromIDMS(ctx context.Context) (string, error
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("IDMS request failed: %w", err)
+		return "", fmt.Errorf("OIDC request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBody, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("IDMS returned %d: %s", resp.StatusCode, string(respBody))
+		return "", fmt.Errorf("OIDC returned %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	var result struct {
 		Token string `json:"token"`
 	}
 	if err := json.Unmarshal(respBody, &result); err != nil {
-		return "", fmt.Errorf("IDMS parse failed: %w", err)
+		return "", fmt.Errorf("OIDC parse failed: %w", err)
 	}
 	if result.Token == "" {
-		return "", fmt.Errorf("IDMS returned empty token")
+		return "", fmt.Errorf("OIDC returned empty token")
 	}
 	return result.Token, nil
 }
 
-// CreateIncidentRequest represents the request to create an HCL incident
+// CreateIncidentRequest represents the request to create an External incident
 type CreateIncidentRequest struct {
 	Module               string `json:"module"`
 	CallingApp           string `json:"callingApp"`
@@ -256,7 +256,7 @@ type CreateIncidentRequest struct {
 	ContactType          string `json:"contactType,omitempty"`
 }
 
-// QueryIncidentsRequest represents the request to query HCL incidents
+// QueryIncidentsRequest represents the request to query External incidents
 type QueryIncidentsRequest struct {
 	Module      string `json:"module"`
 	Number      string `json:"number"`
@@ -267,7 +267,7 @@ type QueryIncidentsRequest struct {
 	SortByField string `json:"sortByField,omitempty"`
 }
 
-// UpdateIncidentRequest represents the request to update an HCL incident
+// UpdateIncidentRequest represents the request to update an External incident
 type UpdateIncidentRequest struct {
 	Module             string `json:"module"`
 	TicketID           string `json:"ticketId"`
@@ -286,7 +286,7 @@ type UpdateIncidentRequest struct {
 	ResolutionSummary  string `json:"resolutionSummary,omitempty"`
 }
 
-// ReopenIncidentRequest represents the request to reopen an HCL incident
+// ReopenIncidentRequest represents the request to reopen an External incident
 type ReopenIncidentRequest struct {
 	Module            string `json:"module"`
 	Number            string `json:"number"`
@@ -297,8 +297,8 @@ type ReopenIncidentRequest struct {
 	AssignedPersonID  string `json:"assignedPersonId,omitempty"`
 }
 
-// KentaurusResponse represents the Kentaurus API response
-type KentaurusResponse struct {
+// IncidentManagerResponse represents the IncidentManager API response
+type IncidentManagerResponse struct {
 	Result struct {
 		Status struct {
 			HTTPStatusCode int    `json:"httpStatusCode"`
@@ -320,23 +320,23 @@ type KentaurusResponse struct {
 	} `json:"result"`
 }
 
-func (c *KentaurusClient) CreateIncident(ctx context.Context, req *CreateIncidentRequest) (*KentaurusResponse, error) {
+func (c *IncidentManagerClient) CreateIncident(ctx context.Context, req *CreateIncidentRequest) (*IncidentManagerResponse, error) {
 	return c.makeRequest(ctx, "POST", "/createRecords", req)
 }
 
-func (c *KentaurusClient) QueryIncidents(ctx context.Context, req *QueryIncidentsRequest) (*KentaurusResponse, error) {
+func (c *IncidentManagerClient) QueryIncidents(ctx context.Context, req *QueryIncidentsRequest) (*IncidentManagerResponse, error) {
 	return c.makeRequest(ctx, "POST", "/queryRecords", req)
 }
 
-func (c *KentaurusClient) UpdateIncident(ctx context.Context, req *UpdateIncidentRequest) (*KentaurusResponse, error) {
+func (c *IncidentManagerClient) UpdateIncident(ctx context.Context, req *UpdateIncidentRequest) (*IncidentManagerResponse, error) {
 	return c.makeRequest(ctx, "POST", "/updateRecords", req)
 }
 
-func (c *KentaurusClient) ReopenIncident(ctx context.Context, req *ReopenIncidentRequest) (*KentaurusResponse, error) {
+func (c *IncidentManagerClient) ReopenIncident(ctx context.Context, req *ReopenIncidentRequest) (*IncidentManagerResponse, error) {
 	return c.makeRequest(ctx, "POST", "/updateRecords", req)
 }
 
-func (c *KentaurusClient) makeRequest(ctx context.Context, method, endpoint string, body interface{}) (*KentaurusResponse, error) {
+func (c *IncidentManagerClient) makeRequest(ctx context.Context, method, endpoint string, body interface{}) (*IncidentManagerResponse, error) {
 	token, err := c.getToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get auth token: %w", err)
@@ -347,14 +347,14 @@ func (c *KentaurusClient) makeRequest(ctx context.Context, method, endpoint stri
 		return nil, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	url := KentaurusAPIURL + endpoint
+	url := IncidentManagerAPIURL + endpoint
 	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("HTTP_HEADER_KENTAURUS_CONSUMER_ID", KentaurusConsumerID)
+	req.Header.Set("HTTP_HEADER_KENTAURUS_CONSUMER_ID", IncidentManagerConsumerID)
 	req.Header.Set("HTTP_HEADER_KENTAURUS_AUTH_TOKEN", token)
 
 	resp, err := c.httpClient.Do(req)
@@ -369,8 +369,8 @@ func (c *KentaurusClient) makeRequest(ctx context.Context, method, endpoint stri
 	}
 
 	// On 401 the token was rejected — clear cache and retry with a fresh token.
-	// If the previous token came from Whisper, fall back to IDMS directly to avoid
-	// using a Whisper token that Kentaurus may have already invalidated.
+	// If the previous token came from SecretsManager, fall back to OIDC directly to avoid
+	// using a SecretsManager token that IncidentManager may have already invalidated.
 	if resp.StatusCode == http.StatusUnauthorized {
 		c.mu.Lock()
 		prevSource := c.tokenSource
@@ -382,19 +382,19 @@ func (c *KentaurusClient) makeRequest(ctx context.Context, method, endpoint stri
 			freshToken string
 			tokenErr   error
 		)
-		if prevSource == "whisper" {
-			// Whisper token was rejected — try IDMS directly
-			freshToken, tokenErr = c.fetchTokenFromIDMS(ctx)
+		if prevSource == "secrets_manager" {
+			// SecretsManager token was rejected — try OIDC directly
+			freshToken, tokenErr = c.fetchTokenFromOIDC(ctx)
 			if tokenErr == nil && freshToken != "" {
 				c.mu.Lock()
 				c.cachedToken = freshToken
-				c.tokenSource = "idms"
+				c.tokenSource = "oidc"
 				c.tokenExpiry = parseTokenExpiry(freshToken)
 				c.mu.Unlock()
 			}
 		}
 		if freshToken == "" {
-			// Either prevSource was idms, or IDMS also failed — try getToken (full chain)
+			// Either prevSource was oidc, or OIDC also failed — try getToken (full chain)
 			freshToken, tokenErr = c.getToken(ctx)
 		}
 		if tokenErr != nil {
@@ -403,7 +403,7 @@ func (c *KentaurusClient) makeRequest(ctx context.Context, method, endpoint stri
 
 		req2, _ := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(jsonBody))
 		req2.Header.Set("Content-Type", "application/json")
-		req2.Header.Set("HTTP_HEADER_KENTAURUS_CONSUMER_ID", KentaurusConsumerID)
+		req2.Header.Set("HTTP_HEADER_KENTAURUS_CONSUMER_ID", IncidentManagerConsumerID)
 		req2.Header.Set("HTTP_HEADER_KENTAURUS_AUTH_TOKEN", freshToken)
 
 		resp2, err2 := c.httpClient.Do(req2)
@@ -416,22 +416,22 @@ func (c *KentaurusClient) makeRequest(ctx context.Context, method, endpoint stri
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("kentaurus API returned status %d: %s", resp.StatusCode, string(respBody))
+		return nil, fmt.Errorf("incident_manager API returned status %d: %s", resp.StatusCode, string(respBody))
 	}
 
-	var kentaurusResp KentaurusResponse
-	if err := json.Unmarshal(respBody, &kentaurusResp); err != nil {
+	var incident_managerResp IncidentManagerResponse
+	if err := json.Unmarshal(respBody, &incident_managerResp); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	// Kentaurus returns "warning" when it clamps input parameters (e.g. count > max).
+	// IncidentManager returns "warning" when it clamps input parameters (e.g. count > max).
 	// Treat "warning" as success — the response still contains valid data.
-	state := kentaurusResp.Result.Status.State
+	state := incident_managerResp.Result.Status.State
 	if state != "success" && state != "warning" {
-		return nil, fmt.Errorf("kentaurus API error: %s - %s",
-			kentaurusResp.Result.Status.State,
-			kentaurusResp.Result.Status.Message)
+		return nil, fmt.Errorf("incident_manager API error: %s - %s",
+			incident_managerResp.Result.Status.State,
+			incident_managerResp.Result.Status.Message)
 	}
 
-	return &kentaurusResp, nil
+	return &incident_managerResp, nil
 }

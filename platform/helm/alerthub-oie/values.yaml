@@ -56,17 +56,17 @@ oie:
   kafkaInvestigationsTopic: "oie.investigations"
   kafkaDlqTopic: "oie.investigations.dlq"
 
-  # Kubeconfigs directory (mounted from Whisper-fetched secret)
+  # Kubeconfigs directory (mounted from SecretsManager-fetched secret)
   kubeconfigsDir: "/etc/kubeconfigs"
 
   # Jaeger/OTel tracing
   jaegerEndpoint: ""
   otelServiceName: "oie"
 
-  # CloudStack — sourced from Whisper (env vars injected at runtime)
+  # CloudStack — sourced from SecretsManager (env vars injected at runtime)
   # OIE_CS_CLUSTER_1_ENDPOINT, OIE_CS_CLUSTER_1_API_KEY, etc.
 
-  # NetApp ONTAP — cluster list (non-sensitive); password sourced from Whisper as NETAPP_PASSWORD
+  # NetApp ONTAP — cluster list (non-sensitive); password sourced from SecretsManager as NETAPP_PASSWORD
   # Format: JSON array matching alerthub-config NETAPP_CLUSTERS
   netappClusters: "[]"
   netappUser: "harvest-user"
@@ -74,7 +74,7 @@ oie:
 build:
   enabled: false
 
-whisper:
+secrets_manager:
   enabled: true
 
 postgres:

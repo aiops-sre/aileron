@@ -54,13 +54,13 @@ React Frontend  ←──── REST API ────── Go Backend
 
 ### How It Works
 
-Authentication is handled entirely by Apple's IdMS (Identity Management Service) via OAuth2. There is no username/password login.
+Authentication is handled entirely by your organization's OIDC (Identity Management Service) via OAuth2. There is no username/password login.
 
 **Flow:**
 1. User visits the app unauthenticated
-2. App immediately redirects to IdMS: `GET /api/v1/auth/mas?redirect=/dashboard`
-3. IdMS validates the user's Apple credentials (SSO + 2FA)
-4. IdMS redirects back with an authorization code
+2. App immediately redirects to OIDC: `GET /api/v1/auth/mas?redirect=/dashboard`
+3. OIDC validates the user's Aileron credentials (SSO + 2FA)
+4. OIDC redirects back with an authorization code
 5. Backend exchanges code for access + refresh tokens
 6. Backend provisions the user in the local DB (or updates group mappings)
 7. Access token stored in `localStorage`, sent as `Authorization: Bearer <token>` on every API call
@@ -75,7 +75,7 @@ Authentication is handled entirely by Apple's IdMS (Identity Management Service)
 | `interactive-monitoring` | Operator | Alert acknowledgment, incident updates |
 | `interactive-all` | Viewer | Read-only |
 
-**Token Refresh:** The frontend watches token expiry and silently refreshes in the background. If refresh fails, the user is redirected to IdMS again. The loading screen shown during this process displays "Refreshing Session" rather than the full initialization message.
+**Token Refresh:** The frontend watches token expiry and silently refreshes in the background. If refresh fails, the user is redirected to OIDC again. The loading screen shown during this process displays "Refreshing Session" rather than the full initialization message.
 
 ---
 
@@ -290,13 +290,13 @@ Two BERT endpoints are configured (primary + local fallback). The service genera
 | `universalDataStore` | Global dashboard + incident data with background refresh |
 | `enhancedUniversalDataStore` | Enhanced data loading with error handling |
 | `alertsStore` | Alert list with real-time background refresh |
-| `kentaurusIncidentsStore` | Incident list with filtering and unread tracking |
+| `incident_managerIncidentsStore` | Incident list with filtering and unread tracking |
 | `settingsStore` | User preferences (theme, notifications, API keys) |
 | `themeStore` | Dark/light mode |
 
 ### Design System
 
-Uses Apple's design language throughout: SF Pro font, Apple color tokens, HIG-compliant spacing and radius values. All styling uses CSS variables via inline styles — no Tailwind, no CSS modules.
+Uses your organization's design language throughout: SF Pro font, Aileron color tokens, HIG-compliant spacing and radius values. All styling uses CSS variables via inline styles — no Tailwind, no CSS modules.
 
 ---
 

@@ -13,7 +13,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -124,19 +124,19 @@ export function NotificationsHubPage() {
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case 'error': return <XCircle style={{ width: 16, height: 16, color: apple.red }} />
-      case 'warning': return <AlertCircle style={{ width: 16, height: 16, color: apple.orange }} />
-      case 'success': return <CheckCircle style={{ width: 16, height: 16, color: apple.green }} />
-      default: return <Info style={{ width: 16, height: 16, color: apple.blue }} />
+      case 'error': return <XCircle style={{ width: 16, height: 16, color: tokens.red }} />
+      case 'warning': return <AlertCircle style={{ width: 16, height: 16, color: tokens.orange }} />
+      case 'success': return <CheckCircle style={{ width: 16, height: 16, color: tokens.green }} />
+      default: return <Info style={{ width: 16, height: 16, color: tokens.blue }} />
     }
   }
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'error': return apple.red
-      case 'warning': return apple.orange
-      case 'success': return apple.green
-      default: return apple.blue
+      case 'error': return tokens.red
+      case 'warning': return tokens.orange
+      case 'success': return tokens.green
+      default: return tokens.blue
     }
   }
 
@@ -145,10 +145,10 @@ export function NotificationsHubPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
             Notifications
           </h1>
-          <p style={{ fontSize: 15, color: apple.secondaryLabel }}>
+          <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>
             {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
           </p>
         </div>
@@ -157,9 +157,9 @@ export function NotificationsHubPage() {
             onClick={markAllAsRead}
             style={{
               padding: '8px 16px',
-              borderRadius: apple.radius.sm,
+              borderRadius: tokens.radius.sm,
               border: 'none',
-              background: apple.blue,
+              background: tokens.blue,
               color: '#fff',
               fontSize: 14,
               fontWeight: 500,
@@ -172,17 +172,17 @@ export function NotificationsHubPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24, borderBottom: `0.5px solid ${apple.separator}`, paddingBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24, borderBottom: `0.5px solid ${tokens.separator}`, paddingBottom: 12 }}>
         {(['all', 'unread', 'read'] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
             style={{
               padding: '8px 16px',
-              borderRadius: apple.radius.sm,
+              borderRadius: tokens.radius.sm,
               border: 'none',
-              background: filter === f ? apple.blue : 'transparent',
-              color: filter === f ? '#fff' : apple.label,
+              background: filter === f ? tokens.blue : 'transparent',
+              color: filter === f ? '#fff' : tokens.label,
               fontSize: 14,
               fontWeight: filter === f ? 600 : 400,
               cursor: 'pointer',
@@ -195,7 +195,7 @@ export function NotificationsHubPage() {
                 marginLeft: 6,
                 padding: '2px 6px',
                 borderRadius: 10,
-                background: filter === f ? 'rgba(255,255,255,0.3)' : `${apple.red}15`,
+                background: filter === f ? 'rgba(255,255,255,0.3)' : `${tokens.red}15`,
                 fontSize: 11,
                 fontWeight: 600,
               }}>
@@ -210,16 +210,16 @@ export function NotificationsHubPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <AnimatePresence>
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: apple.tertiaryLabel }}>
+            <div style={{ padding: 40, textAlign: 'center', color: tokens.tertiaryLabel }}>
               Loading notifications...
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center' }}>
-              <Bell style={{ width: 48, height: 48, color: apple.tertiaryLabel, margin: '0 auto 16px' }} />
-              <h3 style={{ fontSize: 18, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+              <Bell style={{ width: 48, height: 48, color: tokens.tertiaryLabel, margin: '0 auto 16px' }} />
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
                 No notifications
               </h3>
-              <p style={{ fontSize: 14, color: apple.secondaryLabel }}>
+              <p style={{ fontSize: 14, color: tokens.secondaryLabel }}>
                 {filter === 'unread' ? 'All caught up!' : 'No notifications to show'}
               </p>
             </div>
@@ -232,9 +232,9 @@ export function NotificationsHubPage() {
                 exit={{ opacity: 0, x: 10 }}
                 style={{
                   padding: 16,
-                  background: notification.read ? apple.fill : apple.secondaryBackground,
-                  borderRadius: apple.radius.md,
-                  border: `0.5px solid ${notification.read ? apple.separator : getSeverityColor(notification.severity) + '30'}`,
+                  background: notification.read ? tokens.fill : tokens.secondaryBackground,
+                  borderRadius: tokens.radius.md,
+                  border: `0.5px solid ${notification.read ? tokens.separator : getSeverityColor(notification.severity) + '30'}`,
                   borderLeft: `3px solid ${getSeverityColor(notification.severity)}`,
                   cursor: 'pointer',
                   transition: 'all 0.2s',
@@ -245,7 +245,7 @@ export function NotificationsHubPage() {
                   <div style={{
                     width: 40,
                     height: 40,
-                    borderRadius: apple.radius.sm,
+                    borderRadius: tokens.radius.sm,
                     background: `${getSeverityColor(notification.severity)}15`,
                     display: 'flex',
                     alignItems: 'center',
@@ -260,12 +260,12 @@ export function NotificationsHubPage() {
                       <h4 style={{
                         fontSize: 14,
                         fontWeight: notification.read ? 400 : 600,
-                        color: apple.label,
+                        color: tokens.label,
                         margin: 0,
                       }}>
                         {notification.title}
                       </h4>
-                      <span style={{ fontSize: 12, color: apple.tertiaryLabel, whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 12, color: tokens.tertiaryLabel, whiteSpace: 'nowrap' }}>
                         {new Date(notification.created_at).toLocaleTimeString([], { 
                           hour: '2-digit', 
                           minute: '2-digit' 
@@ -275,7 +275,7 @@ export function NotificationsHubPage() {
 
                     <p style={{
                       fontSize: 13,
-                      color: apple.secondaryLabel,
+                      color: tokens.secondaryLabel,
                       marginBottom: 8,
                       lineHeight: 1.4,
                     }}>
@@ -286,9 +286,9 @@ export function NotificationsHubPage() {
                       <span style={{
                         padding: '2px 8px',
                         borderRadius: 10,
-                        background: `${apple.gray}15`,
+                        background: `${tokens.gray}15`,
                         fontSize: 11,
-                        color: apple.gray,
+                        color: tokens.gray,
                         textTransform: 'uppercase',
                         fontWeight: 600,
                       }}>
@@ -304,7 +304,7 @@ export function NotificationsHubPage() {
                             alignItems: 'center',
                             gap: 4,
                             fontSize: 12,
-                            color: apple.blue,
+                            color: tokens.blue,
                             textDecoration: 'none',
                             fontWeight: 500,
                           }}
@@ -325,10 +325,10 @@ export function NotificationsHubPage() {
                         }}
                         style={{
                           padding: 6,
-                          borderRadius: apple.radius.sm,
+                          borderRadius: tokens.radius.sm,
                           border: 'none',
-                          background: `${apple.green}15`,
-                          color: apple.green,
+                          background: `${tokens.green}15`,
+                          color: tokens.green,
                           cursor: 'pointer',
                         }}
                         title="Mark as read"
@@ -343,10 +343,10 @@ export function NotificationsHubPage() {
                       }}
                       style={{
                         padding: 6,
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         border: 'none',
-                        background: `${apple.red}15`,
-                        color: apple.red,
+                        background: `${tokens.red}15`,
+                        color: tokens.red,
                         cursor: 'pointer',
                       }}
                       title="Delete"

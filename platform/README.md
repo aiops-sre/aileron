@@ -64,7 +64,7 @@ flowchart TD
         RCE[Root Cause Engine]
         CORR[CACIE Correlation Engine]
         TOPO[Topology Service + Neo4j Cache]
-        AUTH[Auth Service IDMS/LDAP]
+        AUTH[Auth Service OIDC/LDAP]
         WS_SRV[WebSocket Server]
         KS_PROXY[KubeSense Proxy]
     end
@@ -98,9 +98,9 @@ flowchart TD
     end
 
     subgraph AuthSvc["Auth"]
-        IDMS[Apple IDMS OAuth2]
-        LDAP[DS-LDAP Group Sync]
-        FG[Floodgate OIDC]
+        OIDC[Aileron OIDC OAuth2]
+        LDAP[LDAP Group Sync]
+        FG[OIDC Provider OIDC]
     end
 
     DT & PROM & GRAF & SPL & CS & NETAPP & HCL -->|webhooks| WEBHOOK
@@ -115,7 +115,7 @@ flowchart TD
     OIE_RCA -->|topology resolve| TOPO
     OIE_WB --> PG
     TOPO --> NEO & REDIS
-    AUTH --> IDMS & LDAP & FG
+    AUTH --> OIDC & LDAP & FG
     WS_SRV -->|WebSocket| WS_CLIENT
     Backend -->|SSE| SSE_CLIENT
     UI --> WS_CLIENT & SSE_CLIENT
@@ -140,7 +140,7 @@ flowchart TD
     class PG,NEO,REDIS store
     class DT,PROM,GRAF,SPL,CS,NETAPP,HCL ext
     class BERT,OLLAMA ai
-    class IDMS,LDAP,FG auth
+    class OIDC,LDAP,FG auth
     class KS_AGENT,KS_COLL,KS_API,KS_LLM,KS_NEO,KS_PG ks
     class OIE_CONS,OIE_BUS,OIE_HYP,OIE_RCA,OIE_WB oie
 ```
@@ -350,7 +350,7 @@ sequenceDiagram
 
 ---
 
-## Auth Flow (IDMS OAuth2 + LDAP + Floodgate)
+## Auth Flow (OIDC OAuth2 + LDAP + OIDC Provider)
 
 ```mermaid
 sequenceDiagram
@@ -359,34 +359,34 @@ sequenceDiagram
     participant NGINX as NGINX Ingress
     participant FE as React Frontend
     participant BE as Go Backend
-    participant IDMS as Apple IDMS<br/>
-    participant LDAP as DS-LDAP<br/>:636
-    participant FG as Floodgate<br/>
+    participant OIDC as Aileron OIDC<br/>
+    participant LDAP as LDAP<br/>:636
+    participant FG as OIDC Provider<br/>
     participant PG as PostgreSQL
 
     U->>NGINX: GET https://aileron.example.com
     NGINX-->>U: 302 → /api/v1/auth/oidc (no session)
 
     U->>BE: GET /api/v1/auth/oidc?redirect=/dashboard
-    BE->>IDMS: 302 → Authorization URL<br/>client_id, redirect_uri, scope=openid profile email<br/>audience=[sre-command-center, sear-floodgate]
-    IDMS-->>U: Apple SSO login page
+    BE->>OIDC: 302 → Authorization URL<br/>client_id, redirect_uri, scope=openid profile email<br/>audience=[sre-command-center, sear-oidc]
+    OIDC-->>U: Aileron SSO login page
 
-    U->>IDMS: Authenticate (Apple SSO)
-    IDMS-->>U: 302 → /api/v1/auth?code=xxx&state=yyy
+    U->>OIDC: Authenticate (Aileron SSO)
+    OIDC-->>U: 302 → /api/v1/auth?code=xxx&state=yyy
 
     U->>BE: GET /api/v1/auth?code=xxx&state=yyy
-    BE->>IDMS: POST /auth/oauth2/token (code exchange)
-    IDMS-->>BE: access_token + refresh_token + id_token + groups claim
+    BE->>OIDC: POST /auth/oauth2/token (code exchange)
+    OIDC-->>BE: access_token + refresh_token + id_token + groups claim
 
-    alt IDMS groups claim empty
+    alt OIDC groups claim empty
         BE->>LDAP: Lookup memberOf for user email
         LDAP-->>BE: [aileron-admins, aileron-operators, ...]
     end
 
-    Note over BE: RBAC resolution (priority order):<br/>1. DB ldap_group_role_mappings (Admin UI configured)<br/>2. ALERTHUB_ADMIN_GROUPS env var<br/>3. ALERTHUB_OPERATOR_GROUPS env var<br/>4. Existing DB role (never downgrade)<br/>5. IDMS_DEFAULT_ROLE (default: viewer)
+    Note over BE: RBAC resolution (priority order):<br/>1. DB ldap_group_role_mappings (Admin UI configured)<br/>2. ALERTHUB_ADMIN_GROUPS env var<br/>3. ALERTHUB_OPERATOR_GROUPS env var<br/>4. Existing DB role (never downgrade)<br/>5. OIDC_DEFAULT_ROLE (default: viewer)
 
-    BE->>FG: POST exchange refresh_token → Floodgate id_token<br/>audience=sear-floodgate (for AI assistant)
-    FG-->>BE: floodgate_id_token (TTL 55 min)
+    BE->>FG: POST exchange refresh_token → OIDC Provider id_token<br/>audience=sear-oidc (for AI assistant)
+    FG-->>BE: oidc_id_token (TTL 55 min)
 
     BE->>PG: UPSERT users (auto-provision role from LDAP groups)
 
@@ -394,7 +394,7 @@ sequenceDiagram
     BE-->>U: 302 → /oauth/callback?exchange_code=yyy
 
     U->>BE: GET /api/v1/auth/oidc/exchange?code=yyy
-    BE-->>U: {access_token, refresh_token, idms_token, floodgate_token}
+    BE-->>U: {access_token, refresh_token, oidc_token, oidc_token}
 
     FE->>FE: Store in enhancedAuthStore (Zustand)<br/>visibilitychange resets lastActivity<br/>proactive refresh 5min before expiry
 
@@ -554,7 +554,7 @@ flowchart LR
     end
 
     subgraph Cosign["Image Signing"]
-        SIGN[Cosign sign<br/>Whisper Apple corp CA]
+        SIGN[Cosign sign<br/>SecretsManager Aileron corp CA]
     end
 
     subgraph ArgoCD["ArgoCD — Applications"]
@@ -746,7 +746,7 @@ alerthub-enterprise/
 │   │   ├── correlation/            # 4-strategy correlation engine + aggregator
 │   │   ├── topology/               # Neo4j + Redis graph topology service
 │   │   ├── rca/                    # RCA trigger + result storage
-│   │   └── auth/                   # IDMS OAuth2, LDAP sync, JWT
+│   │   └── auth/                   # OIDC OAuth2, LDAP sync, JWT
 │   ├── db/                         # PostgreSQL migrations + query layer
 │   └── kafka/                      # Producer + consumer wrappers
 ├── frontend/
@@ -802,12 +802,12 @@ alerthub-enterprise/
 | **AI — Embeddings** | nomic-embed-text | 768-dim via Ollama | Semantic past-investigation search (pgvector) |
 | **AI — Inline LLM** | Ollama qwen2.5:3b | — | 2–4 sentence RCA narrative on incident creation |
 | **AI — Deep RCA** | OIE (Go) | — | 16-fetcher evidence DAG, hypothesis scoring, LLM narrator |
-| **Auth** | Apple IDMS OAuth2 |  | Primary SSO |
-| **Auth** | DS-LDAP | — | Group-based role assignment |
-| **Auth** | Floodgate | OIDC | Access gate |
+| **Auth** | Aileron OIDC OAuth2 |  | Primary SSO |
+| **Auth** | LDAP | — | Group-based role assignment |
+| **Auth** | OIDC Provider | OIDC | Access gate |
 | **GitOps** | ArgoCD | latest | Continuous deployment |
 | **GitOps** | BuildKit | rootless | In-cluster image builds |
-| **GitOps** | Cosign | Whisper CA | Image signing |
+| **GitOps** | Cosign | SecretsManager CA | Image signing |
 | **Infra** | Kubernetes | 1.28+ | Container orchestration |
 | **Infra** | Helm | 3 | Chart templating |
 
@@ -831,7 +831,7 @@ alerthub-enterprise/
 
 - **Live Infrastructure Topology** — Neo4j 5.15 stores the full infrastructure graph (CloudStack VMs, KVM hosts, K8s nodes, clusters, NetApp volumes). Redis provides fast in-memory cache for correlation scoring. `GET /api/v1/topology/resolve` resolves any entity in <10ms.
 
-- **Role-Based Access Control** — Four-tier RBAC (admin / sre / operator / viewer) from DS-LDAP groups via IDMS OAuth2. Priority: DB mappings → `ALERTHUB_ADMIN_GROUPS` env → preserved role → `IDMS_DEFAULT_ROLE`. Groups: `aileron-admins` → admin, `aileron-operators` → operator, `aileron-viewers` → viewer.
+- **Role-Based Access Control** — Four-tier RBAC (admin / sre / operator / viewer) from LDAP groups via OIDC OAuth2. Priority: DB mappings → `ALERTHUB_ADMIN_GROUPS` env → preserved role → `OIDC_DEFAULT_ROLE`. Groups: `aileron-admins` → admin, `aileron-operators` → operator, `aileron-viewers` → viewer.
 
 - **KubeSense Integration** — 5 Go services (agent, collector, core, api, llm) in `aileron-agent` namespace. 5 Davis AI algorithms: Holt-Winters baseline anomaly detection, alert state machine + flap suppression, Union-Find multi-signal grouper (67% noise reduction), topology-anchored root cause scoring, change correlation RCA. All signals feed OIE evidence DAG and surface in the Situations tab.
 
@@ -843,13 +843,13 @@ alerthub-enterprise/
 
 - **Policy Engine** — DB-driven `intelligence_policies` table. Types: `suppress_alert`, `suppress_incident`, `skip_rca`, `require_approval`, `auto_resolve`. 5-minute cache, 500 policy limit, priority-ordered.
 
-- **LLM Guard** — RFC-1918 IPs, K8s UIDs, Apple hostnames, internal DNS, credentials redacted before LLM. SigmaHQ-pattern injection detection blocks `ignore previous instructions`, `act as`, `eval(` in alert payloads.
+- **LLM Guard** — RFC-1918 IPs, K8s UIDs, Aileron hostnames, internal DNS, credentials redacted before LLM. SigmaHQ-pattern injection detection blocks `ignore previous instructions`, `act as`, `eval(` in alert payloads.
 
 - **Stale Sweep** — Hourly background goroutine resolves: fingerprint alerts open >4h, all alerts with no update in 24h, incidents with all alerts resolved, OIE investigations stuck in `investigating` >15min.
 
 - **Real-Time Dashboard** — WebSocket streaming to all connected clients. 30+ React pages: alert feed, incident timeline, blast radius visualizer, topology graph, RCA viewer, correlation rules editor, Situations tab, KubeSense intelligence tabs (chaos, violations, forecasts, APM, changes, risk, playbooks, correlation).
 
-- **GitOps Automation** — Single `git push` triggers: commit-lint + secret-scan, rootless BuildKit image builds, Cosign signing with Whisper Apple corp CA, ArgoCD sync. `helm-revision-v1.0` CMP derives `imageTag` from `git log -- <service-paths>` — no manual `values.yaml` edits.
+- **GitOps Automation** — Single `git push` triggers: commit-lint + secret-scan, rootless BuildKit image builds, Cosign signing with SecretsManager Aileron corp CA, ArgoCD sync. `helm-revision-v1.0` CMP derives `imageTag` from `git log -- <service-paths>` — no manual `values.yaml` edits.
 
 ---
 
@@ -867,7 +867,7 @@ alerthub-enterprise/
 https://aileron.example.com
 ```
 
-Login via Apple IDMS OAuth2. Your DS-LDAP group determines your role (`aileron-admins` → admin).
+Login via Aileron OIDC OAuth2. Your LDAP group determines your role (`aileron-admins` → admin).
 
 ### Send a Test Alert
 
@@ -898,7 +898,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
       "url": "https://aileron.example.com/api/v1/mcp",
       "transport": "http",
       "headers": {
-        "Authorization": "Bearer <jwt-from-idms-exchange>"
+        "Authorization": "Bearer <jwt-from-oidc-exchange>"
       }
     }
   }
@@ -946,12 +946,12 @@ curl https://aileron.example.com/health/detailed
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/v1/auth/oidc` | Initiate IDMS OAuth2 → redirect to  |
-| `GET` | `/api/v1/auth` | IDMS OAuth2 callback |
-| `GET` | `/api/v1/auth/oidc/callback` | Alias for IDMS callback |
+| `GET` | `/api/v1/auth/oidc` | Initiate OIDC OAuth2 → redirect to  |
+| `GET` | `/api/v1/auth` | OIDC OAuth2 callback |
+| `GET` | `/api/v1/auth/oidc/callback` | Alias for OIDC callback |
 | `GET` | `/api/v1/auth/oidc/exchange` | Redeem one-time code → JWT access + refresh tokens |
-| `GET` | `/api/v1/auth/oidc/floodgate-refresh` | Silent Floodgate token refresh |
-| `GET` | `/api/v1/auth/oidc/groups` | Current user's synced DS-LDAP groups |
+| `GET` | `/api/v1/auth/oidc/oidc-refresh` | Silent OIDC Provider token refresh |
+| `GET` | `/api/v1/auth/oidc/groups` | Current user's synced LDAP groups |
 | `GET` | `/api/v1/auth/oidc/settings` | Auth settings from DB |
 
 ### Webhooks
@@ -1120,15 +1120,15 @@ All runtime configuration is supplied via environment variables. In Kubernetes t
 | `BERT_SERVICE_URL` | yes | BERT embedding service (`http://bert-service:8766`) |
 | `OLLAMA_URL` | yes | Ollama base URL (`http://ollama:11434`) |
 | `OIDC_CLIENT_ID` | yes | OAuth2 client ID |
-| `OIDC_CLIENT_SECRET` | yes | OAuth2 client secret (from Whisper) |
-| `OIDC_APP_ID` | yes | IdMS application ID (`961469`) |
-| `IDMS_REDIRECT_URI` | yes | OAuth2 callback URL |
+| `OIDC_CLIENT_SECRET` | yes | OAuth2 client secret (from SecretsManager) |
+| `OIDC_APP_ID` | yes | OIDC application ID (`961469`) |
+| `OIDC_REDIRECT_URI` | yes | OAuth2 callback URL |
 | `JWT_SECRET` | yes | HMAC secret for JWT signing (min 32 chars) |
 | `JWT_REFRESH_SECRET` | yes | HMAC secret for refresh tokens (min 32 chars) |
-| `LDAP_URL` | yes | DS-LDAP server URL |
+| `LDAP_URL` | yes | LDAP server URL |
 | `LDAP_BIND_DN` | yes | LDAP bind distinguished name |
 | `LDAP_BIND_PASSWORD` | yes | LDAP bind password |
-| `FLOODGATE_OIDC_CLIENT_ID` | yes | Floodgate OIDC client ID |
+| `FLOODGATE_OIDC_CLIENT_ID` | yes | OIDC Provider OIDC client ID |
 | `DYNATRACE_API_TOKEN` | yes | Dynatrace API token for RCA metrics |
 | `CLOUDSTACK_API_URL` | yes | CloudStack API endpoint |
 | `CLOUDSTACK_API_KEY` | yes | CloudStack API key |
@@ -1187,10 +1187,10 @@ All runtime configuration is supplied via environment variables. In Kubernetes t
 | **StatefulSet** | `redis-cluster` | `aileron` | 3 replicas |
 | **StatefulSet** | `kafka` | `aileron` | 3 brokers + ZooKeeper |
 | **Secret** | `alerthub-secrets` | `aileron` | DB, JWT, OAuth credentials |
-| **Secret** | `alerthub-dsldap-credentials` | `aileron` | DS-LDAP bind credentials |
+| **Secret** | `alerthub-ldap-credentials` | `aileron` | LDAP bind credentials |
 | **Secret** | `alerthub-hcl-credentials` | `aileron` | HCL API credentials |
 | **Secret** | `infrastructure-credentials` | `aileron` | CloudStack, Dynatrace tokens |
-| **Secret** | `alerthub-whisper-cert` | `aileron` | Cosign Whisper Apple corp CA cert |
+| **Secret** | `alerthub-secrets_manager-cert` | `aileron` | Cosign SecretsManager Aileron corp CA cert |
 | **Secret** | `kubesense-postgres-secret` | `aileron-agent` | DATABASE_URL |
 | **Secret** | `kubesense-neo4j-secret` | `aileron-agent` | NEO4J_URL, NEO4J_PASSWORD |
 | **Secret** | `kubesense-llm-secret` | `aileron-agent` | CLAUDE_API_KEY (optional) |
@@ -1243,7 +1243,7 @@ kubectl get pods -n aileron -w
 kubectl get pods -n aileron-agent -w
 ```
 
-### Secrets (via Whisper)
+### Secrets (via SecretsManager)
 
 | Secret | Contents |
 |---|---|

@@ -13,7 +13,7 @@ import {
   Calendar,
 } from 'lucide-react'
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -137,10 +137,10 @@ export function MappingRulesPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
             Mapping & Extraction Rules
           </h1>
-          <p style={{ fontSize: 15, color: apple.secondaryLabel }}>
+          <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>
             Extract and transform fields from alert payloads
           </p>
         </div>
@@ -154,9 +154,9 @@ export function MappingRulesPage() {
             alignItems: 'center',
             gap: 8,
             padding: '10px 20px',
-            borderRadius: apple.radius.sm,
+            borderRadius: tokens.radius.sm,
             border: 'none',
-            background: apple.purple,
+            background: tokens.purple,
             color: '#fff',
             fontSize: 14,
             fontWeight: 500,
@@ -172,75 +172,75 @@ export function MappingRulesPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         <div style={{
           padding: 16,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.md,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.md,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: apple.purple }}>{rules.length}</div>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>Total Rules</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: tokens.purple }}>{rules.length}</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>Total Rules</div>
         </div>
         <div style={{
           padding: 16,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.md,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.md,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: apple.green }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: tokens.green }}>
             {rules.filter(r => r.enabled).length}
           </div>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>Active Rules</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>Active Rules</div>
         </div>
         <div style={{
           padding: 16,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.md,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.md,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: apple.blue }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: tokens.blue }}>
             {rules.reduce((sum, r) => sum + (r.execution_count || 0), 0)}
           </div>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>Executions</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>Executions</div>
         </div>
         <div style={{
           padding: 16,
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.md,
-          border: `0.5px solid ${apple.separator}`,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.md,
+          border: `0.5px solid ${tokens.separator}`,
         }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: apple.orange }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: tokens.orange }}>
             {Math.round(rules.reduce((sum, r) => sum + (r.success_rate || 0), 0) / Math.max(1, rules.length))}%
           </div>
-          <div style={{ fontSize: 13, color: apple.tertiaryLabel }}>Success Rate</div>
+          <div style={{ fontSize: 13, color: tokens.tertiaryLabel }}>Success Rate</div>
         </div>
       </div>
 
       {/* Rules List */}
       <div style={{
-        background: apple.secondaryBackground,
-        borderRadius: apple.radius.lg,
-        border: `0.5px solid ${apple.separator}`,
+        background: tokens.secondaryBackground,
+        borderRadius: tokens.radius.lg,
+        border: `0.5px solid ${tokens.separator}`,
         overflow: 'hidden',
       }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: apple.tertiaryLabel }}>
+          <div style={{ padding: 40, textAlign: 'center', color: tokens.tertiaryLabel }}>
             Loading mapping rules...
           </div>
         ) : rules.length === 0 ? (
           <div style={{ padding: 60, textAlign: 'center' }}>
-            <FileJson style={{ width: 48, height: 48, color: apple.tertiaryLabel, margin: '0 auto 16px' }} />
-            <h3 style={{ fontSize: 18, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+            <FileJson style={{ width: 48, height: 48, color: tokens.tertiaryLabel, margin: '0 auto 16px' }} />
+            <h3 style={{ fontSize: 18, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
               No mapping rules yet
             </h3>
-            <p style={{ fontSize: 14, color: apple.secondaryLabel, marginBottom: 20 }}>
+            <p style={{ fontSize: 14, color: tokens.secondaryLabel, marginBottom: 20 }}>
               Create rules to extract and transform alert data
             </p>
             <button
               onClick={() => setShowModal(true)}
               style={{
                 padding: '10px 20px',
-                borderRadius: apple.radius.sm,
+                borderRadius: tokens.radius.sm,
                 border: 'none',
-                background: apple.purple,
+                background: tokens.purple,
                 color: '#fff',
                 fontSize: 14,
                 fontWeight: 500,
@@ -259,25 +259,25 @@ export function MappingRulesPage() {
                 animate={{ opacity: 1 }}
                 style={{
                   padding: 16,
-                  background: apple.fill,
-                  borderRadius: apple.radius.md,
-                  border: `0.5px solid ${apple.separator}`,
+                  background: tokens.fill,
+                  borderRadius: tokens.radius.md,
+                  border: `0.5px solid ${tokens.separator}`,
                   marginBottom: 12,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                      <h4 style={{ fontSize: 16, fontWeight: 600, color: apple.label, margin: 0 }}>
+                      <h4 style={{ fontSize: 16, fontWeight: 600, color: tokens.label, margin: 0 }}>
                         {rule.name}
                       </h4>
                       <span style={{
                         padding: '2px 8px',
                         borderRadius: 10,
-                        background: `${apple.purple}15`,
+                        background: `${tokens.purple}15`,
                         fontSize: 11,
                         fontWeight: 600,
-                        color: apple.purple,
+                        color: tokens.purple,
                       }}>
                         Priority: {rule.priority}
                       </span>
@@ -287,7 +287,7 @@ export function MappingRulesPage() {
                           width: 40,
                           height: 20,
                           borderRadius: 10,
-                          background: rule.enabled ? apple.green : apple.tertiaryLabel,
+                          background: rule.enabled ? tokens.green : tokens.tertiaryLabel,
                           border: 'none',
                           cursor: 'pointer',
                           position: 'relative',
@@ -308,7 +308,7 @@ export function MappingRulesPage() {
                       </button>
                     </div>
                     
-                    <p style={{ fontSize: 13, color: apple.secondaryLabel, marginBottom: 12 }}>
+                    <p style={{ fontSize: 13, color: tokens.secondaryLabel, marginBottom: 12 }}>
                       {rule.description}
                     </p>
 
@@ -322,24 +322,24 @@ export function MappingRulesPage() {
                             alignItems: 'center',
                             gap: 6,
                             padding: '4px 10px',
-                            borderRadius: apple.radius.sm,
-                            background: `${apple.blue}08`,
-                            border: `0.5px solid ${apple.blue}20`,
+                            borderRadius: tokens.radius.sm,
+                            background: `${tokens.blue}08`,
+                            border: `0.5px solid ${tokens.blue}20`,
                             fontSize: 12,
                           }}
                         >
-                          <Code style={{ width: 10, height: 10, color: apple.blue }} />
-                          <span style={{ color: apple.label, fontFamily: 'SFMono-Regular, monospace' }}>
+                          <Code style={{ width: 10, height: 10, color: tokens.blue }} />
+                          <span style={{ color: tokens.label, fontFamily: 'SFMono-Regular, monospace' }}>
                             {extraction.source_field}
                           </span>
-                          <ArrowRight style={{ width: 10, height: 10, color: apple.tertiaryLabel }} />
-                          <span style={{ color: apple.label, fontFamily: 'SFMono-Regular, monospace' }}>
+                          <ArrowRight style={{ width: 10, height: 10, color: tokens.tertiaryLabel }} />
+                          <span style={{ color: tokens.label, fontFamily: 'SFMono-Regular, monospace' }}>
                             {extraction.target_field}
                           </span>
                         </div>
                       ))}
                       {rule.extractions.length > 3 && (
-                        <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>
+                        <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>
                           +{rule.extractions.length - 3} more
                         </span>
                       )}
@@ -348,11 +348,11 @@ export function MappingRulesPage() {
                     {/* Stats */}
                     {rule.execution_count && rule.execution_count > 0 && (
                       <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-                        <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>
-                          Executions: <strong style={{ color: apple.label }}>{rule.execution_count}</strong>
+                        <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>
+                          Executions: <strong style={{ color: tokens.label }}>{rule.execution_count}</strong>
                         </span>
-                        <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>
-                          Success: <strong style={{ color: apple.green }}>{rule.success_rate}%</strong>
+                        <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>
+                          Success: <strong style={{ color: tokens.green }}>{rule.success_rate}%</strong>
                         </span>
                       </div>
                     )}
@@ -363,10 +363,10 @@ export function MappingRulesPage() {
                       onClick={() => runRule(rule.id)}
                       style={{
                         padding: 8,
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         border: 'none',
-                        background: `${apple.green}15`,
-                        color: apple.green,
+                        background: `${tokens.green}15`,
+                        color: tokens.green,
                         cursor: 'pointer',
                       }}
                       title="Run rule now"
@@ -380,10 +380,10 @@ export function MappingRulesPage() {
                       }}
                       style={{
                         padding: 8,
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         border: 'none',
-                        background: apple.fill,
-                        color: apple.blue,
+                        background: tokens.fill,
+                        color: tokens.blue,
                         cursor: 'pointer',
                       }}
                     >
@@ -393,10 +393,10 @@ export function MappingRulesPage() {
                       onClick={() => deleteRule(rule.id)}
                       style={{
                         padding: 8,
-                        borderRadius: apple.radius.sm,
+                        borderRadius: tokens.radius.sm,
                         border: 'none',
-                        background: `${apple.red}15`,
-                        color: apple.red,
+                        background: `${tokens.red}15`,
+                        color: tokens.red,
                         cursor: 'pointer',
                       }}
                     >
@@ -485,8 +485,8 @@ function MappingRuleModal({ rule, onClose, onSaved }: any) {
         animate={{ scale: 1 }}
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: apple.secondaryBackground,
-          borderRadius: apple.radius.lg,
+          background: tokens.secondaryBackground,
+          borderRadius: tokens.radius.lg,
           padding: 24,
           width: '90%',
           maxWidth: 600,
@@ -494,13 +494,13 @@ function MappingRuleModal({ rule, onClose, onSaved }: any) {
           overflowY: 'auto',
         }}
       >
-        <h3 style={{ fontSize: 20, fontWeight: 600, color: apple.label, marginBottom: 20 }}>
+        <h3 style={{ fontSize: 20, fontWeight: 600, color: tokens.label, marginBottom: 20 }}>
           {rule ? 'Edit' : 'Create'} Mapping Rule
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: apple.secondaryLabel, marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel, marginBottom: 8 }}>
               Rule Name
             </label>
             <input
@@ -511,19 +511,19 @@ function MappingRuleModal({ rule, onClose, onSaved }: any) {
               style={{
                 width: '100%',
                 height: 40,
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
                 padding: '0 12px',
                 fontSize: 14,
-                color: apple.label,
+                color: tokens.label,
                 outline: 'none',
               }}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: apple.secondaryLabel, marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel, marginBottom: 8 }}>
               Description
             </label>
             <textarea
@@ -533,12 +533,12 @@ function MappingRuleModal({ rule, onClose, onSaved }: any) {
               rows={2}
               style={{
                 width: '100%',
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
                 padding: 12,
                 fontSize: 14,
-                color: apple.label,
+                color: tokens.label,
                 outline: 'none',
                 resize: 'vertical',
               }}
@@ -546,7 +546,7 @@ function MappingRuleModal({ rule, onClose, onSaved }: any) {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: apple.secondaryLabel, marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: tokens.secondaryLabel, marginBottom: 8 }}>
               Priority (1-1000)
             </label>
             <input
@@ -558,16 +558,16 @@ function MappingRuleModal({ rule, onClose, onSaved }: any) {
               style={{
                 width: '100%',
                 height: 40,
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
                 padding: '0 12px',
                 fontSize: 14,
-                color: apple.label,
+                color: tokens.label,
                 outline: 'none',
               }}
             />
-            <p style={{ fontSize: 11, color: apple.tertiaryLabel, marginTop: 4 }}>
+            <p style={{ fontSize: 11, color: tokens.tertiaryLabel, marginTop: 4 }}>
               Higher priority rules execute first
             </p>
           </div>
@@ -578,10 +578,10 @@ function MappingRuleModal({ rule, onClose, onSaved }: any) {
               style={{
                 flex: 1,
                 padding: '10px 16px',
-                borderRadius: apple.radius.sm,
-                border: `0.5px solid ${apple.separator}`,
-                background: apple.fill,
-                color: apple.label,
+                borderRadius: tokens.radius.sm,
+                border: `0.5px solid ${tokens.separator}`,
+                background: tokens.fill,
+                color: tokens.label,
                 fontSize: 14,
                 fontWeight: 500,
                 cursor: 'pointer',
@@ -595,9 +595,9 @@ function MappingRuleModal({ rule, onClose, onSaved }: any) {
               style={{
                 flex: 1,
                 padding: '10px 16px',
-                borderRadius: apple.radius.sm,
+                borderRadius: tokens.radius.sm,
                 border: 'none',
-                background: apple.purple,
+                background: tokens.purple,
                 color: '#fff',
                 fontSize: 14,
                 fontWeight: 500,

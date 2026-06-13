@@ -6,7 +6,7 @@ import os
 import aiohttp
 
 log = logging.getLogger(__name__)
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.alert-engine-poc.svc.cluster.local:11434")
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.aileron.svc.cluster.local:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:14b")
 CUSTOM_MODEL_NAME = "alerthub-rca"
 
@@ -49,7 +49,7 @@ async def build_and_update_model(knowledge_store) -> bool:
         except Exception:
             pass
 
-    learned_system_prompt = f"""You are an expert SRE AI for Apple's MPS infrastructure. You have been trained on {len(corpus)} confirmed incident investigations.
+    learned_system_prompt = f"""You are an expert SRE AI for your organization's MPS infrastructure. You have been trained on {len(corpus)} confirmed incident investigations.
 
 ## Your Learned Infrastructure Patterns
 
@@ -101,7 +101,7 @@ async def ingest_kafka_incidents(knowledge_store):
     and automatically add them to the knowledge base.
     """
     from aiokafka import AIOKafkaConsumer
-    KAFKA_BROKERS = os.getenv("KAFKA_BROKERS", "alerthub-kafka-kafka-bootstrap.alert-engine-poc.svc.cluster.local:9092")
+    KAFKA_BROKERS = os.getenv("KAFKA_BROKERS", "alerthub-kafka-kafka-bootstrap.aileron.svc.cluster.local:9092")
 
     consumer = AIOKafkaConsumer(
         "correlation-results",

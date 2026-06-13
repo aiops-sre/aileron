@@ -9,7 +9,7 @@ ENV HTTP_PROXY=${HTTP_PROXY} \
     NO_PROXY=${NO_PROXY} \
     OLLAMA_MODELS=/ollama-models
 
-# registry.ollama.ai is unreachable through Apple's proxy. Download GGUF files
+# registry.ollama.ai is unreachable through your organization's proxy. Download GGUF files
 # from HuggingFace (accessible) at build time. Model registration (ollama create)
 # runs at first container startup via the entrypoint wrapper — ollama serve cannot
 # run in the BuildKit environment (capability restrictions).

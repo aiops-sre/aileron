@@ -1750,9 +1750,9 @@ func (x *BurstDetectedEvent) GetSeverityDistribution() map[string]int32 {
 	return nil
 }
 
-type FloodgateActivatedEvent struct {
+type OIDC ProviderActivatedEvent struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	FloodgateSessionId string                 `protobuf:"bytes,1,opt,name=floodgate_session_id,json=floodgateSessionId,proto3" json:"floodgate_session_id,omitempty"`
+	OIDC ProviderSessionId string                 `protobuf:"bytes,1,opt,name=oidc_session_id,json=oidcSessionId,proto3" json:"oidc_session_id,omitempty"`
 	RuleName           string                 `protobuf:"bytes,2,opt,name=rule_name,json=ruleName,proto3" json:"rule_name,omitempty"`
 	SuppressedCount    int32                  `protobuf:"varint,3,opt,name=suppressed_count,json=suppressedCount,proto3" json:"suppressed_count,omitempty"`
 	SuppressedAlertIds []string               `protobuf:"bytes,4,rep,name=suppressed_alert_ids,json=suppressedAlertIds,proto3" json:"suppressed_alert_ids,omitempty"`
@@ -1763,20 +1763,20 @@ type FloodgateActivatedEvent struct {
 	sizeCache          protoimpl.SizeCache
 }
 
-func (x *FloodgateActivatedEvent) Reset() {
-	*x = FloodgateActivatedEvent{}
+func (x *OIDC ProviderActivatedEvent) Reset() {
+	*x = OIDC ProviderActivatedEvent{}
 	mi := &file_proto_events_events_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *FloodgateActivatedEvent) String() string {
+func (x *OIDC ProviderActivatedEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FloodgateActivatedEvent) ProtoMessage() {}
+func (*OIDC ProviderActivatedEvent) ProtoMessage() {}
 
-func (x *FloodgateActivatedEvent) ProtoReflect() protoreflect.Message {
+func (x *OIDC ProviderActivatedEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_events_events_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1788,54 +1788,54 @@ func (x *FloodgateActivatedEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FloodgateActivatedEvent.ProtoReflect.Descriptor instead.
-func (*FloodgateActivatedEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use OIDC ProviderActivatedEvent.ProtoReflect.Descriptor instead.
+func (*OIDC ProviderActivatedEvent) Descriptor() ([]byte, []int) {
 	return file_proto_events_events_proto_rawDescGZIP(), []int{19}
 }
 
-func (x *FloodgateActivatedEvent) GetFloodgateSessionId() string {
+func (x *OIDC ProviderActivatedEvent) GetOIDC ProviderSessionId() string {
 	if x != nil {
-		return x.FloodgateSessionId
+		return x.OIDC ProviderSessionId
 	}
 	return ""
 }
 
-func (x *FloodgateActivatedEvent) GetRuleName() string {
+func (x *OIDC ProviderActivatedEvent) GetRuleName() string {
 	if x != nil {
 		return x.RuleName
 	}
 	return ""
 }
 
-func (x *FloodgateActivatedEvent) GetSuppressedCount() int32 {
+func (x *OIDC ProviderActivatedEvent) GetSuppressedCount() int32 {
 	if x != nil {
 		return x.SuppressedCount
 	}
 	return 0
 }
 
-func (x *FloodgateActivatedEvent) GetSuppressedAlertIds() []string {
+func (x *OIDC ProviderActivatedEvent) GetSuppressedAlertIds() []string {
 	if x != nil {
 		return x.SuppressedAlertIds
 	}
 	return nil
 }
 
-func (x *FloodgateActivatedEvent) GetActivatedBy() string {
+func (x *OIDC ProviderActivatedEvent) GetActivatedBy() string {
 	if x != nil {
 		return x.ActivatedBy
 	}
 	return ""
 }
 
-func (x *FloodgateActivatedEvent) GetActivatedAt() *timestamppb.Timestamp {
+func (x *OIDC ProviderActivatedEvent) GetActivatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.ActivatedAt
 	}
 	return nil
 }
 
-func (x *FloodgateActivatedEvent) GetRuleConditions() map[string]string {
+func (x *OIDC ProviderActivatedEvent) GetRuleConditions() map[string]string {
 	if x != nil {
 		return x.RuleConditions
 	}
@@ -5516,14 +5516,14 @@ const file_proto_events_events_proto_rawDesc = "" +
 	"\x19SeverityDistributionEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"\xc8\x03\n" +
-	"\x17FloodgateActivatedEvent\x120\n" +
-	"\x14floodgate_session_id\x18\x01 \x01(\tR\x12floodgateSessionId\x12\x1b\n" +
+	"\x17OIDC ProviderActivatedEvent\x120\n" +
+	"\x14oidc_session_id\x18\x01 \x01(\tR\x12oidcSessionId\x12\x1b\n" +
 	"\trule_name\x18\x02 \x01(\tR\bruleName\x12)\n" +
 	"\x10suppressed_count\x18\x03 \x01(\x05R\x0fsuppressedCount\x120\n" +
 	"\x14suppressed_alert_ids\x18\x04 \x03(\tR\x12suppressedAlertIds\x12!\n" +
 	"\factivated_by\x18\x05 \x01(\tR\vactivatedBy\x12=\n" +
 	"\factivated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\vactivatedAt\x12\\\n" +
-	"\x0frule_conditions\x18\a \x03(\v23.events.FloodgateActivatedEvent.RuleConditionsEntryR\x0eruleConditions\x1aA\n" +
+	"\x0frule_conditions\x18\a \x03(\v23.events.OIDC ProviderActivatedEvent.RuleConditionsEntryR\x0eruleConditions\x1aA\n" +
 	"\x13RuleConditionsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x9b\x03\n" +
@@ -6010,7 +6010,7 @@ var file_proto_events_events_proto_goTypes = []any{
 	(*AlertCorrelatedEvent)(nil),            // 16: events.AlertCorrelatedEvent
 	(*AlertEnrichedEvent)(nil),              // 17: events.AlertEnrichedEvent
 	(*BurstDetectedEvent)(nil),              // 18: events.BurstDetectedEvent
-	(*FloodgateActivatedEvent)(nil),         // 19: events.FloodgateActivatedEvent
+	(*OIDC ProviderActivatedEvent)(nil),         // 19: events.OIDC ProviderActivatedEvent
 	(*ConfigCreatedEvent)(nil),              // 20: events.ConfigCreatedEvent
 	(*ConfigUpdatedEvent)(nil),              // 21: events.ConfigUpdatedEvent
 	(*ConfigDeletedEvent)(nil),              // 22: events.ConfigDeletedEvent
@@ -6059,7 +6059,7 @@ var file_proto_events_events_proto_goTypes = []any{
 	nil,                                     // 65: events.AlertCorrelatedEvent.CorrelationMetadataEntry
 	nil,                                     // 66: events.AlertEnrichedEvent.EnrichmentDataEntry
 	nil,                                     // 67: events.BurstDetectedEvent.SeverityDistributionEntry
-	nil,                                     // 68: events.FloodgateActivatedEvent.RuleConditionsEntry
+	nil,                                     // 68: events.OIDC ProviderActivatedEvent.RuleConditionsEntry
 	nil,                                     // 69: events.ConfigCreatedEvent.MetadataEntry
 	nil,                                     // 70: events.ConfigDeployedEvent.DeploymentResultsEntry
 	nil,                                     // 71: events.ConfigSyncEvent.SyncResultsEntry
@@ -6119,8 +6119,8 @@ var file_proto_events_events_proto_depIdxs = []int32{
 	92,  // 29: events.BurstDetectedEvent.burst_start:type_name -> google.protobuf.Timestamp
 	92,  // 30: events.BurstDetectedEvent.detected_at:type_name -> google.protobuf.Timestamp
 	67,  // 31: events.BurstDetectedEvent.severity_distribution:type_name -> events.BurstDetectedEvent.SeverityDistributionEntry
-	92,  // 32: events.FloodgateActivatedEvent.activated_at:type_name -> google.protobuf.Timestamp
-	68,  // 33: events.FloodgateActivatedEvent.rule_conditions:type_name -> events.FloodgateActivatedEvent.RuleConditionsEntry
+	92,  // 32: events.OIDC ProviderActivatedEvent.activated_at:type_name -> google.protobuf.Timestamp
+	68,  // 33: events.OIDC ProviderActivatedEvent.rule_conditions:type_name -> events.OIDC ProviderActivatedEvent.RuleConditionsEntry
 	92,  // 34: events.ConfigCreatedEvent.created_at:type_name -> google.protobuf.Timestamp
 	69,  // 35: events.ConfigCreatedEvent.metadata:type_name -> events.ConfigCreatedEvent.MetadataEntry
 	92,  // 36: events.ConfigUpdatedEvent.updated_at:type_name -> google.protobuf.Timestamp

@@ -19,10 +19,10 @@ import { useThemeStore } from '@/stores/themeStore'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Apple Design Tokens
+// Aileron Design Tokens
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -61,12 +61,12 @@ export function Header() {
     const appToken = sessionStorage.getItem('access_token') || localStorage.getItem('access_token')
     if (!appToken) return
 
-    const idmsToken = localStorage.getItem('oauth_id_token')
+    const oidcToken = localStorage.getItem('oauth_id_token')
     const controller = new AbortController()
     const headers: Record<string, string> = {
       Authorization: `Bearer ${appToken}`,
     }
-    if (idmsToken) headers['X-IDMS-Token'] = idmsToken
+    if (oidcToken) headers['X-OIDC-Token'] = oidcToken
 
     fetch('/api/v1/users/me/photo', {
       headers,
@@ -140,7 +140,7 @@ export function Header() {
           alt={user?.full_name || 'User'}
           style={{
             width: size, height: size,
-            borderRadius: apple.radius.sm,
+            borderRadius: tokens.radius.sm,
             objectFit: 'cover',
             flexShrink: 0,
           }}
@@ -151,8 +151,8 @@ export function Header() {
     return (
       <div style={{
         width: size, height: size,
-        borderRadius: apple.radius.sm,
-        background: `linear-gradient(135deg, ${apple.blue}, ${apple.purple})`,
+        borderRadius: tokens.radius.sm,
+        background: `linear-gradient(135deg, ${tokens.blue}, ${tokens.purple})`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize, fontWeight: 600, color: '#fff', flexShrink: 0,
       }}>
@@ -182,15 +182,15 @@ export function Header() {
         top: 0,
         zIndex: 1000,
         height: 64,
-        background: apple.secondaryBackground,
+        background: tokens.secondaryBackground,
         backdropFilter: 'saturate(180%) blur(20px)',
         WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-        borderBottom: `0.5px solid ${apple.separator}`,
+        borderBottom: `0.5px solid ${tokens.separator}`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0 20px',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", sans-serif',
+        fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", sans-serif',
       }}>
         {/* Logo */}
         <motion.div
@@ -204,7 +204,7 @@ export function Header() {
             cursor: 'pointer',
             fontSize: isMobile ? 15 : 18,
             fontWeight: 600,
-            color: apple.label,
+            color: tokens.label,
           }}
         >
           <svg
@@ -214,7 +214,7 @@ export function Header() {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              color: apple.label,
+              color: tokens.label,
               transition: 'color 0.2s ease',
               flexShrink: 0,
             }}
@@ -248,10 +248,10 @@ export function Header() {
                   onClick={() => showSection(item.section)}
                   style={{
                     padding: '6px 12px',
-                    borderRadius: apple.radius.sm,
-                    border: isHighlight ? `0.5px solid ${apple.purple}40` : 'none',
-                    background: isActive ? apple.blue : isHighlight ? `${apple.purple}12` : 'transparent',
-                    color: isActive ? '#fff' : isHighlight ? apple.purple : apple.label,
+                    borderRadius: tokens.radius.sm,
+                    border: isHighlight ? `0.5px solid ${tokens.purple}40` : 'none',
+                    background: isActive ? tokens.blue : isHighlight ? `${tokens.purple}12` : 'transparent',
+                    color: isActive ? '#fff' : isHighlight ? tokens.purple : tokens.label,
                     fontSize: 13,
                     fontWeight: isActive ? 600 : 500,
                     cursor: 'pointer',
@@ -263,13 +263,13 @@ export function Header() {
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.background = isHighlight ? `${apple.purple}20` : apple.tertiaryFill
+                      e.currentTarget.style.background = isHighlight ? `${tokens.purple}20` : tokens.tertiaryFill
                       e.currentTarget.style.opacity = '1'
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.background = isHighlight ? `${apple.purple}12` : 'transparent'
+                      e.currentTarget.style.background = isHighlight ? `${tokens.purple}12` : 'transparent'
                       e.currentTarget.style.opacity = '0.8'
                     }
                   }}
@@ -292,10 +292,10 @@ export function Header() {
             style={{
               width: 36,
               height: 36,
-              borderRadius: apple.radius.sm,
+              borderRadius: tokens.radius.sm,
               border: 'none',
-              background: apple.fill,
-              color: apple.label,
+              background: tokens.fill,
+              color: tokens.label,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -304,10 +304,10 @@ export function Header() {
             }}
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = apple.secondaryFill
+              e.currentTarget.style.background = tokens.secondaryFill
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = apple.fill
+              e.currentTarget.style.background = tokens.fill
             }}
           >
             {theme === 'dark' ? (
@@ -329,16 +329,16 @@ export function Header() {
                   alignItems: 'center',
                   gap: 8,
                   padding: '6px 12px 6px 8px',
-                  borderRadius: apple.radius.md,
+                  borderRadius: tokens.radius.md,
                   border: 'none',
-                  background: showUserMenu ? apple.fill : 'transparent',
-                  color: apple.label,
+                  background: showUserMenu ? tokens.fill : 'transparent',
+                  color: tokens.label,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                 }}
                 onMouseEnter={(e) => {
                   if (!showUserMenu) {
-                    e.currentTarget.style.background = apple.tertiaryFill
+                    e.currentTarget.style.background = tokens.tertiaryFill
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -352,9 +352,9 @@ export function Header() {
                   {user?.full_name || 'User'}
                 </span>
                 {showUserMenu ? (
-                  <ChevronUp style={{ width: 12, height: 12, color: apple.tertiaryLabel }} />
+                  <ChevronUp style={{ width: 12, height: 12, color: tokens.tertiaryLabel }} />
                 ) : (
-                  <ChevronDown style={{ width: 12, height: 12, color: apple.tertiaryLabel }} />
+                  <ChevronDown style={{ width: 12, height: 12, color: tokens.tertiaryLabel }} />
                 )}
               </motion.button>
 
@@ -372,9 +372,9 @@ export function Header() {
                       top: '100%',
                       marginTop: 8,
                       width: 200,
-                      background: apple.secondaryBackground,
-                      borderRadius: apple.radius.lg,
-                      border: `0.5px solid ${apple.separator}`,
+                      background: tokens.secondaryBackground,
+                      borderRadius: tokens.radius.lg,
+                      border: `0.5px solid ${tokens.separator}`,
                       boxShadow: '0 12px 48px rgba(0,0,0,0.15)',
                       overflow: 'hidden',
                     }}
@@ -382,17 +382,17 @@ export function Header() {
                     {/* User Info */}
                     <div style={{
                       padding: 12,
-                      borderBottom: `0.5px solid ${apple.separator}`,
+                      borderBottom: `0.5px solid ${tokens.separator}`,
                       display: 'flex',
                       alignItems: 'center',
                       gap: 10,
                     }}>
                       {renderAvatar(40, 15)}
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: apple.label, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: tokens.label, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {user?.full_name || 'User'}
                         </div>
-                        <div style={{ fontSize: 12, color: apple.secondaryLabel, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 12, color: tokens.secondaryLabel, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {user?.email || ''}
                         </div>
                       </div>
@@ -408,27 +408,27 @@ export function Header() {
                           alignItems: 'center',
                           gap: 10,
                           padding: '8px 12px',
-                          borderRadius: apple.radius.sm,
+                          borderRadius: tokens.radius.sm,
                           border: 'none',
                           background: 'transparent',
-                          color: apple.label,
+                          color: tokens.label,
                           fontSize: 13,
                           cursor: 'pointer',
                           transition: 'background 0.15s ease',
                           textAlign: 'left',
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = apple.tertiaryFill
+                          e.currentTarget.style.background = tokens.tertiaryFill
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
                         }}
                       >
-                        <Settings style={{ width: 14, height: 14, color: apple.secondaryLabel }} />
+                        <Settings style={{ width: 14, height: 14, color: tokens.secondaryLabel }} />
                         Settings
                       </button>
 
-                      <div style={{ height: 1, background: apple.separator, margin: '4px 8px' }} />
+                      <div style={{ height: 1, background: tokens.separator, margin: '4px 8px' }} />
 
                       <button
                         onClick={handleLogout}
@@ -438,17 +438,17 @@ export function Header() {
                           alignItems: 'center',
                           gap: 10,
                           padding: '8px 12px',
-                          borderRadius: apple.radius.sm,
+                          borderRadius: tokens.radius.sm,
                           border: 'none',
                           background: 'transparent',
-                          color: apple.red,
+                          color: tokens.red,
                           fontSize: 13,
                           cursor: 'pointer',
                           transition: 'background 0.15s ease',
                           textAlign: 'left',
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = `${apple.red}15`
+                          e.currentTarget.style.background = `${tokens.red}15`
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = 'transparent'
@@ -488,10 +488,10 @@ export function Header() {
               style={{
                 width: 36,
                 height: 36,
-                borderRadius: apple.radius.sm,
+                borderRadius: tokens.radius.sm,
                 border: 'none',
-                background: showMobileMenu ? apple.fill : 'transparent',
-                color: apple.label,
+                background: showMobileMenu ? tokens.fill : 'transparent',
+                color: tokens.label,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -526,13 +526,13 @@ export function Header() {
               right: 0,
               bottom: 0,
               zIndex: 999,
-              background: apple.background,
+              background: tokens.background,
               backdropFilter: 'saturate(180%) blur(20px)',
               WebkitBackdropFilter: 'saturate(180%) blur(20px)',
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+              fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
             }}
           >
             {/* Nav items */}
@@ -558,9 +558,9 @@ export function Header() {
                       padding: '14px 20px',
                       borderRadius: 0,
                       border: 'none',
-                      borderBottom: `0.5px solid ${apple.separator}`,
-                      background: isActive ? `${apple.blue}14` : 'transparent',
-                      color: isActive ? apple.blue : apple.label,
+                      borderBottom: `0.5px solid ${tokens.separator}`,
+                      background: isActive ? `${tokens.blue}14` : 'transparent',
+                      color: isActive ? tokens.blue : tokens.label,
                       fontSize: 16,
                       fontWeight: isActive ? 600 : 400,
                       cursor: 'pointer',
@@ -568,7 +568,7 @@ export function Header() {
                       transition: 'background 0.15s ease',
                     }}
                   >
-                    {isHighlight && <Brain style={{ width: 16, height: 16, color: apple.purple }} />}
+                    {isHighlight && <Brain style={{ width: 16, height: 16, color: tokens.purple }} />}
                     {item.label}
                     {isActive && (
                       <div style={{
@@ -576,7 +576,7 @@ export function Header() {
                         width: 6,
                         height: 6,
                         borderRadius: '50%',
-                        background: apple.blue,
+                        background: tokens.blue,
                         flexShrink: 0,
                       }} />
                     )}
@@ -587,7 +587,7 @@ export function Header() {
 
             {/* Bottom user section */}
             <div style={{
-              borderTop: `0.5px solid ${apple.separator}`,
+              borderTop: `0.5px solid ${tokens.separator}`,
               padding: '12px 0',
             }}>
               {/* User info row */}
@@ -596,14 +596,14 @@ export function Header() {
                 alignItems: 'center',
                 gap: 12,
                 padding: '10px 20px 14px',
-                borderBottom: `0.5px solid ${apple.separator}`,
+                borderBottom: `0.5px solid ${tokens.separator}`,
               }}>
                 {renderAvatar(40, 15)}
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: apple.label, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: tokens.label, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user?.full_name || 'User'}
                   </div>
-                  <div style={{ fontSize: 13, color: apple.secondaryLabel, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 13, color: tokens.secondaryLabel, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user?.email || ''}
                   </div>
                 </div>
@@ -620,15 +620,15 @@ export function Header() {
                   minHeight: 48,
                   padding: '14px 20px',
                   border: 'none',
-                  borderBottom: `0.5px solid ${apple.separator}`,
+                  borderBottom: `0.5px solid ${tokens.separator}`,
                   background: 'transparent',
-                  color: apple.label,
+                  color: tokens.label,
                   fontSize: 16,
                   cursor: 'pointer',
                   textAlign: 'left',
                 }}
               >
-                <Settings style={{ width: 18, height: 18, color: apple.secondaryLabel }} />
+                <Settings style={{ width: 18, height: 18, color: tokens.secondaryLabel }} />
                 Settings
               </button>
 
@@ -644,7 +644,7 @@ export function Header() {
                   padding: '14px 20px',
                   border: 'none',
                   background: 'transparent',
-                  color: apple.red,
+                  color: tokens.red,
                   fontSize: 16,
                   cursor: 'pointer',
                   textAlign: 'left',

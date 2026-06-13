@@ -15,7 +15,7 @@ from agent.llm_narrator import narrate
 
 log = logging.getLogger(__name__)
 
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.alert-engine-poc.svc.cluster.local:11434")
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama.aileron.svc.cluster.local:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
 OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "240"))
 
@@ -312,13 +312,13 @@ class RCAOrchestratorV2:
             log.error(f"Ollama narrator request failed: {e}")
             return None
 
-    async def _floodgate_call(
+    async def _oidc_call(
         self, messages: list[dict], model: str, token: str, json_mode: bool = False
     ) -> dict | None:
-        """Delegate to the existing Floodgate caller on the V1 orchestrator."""
+        """Delegate to the existing OIDC Provider caller on the V1 orchestrator."""
         from agent.orchestrator import RCAOrchestrator
         tmp = RCAOrchestrator()
-        return await tmp._floodgate_chat(messages, model, token, json_mode)
+        return await tmp._oidc_chat(messages, model, token, json_mode)
 
     async def _set_phase(
         self, inv: Investigation, phase: InvestigationPhase, emit: Callable

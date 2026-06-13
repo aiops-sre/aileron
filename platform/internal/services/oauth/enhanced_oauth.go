@@ -17,8 +17,8 @@ import (
 )
 
 // ============================================================================
-// APPLE IDMS OAUTH 2.0 AUTHORIZATION CODE FLOW
-// Full implementation based on Apple IdMS documentation
+// OIDC OAUTH 2.0 AUTHORIZATION CODE FLOW
+// Full implementation based on Aileron OIDC documentation
 // ============================================================================
 
 // AuthorizationRequest represents OAuth authorization request
@@ -33,7 +33,7 @@ type AuthorizationRequest struct {
 	CodeChallengeMethod string   `json:"code_challenge_method,omitempty"` // "S256"
 }
 
-// AuthorizationResponse represents callback response from IdMS
+// AuthorizationResponse represents callback response from OIDC
 type AuthorizationResponse struct {
 	Code             string `json:"code"`
 	State            string `json:"state"`
@@ -102,12 +102,12 @@ func (c *OAuthClient) GetClientID() string {
 
 // GetAuthorizationURL generates OAuth authorization URL
 func (c *OAuthClient) GetAuthorizationURL(redirectURI, state string) (string, error) {
-	authURL, err := url.Parse(fmt.Sprintf("%s/IDMSWebAuth/appleauth/auth/oauth2/v2/authorize", c.config.IdMSBaseURL))
+	authURL, err := url.Parse(fmt.Sprintf("%s/protocol/openid-connect/auth", c.config.OIDCBaseURL))
 	if err != nil {
 		return "", fmt.Errorf("failed to parse auth URL: %w", err)
 	}
 
-	// Required scopes for Floodgate access (space-separated per RFC 6749 §3.3)
+	// Required scopes for OIDC Provider access (space-separated per RFC 6749 §3.3)
 	// "profile" added to get picture/name claims from userinfo endpoint
 	scopes := []string{"openid", "api", "dsid", "accountname", "email", "groups", "profile", "offline_access"}
 
@@ -117,8 +117,8 @@ func (c *OAuthClient) GetAuthorizationURL(redirectURI, state string) (string, er
 	params.Set("response_type", "code")
 	params.Set("scope", strings.Join(scopes, " "))
 	params.Set("state", state)
-	// Include Floodgate OIDC client as audience so the refresh token carries Floodgate
-	// consent. SEAR-Floodgate approved this client, so IdMS will honour the audience.
+	// Include OIDC Provider OIDC client as audience so the refresh token carries OIDC Provider
+	// consent. SEAR-OIDC Provider approved this client, so OIDC will honour the audience.
 	params.Set("audience", "hvys3fcwcteqrvw3qzkvtk86viuoqv")
 
 	authURL.RawQuery = params.Encode()
@@ -127,7 +127,7 @@ func (c *OAuthClient) GetAuthorizationURL(redirectURI, state string) (string, er
 
 // ExchangeCodeForTokens exchanges authorization code for access and ID tokens
 func (c *OAuthClient) ExchangeCodeForTokens(ctx context.Context, code, redirectURI string) (*TokenResponse, *UserClaims, error) {
-	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.IdMSBaseURL)
+	tokenURL := fmt.Sprintf("%s/auth/oauth2/token", c.config.OIDCBaseURL)
 
 	// OAuth2 token exchange uses application/x-www-form-urlencoded (RFC 6749)
 	data := url.Values{}
@@ -136,8 +136,8 @@ func (c *OAuthClient) ExchangeCodeForTokens(ctx context.Context, code, redirectU
 	data.Set("grant_type", "authorization_code")
 	data.Set("code", code)
 	data.Set("redirect_uri", redirectURI)
-	// Request Floodgate audience in the code exchange so the returned id_token is
-	// valid for Floodgate without a separate token exchange round-trip.
+	// Request OIDC Provider audience in the code exchange so the returned id_token is
+	// valid for OIDC Provider without a separate token exchange round-trip.
 	data.Set("audience", "hvys3fcwcteqrvw3qzkvtk86viuoqv")
 
 	req, err := http.NewRequestWithContext(ctx, "POST", tokenURL, strings.NewReader(data.Encode()))
@@ -189,7 +189,7 @@ func (c *OAuthClient) ExchangeCodeForTokens(ctx context.Context, code, redirectU
 	}
 
 	// If the ID token didn't carry a picture claim, try the userinfo endpoint.
-	// Apple IdMS sometimes includes richer profile data there.
+	// Aileron OIDC sometimes includes richer profile data there.
 	if userClaims.Picture == "" && tokenResp.AccessToken != "" {
 		if info, err := c.FetchUserInfo(ctx, tokenResp.AccessToken); err == nil && info != nil && info.Picture != "" {
 			userClaims.Picture = info.Picture
@@ -202,8 +202,8 @@ func (c *OAuthClient) ExchangeCodeForTokens(ctx context.Context, code, redirectU
 // FetchUserInfo calls the OIDC userinfo endpoint with the given access token
 // and returns any additional user claims (e.g. picture URL) not present in the ID token.
 func (c *OAuthClient) FetchUserInfo(ctx context.Context, accessToken string) (*UserClaims, error) {
-	// Try the standard OIDC userinfo path; IdMS uses the same base as the token endpoint.
-	userInfoURL := fmt.Sprintf("%s/auth/oauth2/userinfo", c.config.IdMSBaseURL)
+	// Try the standard OIDC userinfo path; OIDC uses the same base as the token endpoint.
+	userInfoURL := fmt.Sprintf("%s/auth/oauth2/userinfo", c.config.OIDCBaseURL)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, userInfoURL, nil)
 	if err != nil {
 		return nil, err
@@ -224,7 +224,7 @@ func (c *OAuthClient) FetchUserInfo(ctx context.Context, accessToken string) (*U
 	if err := json.NewDecoder(resp.Body).Decode(&claims); err != nil {
 		return nil, err
 	}
-	// Log all claim keys so we know what IdMS actually returns (helps debug missing picture).
+	// Log all claim keys so we know what OIDC actually returns (helps debug missing picture).
 	keys := make([]string, 0, len(claims))
 	for k := range claims {
 		keys = append(keys, k)
@@ -242,10 +242,10 @@ func (c *OAuthClient) FetchUserInfo(ctx context.Context, accessToken string) (*U
 // parseIDToken parses and validates ID token claims
 func (c *OAuthClient) parseIDToken(idToken string) (*UserClaims, error) {
 	// Parse JWT token (without signature validation for now)
-	// In production, you should validate the signature against IdMS public keys
+	// In production, you should validate the signature against OIDC public keys
 	token, err := jwt.Parse(idToken, func(token *jwt.Token) (interface{}, error) {
 		// For now, skip signature validation
-		// In production, fetch and use IdMS public keys
+		// In production, fetch and use OIDC public keys
 		return []byte("dummy-key"), nil
 	})
 
@@ -288,7 +288,7 @@ func (c *OAuthClient) extractUserClaims(claims jwt.MapClaims) *UserClaims {
 	if picture, ok := claims["picture"].(string); ok {
 		userClaims.Picture = picture
 	}
-	// Try alternate field names Apple IdMS may use for the profile photo.
+	// Try alternate field names Aileron OIDC may use for the profile photo.
 	if userClaims.Picture == "" {
 		for _, key := range []string{"photo", "photo_url", "avatar_url", "profile_image_url", "image", "thumbnail"} {
 			if v, ok := claims[key].(string); ok && v != "" {
@@ -415,8 +415,8 @@ func (c *OAuthClient) GetRBACConfig() *RBAC {
 		},
 		RoleMapping: map[string]string{
 			"aileron-operators":     "engineer",
-			"floodgate-google-models-access": "ai-user",
-			"floodgate-anthropic-access":     "ai-user",
+			"oidc-google-models-access": "ai-user",
+			"oidc-anthropic-access":     "ai-user",
 			"sre-admin":                      "admin",
 			"alerthub-admin":                 "admin",
 			"sre-oncall":                     "oncall",
@@ -451,19 +451,19 @@ func (c *OAuthClient) GetRBACConfig() *RBAC {
 // FLOODGATE INTEGRATION (Enhanced)
 // ============================================================================
 
-// FloodgateTokenRequest requests Floodgate-specific token
-type FloodgateTokenRequest struct {
+// OIDC ProviderTokenRequest requests OIDC Provider-specific token
+type OIDC ProviderTokenRequest struct {
 	UserToken string `json:"user_token"`
 	UserIP    string `json:"user_ip"`
 	UserAgent string `json:"user_agent"`
 }
 
-// GetFloodgateToken gets or exchanges token for Floodgate API access
-func (c *OAuthClient) GetFloodgateToken(ctx context.Context, userID, userIP string) (*TokenResponse, error) {
+// GetOIDC ProviderToken gets or exchanges token for OIDC Provider API access
+func (c *OAuthClient) GetOIDC ProviderToken(ctx context.Context, userID, userIP string) (*TokenResponse, error) {
 	// Check if we have a cached multi-audience token
 	if cached := c.getCachedToken(userID); cached != nil {
-		// Validate token has Floodgate audience
-		if c.hasFloodgateAudience(cached.Token.AccessToken) {
+		// Validate token has OIDC Provider audience
+		if c.hasOIDC ProviderAudience(cached.Token.AccessToken) {
 			return cached.Token, nil
 		}
 	}
@@ -474,17 +474,17 @@ func (c *OAuthClient) GetFloodgateToken(ctx context.Context, userID, userIP stri
 		return nil, fmt.Errorf("user not authenticated")
 	}
 
-	// Exchange for Floodgate token
-	floodgateToken, err := c.ExchangeTokenForFloodgate(ctx, userToken.Token.AccessToken, userID)
+	// Exchange for OIDC Provider token
+	oidcToken, err := c.ExchangeTokenForOIDC Provider(ctx, userToken.Token.AccessToken, userID)
 	if err != nil {
-		return nil, fmt.Errorf("Floodgate token exchange failed: %w", err)
+		return nil, fmt.Errorf("OIDC Provider token exchange failed: %w", err)
 	}
 
-	return floodgateToken, nil
+	return oidcToken, nil
 }
 
-// hasFloodgateAudience checks if token has Floodgate audience
-func (c *OAuthClient) hasFloodgateAudience(accessToken string) bool {
+// hasOIDC ProviderAudience checks if token has OIDC Provider audience
+func (c *OAuthClient) hasOIDC ProviderAudience(accessToken string) bool {
 	// Parse JWT to check audience claim
 	parser := jwt.NewParser()
 	claims := jwt.MapClaims{}
@@ -495,12 +495,12 @@ func (c *OAuthClient) hasFloodgateAudience(accessToken string) bool {
 
 	// Check audience claim
 	if aud, ok := claims["aud"].(string); ok {
-		return strings.Contains(aud, "sear-floodgate")
+		return strings.Contains(aud, "sear-oidc")
 	}
 
 	if auds, ok := claims["aud"].([]interface{}); ok {
 		for _, aud := range auds {
-			if audStr, ok := aud.(string); ok && strings.Contains(audStr, "sear-floodgate") {
+			if audStr, ok := aud.(string); ok && strings.Contains(audStr, "sear-oidc") {
 				return true
 			}
 		}
@@ -712,22 +712,22 @@ func (c *OAuthClient) RBACMiddleware(requiredPermission string) func(http.Handle
 func (c *OAuthClient) HealthCheck(ctx context.Context) map[string]interface{} {
 	health := map[string]interface{}{
 		"oauth_configured":     c.config.ClientID != "",
-		"idms_base_url":        c.config.IdMSBaseURL,
-		"floodgate_configured": c.config.FloodgateAppID != "",
+		"oidc_base_url":        c.config.OIDCBaseURL,
+		"oidc_configured": c.config.OIDC ProviderAppID != "",
 		"cache_enabled":        true,
 		"multi_audience":       len(c.config.Audiences) > 1,
 		"required_groups":      c.config.RequiredGroups,
 	}
 
-	// Test IdMS connectivity
-	if c.config.IdMSBaseURL != "" {
-		testURL := fmt.Sprintf("%s/.well-known/openid_configuration", c.config.IdMSBaseURL)
+	// Test OIDC connectivity
+	if c.config.OIDCBaseURL != "" {
+		testURL := fmt.Sprintf("%s/.well-known/openid_configuration", c.config.OIDCBaseURL)
 		resp, err := http.Get(testURL)
 		if err == nil && resp.StatusCode == 200 {
-			health["idms_connectivity"] = "healthy"
+			health["oidc_connectivity"] = "healthy"
 			resp.Body.Close()
 		} else {
-			health["idms_connectivity"] = "unhealthy"
+			health["oidc_connectivity"] = "unhealthy"
 		}
 	}
 

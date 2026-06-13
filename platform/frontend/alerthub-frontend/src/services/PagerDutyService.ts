@@ -43,15 +43,15 @@ class PagerDutyAPIClient {
   ): Promise<T> {
     const url = `${this.baseUrl}/${endpoint}`
 
-    // Attach IDMS access token so nginx can forward it to oncall-pd
-    const idmsToken = localStorage.getItem('oauth_id_token') || localStorage.getItem('floodgate_token') || ''
+    // Attach OIDC access token so nginx can forward it to oncall-pd
+    const oidcToken = localStorage.getItem('oauth_id_token') || localStorage.getItem('oidc_token') || ''
 
     const requestHeaders: Record<string, string> = {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
     }
-    if (idmsToken) {
-      requestHeaders['Authorization'] = `Bearer ${idmsToken}`
+    if (oidcToken) {
+      requestHeaders['Authorization'] = `Bearer ${oidcToken}`
     }
 
     const defaultOptions: RequestInit = {

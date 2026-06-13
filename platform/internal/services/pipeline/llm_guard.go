@@ -7,7 +7,7 @@ import (
 
 // LLMGuard sanitizes text before it reaches an LLM and validates LLM outputs.
 // Implements the K8sGPT anonymization pattern + Aurora NeMo Guardrails (simplified):
-//   - Input: strips internal IPs, K8s UIDs, Apple hostnames, credential patterns
+//   - Input: strips internal IPs, K8s UIDs, Aileron hostnames, credential patterns
 //   - Output: rejects responses that leaked internal structure or contain injections
 //
 // This prevents the LLM from receiving or echoing internal infrastructure topology
@@ -23,9 +23,9 @@ var (
 	k8sUID = regexp.MustCompile(
 		`\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b`,
 	)
-	// appleHostname matches *.example.com and *.example.com internal hostnames.
-	appleHostname = regexp.MustCompile(
-		`\b[\w\-]+(?:\.k\.miao|\.pie|\.corp|\.iapps)?\.apple\.com\b`,
+	// internalHostname matches *.example.com and *.example.com internal hostnames.
+	internalHostname = regexp.MustCompile(
+		`\b[\w\-]+(?:\.k\.miao|\.pie|\.corp|\.iapps)?\.example.com\b`,
 	)
 	// credentialPattern matches common credential noise in alert payloads.
 	credentialPattern = regexp.MustCompile(
@@ -54,7 +54,7 @@ func (g *LLMGuard) Anonymize(text string) (string, bool) {
 	text = rfc1918IP.ReplaceAllString(text, "[IP]")
 	text = neo4jBolt.ReplaceAllString(text, "[DB-URL]")
 	text = internalSvcDNS.ReplaceAllString(text, "[SVC]")
-	text = appleHostname.ReplaceAllString(text, "[HOST]")
+	text = internalHostname.ReplaceAllString(text, "[HOST]")
 	text = credentialPattern.ReplaceAllString(text, "$1=[REDACTED]")
 	// UIDs last — must run after hostname/IP so we don't mangle timestamps.
 	text = k8sUID.ReplaceAllString(text, "[UID]")

@@ -14,23 +14,23 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/aileron-platform/aileron/platform/internal/services/floodgate"
+	"github.com/aileron-platform/aileron/platform/internal/services/oidc"
 )
 
 // AIHandler handles AI chat operations
 type AIHandler struct {
-	floodgateService *floodgate.FloodgateService
+	oidcService *oidc.OIDC ProviderService
 	db               *sql.DB
 	advancedAnalyzer *AIAdvancedAnalyzer
-	modelsCache      []floodgate.ModelInfo
+	modelsCache      []oidc.ModelInfo
 	cacheExpiry      time.Time
 	mu               sync.RWMutex
 }
 
 // NewAIHandler creates a new AI handler
-func NewAIHandler(floodgateService *floodgate.FloodgateService, db *sql.DB) *AIHandler {
+func NewAIHandler(oidcService *oidc.OIDC ProviderService, db *sql.DB) *AIHandler {
 	return &AIHandler{
-		floodgateService: floodgateService,
+		oidcService: oidcService,
 		db:               db,
 		advancedAnalyzer: NewAIAdvancedAnalyzer(db),
 	}
@@ -39,7 +39,7 @@ func NewAIHandler(floodgateService *floodgate.FloodgateService, db *sql.DB) *AIH
 // ChatRequest represents an incoming chat request from the frontend
 type ChatRequest struct {
 	Model     string                  `json:"model" binding:"required"`
-	Messages  []floodgate.ChatMessage `json:"messages" binding:"required"`
+	Messages  []oidc.ChatMessage `json:"messages" binding:"required"`
 	SessionID *string                 `json:"session_id,omitempty"`
 	MaxTokens int                     `json:"max_tokens,omitempty"`
 }
@@ -48,7 +48,7 @@ type ChatRequest struct {
 type ChatResponse struct {
 	Success   bool                    `json:"success"`
 	Message   string                  `json:"message,omitempty"`
-	Response  *floodgate.ChatResponse `json:"response,omitempty"`
+	Response  *oidc.ChatResponse `json:"response,omitempty"`
 	SessionID string                  `json:"session_id,omitempty"`
 	Error     string                  `json:"error,omitempty"`
 }
@@ -56,7 +56,7 @@ type ChatResponse struct {
 // ModelsResponse represents the available models response
 type ModelsResponse struct {
 	Success bool                  `json:"success"`
-	Models  []floodgate.ModelInfo `json:"models,omitempty"`
+	Models  []oidc.ModelInfo `json:"models,omitempty"`
 	Error   string                `json:"error,omitempty"`
 }
 
@@ -90,7 +90,7 @@ func (h *AIHandler) RegisterRoutes(router *gin.RouterGroup) {
 	}
 }
 
-// Chat handles chat requests to Floodgate AI
+// Chat handles chat requests to OIDC Provider AI
 // @Summary Chat with AI
 // @Description Send a chat message to the configured AI model
 // @Tags AI
@@ -145,36 +145,36 @@ func (h *AIHandler) Chat(c *gin.Context) {
 	// Enhance messages with AlertHub context
 	enhancedMessages := h.enhanceMessagesWithContext(req.Messages, userIDStr)
 
-	// Check for Floodgate token from browser
-	floodgateToken := c.GetHeader("X-Floodgate-Token")
-	if floodgateToken != "" {
+	// Check for OIDC Provider token from browser
+	oidcToken := c.GetHeader("X-OIDC Provider-Token")
+	if oidcToken != "" {
 		// Use token provided by user's browser/device
-		h.floodgateService.SetUserToken(floodgateToken)
+		h.oidcService.SetUserToken(oidcToken)
 
 		// NEW: Get user's VPN IP from database for proxy requests
 		var userVPNIP string
 		err := h.db.QueryRow("SELECT vpn_ip FROM users WHERE id = $1", userIDStr).Scan(&userVPNIP)
 		if err == nil && userVPNIP != "" {
-			h.floodgateService.SetUserVPNIP(userVPNIP)
+			h.oidcService.SetUserVPNIP(userVPNIP)
 		}
 	}
 
-	// Create Floodgate request
-	floodgateReq := &floodgate.ChatRequest{
+	// Create OIDC Provider request
+	oidcReq := &oidc.ChatRequest{
 		Model:     req.Model,
 		Messages:  enhancedMessages,
 		MaxTokens: req.MaxTokens,
 	}
 
-	// Allow up to 3 minutes for LLM inference — Floodgate Claude/Gemini calls can take 30-90s
+	// Allow up to 3 minutes for LLM inference — OIDC Provider Claude/Gemini calls can take 30-90s
 	// for longer responses. The nginx ingress has proxy_read_timeout: 3600.
-	floodgateCtx, cancelFG := context.WithTimeout(c.Request.Context(), 180*time.Second)
+	oidcCtx, cancelFG := context.WithTimeout(c.Request.Context(), 180*time.Second)
 	defer cancelFG()
-	response, err := h.floodgateService.Chat(floodgateCtx, floodgateReq)
+	response, err := h.oidcService.Chat(oidcCtx, oidcReq)
 	if err != nil {
 		// Log the error so it's visible in pod logs
-		log.Printf("Floodgate chat error (model=%s): %v", req.Model, err)
-		// Fall back to mock only when Floodgate is unavailable (not on timeout from user-selected model)
+		log.Printf("OIDC Provider chat error (model=%s): %v", req.Model, err)
+		// Fall back to mock only when OIDC Provider is unavailable (not on timeout from user-selected model)
 		response = h.getMockResponseWithContext(enhancedMessages, userIDStr)
 	}
 
@@ -194,25 +194,25 @@ func (h *AIHandler) Chat(c *gin.Context) {
 
 // ListModels lists available AI models with caching for fast loading
 // @Summary List AI models
-// @Description Get list of available AI models from Floodgate with caching
+// @Description Get list of available AI models from OIDC Provider with caching
 // @Tags AI
 // @Produce json
 // @Success 200 {object} ModelsResponse
 // @Failure 500 {object} ModelsResponse
 // @Router /api/v1/ai/models [get]
 func (h *AIHandler) ListModels(c *gin.Context) {
-	// Check for Floodgate token first — bypass cache when user provides their token
-	floodgateToken := c.GetHeader("X-Floodgate-Token")
-	if floodgateToken == "" {
+	// Check for OIDC Provider token first — bypass cache when user provides their token
+	oidcToken := c.GetHeader("X-OIDC Provider-Token")
+	if oidcToken == "" {
 		// Try to get from OAuth Authorization header
 		authHeader := c.GetHeader("Authorization")
 		if strings.HasPrefix(authHeader, "Bearer ") {
-			floodgateToken = strings.TrimPrefix(authHeader, "Bearer ")
+			oidcToken = strings.TrimPrefix(authHeader, "Bearer ")
 		}
 	}
 
 	// Only serve from cache when no user token is provided (anonymous/fallback requests)
-	if floodgateToken == "" {
+	if oidcToken == "" {
 		h.mu.RLock()
 		if time.Now().Before(h.cacheExpiry) && len(h.modelsCache) > 0 {
 			models := h.modelsCache
@@ -226,11 +226,11 @@ func (h *AIHandler) ListModels(c *gin.Context) {
 		h.mu.RUnlock()
 	}
 
-	var models []floodgate.ModelInfo
+	var models []oidc.ModelInfo
 
-	if floodgateToken != "" {
+	if oidcToken != "" {
 		// Use token provided by user's browser/device
-		h.floodgateService.SetUserToken(floodgateToken)
+		h.oidcService.SetUserToken(oidcToken)
 
 		// Get user's VPN IP from database for proxy requests
 		userID, exists := c.Get("user_id")
@@ -247,26 +247,26 @@ func (h *AIHandler) ListModels(c *gin.Context) {
 				var userVPNIP string
 				err := h.db.QueryRow("SELECT vpn_ip FROM users WHERE id = $1", userIDStr).Scan(&userVPNIP)
 				if err == nil && userVPNIP != "" {
-					h.floodgateService.SetUserVPNIP(userVPNIP)
+					h.oidcService.SetUserVPNIP(userVPNIP)
 				}
 			}
 		}
 
-		// Try to get models from Floodgate
-		floodgateModels, err := h.floodgateService.ListModels(c.Request.Context())
+		// Try to get models from OIDC Provider
+		oidcModels, err := h.oidcService.ListModels(c.Request.Context())
 		if err == nil {
-			models = floodgateModels
+			models = oidcModels
 		} else {
-			log.Printf("Floodgate ListModels failed (token_prefix=%s...): %v", func() string {
-				if len(floodgateToken) > 20 { return floodgateToken[:20] }
-				return floodgateToken
+			log.Printf("OIDC Provider ListModels failed (token_prefix=%s...): %v", func() string {
+				if len(oidcToken) > 20 { return oidcToken[:20] }
+				return oidcToken
 			}(), err)
 		}
 	}
 
 	// Always provide AlertHub Intelligence as fallback/default
 	if len(models) == 0 {
-		models = []floodgate.ModelInfo{
+		models = []oidc.ModelInfo{
 			{
 				ID:        "alerthub-intelligence",
 				Name:      "AlertHub Intelligence",
@@ -281,8 +281,8 @@ func (h *AIHandler) ListModels(c *gin.Context) {
 			},
 		}
 	} else {
-		// Add AlertHub models to Floodgate models
-		models = append(models, floodgate.ModelInfo{
+		// Add AlertHub models to OIDC Provider models
+		models = append(models, oidc.ModelInfo{
 			ID:        "alerthub-intelligence",
 			Name:      "AlertHub Intelligence",
 			Provider:  "AlertHub AI",
@@ -304,21 +304,21 @@ func (h *AIHandler) ListModels(c *gin.Context) {
 
 // HealthCheck checks AI service health
 // @Summary Health check
-// @Description Check if Floodgate service is accessible
+// @Description Check if OIDC Provider service is accessible
 // @Tags AI
 // @Produce json
 // @Success 200 {object} map[string]interface{}
 // @Failure 503 {object} map[string]interface{}
 // @Router /api/v1/ai/health [get]
 func (h *AIHandler) HealthCheck(c *gin.Context) {
-	// Check for Floodgate token from browser (CRITICAL FIX)
-	floodgateToken := c.GetHeader("X-Floodgate-Token")
-	if floodgateToken != "" {
+	// Check for OIDC Provider token from browser (CRITICAL FIX)
+	oidcToken := c.GetHeader("X-OIDC Provider-Token")
+	if oidcToken != "" {
 		// Use token provided by user's browser/device
-		h.floodgateService.SetUserToken(floodgateToken)
+		h.oidcService.SetUserToken(oidcToken)
 	}
 
-	err := h.floodgateService.HealthCheck(c.Request.Context())
+	err := h.oidcService.HealthCheck(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"success": false,
@@ -331,7 +331,7 @@ func (h *AIHandler) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"status":  "healthy",
-		"service": "Floodgate GenAI",
+		"service": "OIDC Provider GenAI",
 	})
 }
 
@@ -615,7 +615,7 @@ type ChatMessageDB struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
-func (h *AIHandler) storeConversation(sessionID, userID, model string, messages []floodgate.ChatMessage, response *floodgate.ChatResponse) error {
+func (h *AIHandler) storeConversation(sessionID, userID, model string, messages []oidc.ChatMessage, response *oidc.ChatResponse) error {
 	tx, err := h.db.Begin()
 	if err != nil {
 		return err
@@ -804,7 +804,7 @@ type TopologyOverview struct {
 }
 
 // enhanceMessagesWithContext adds AlertHub data context to user messages
-func (h *AIHandler) enhanceMessagesWithContext(messages []floodgate.ChatMessage, userID string) []floodgate.ChatMessage {
+func (h *AIHandler) enhanceMessagesWithContext(messages []oidc.ChatMessage, userID string) []oidc.ChatMessage {
 	// Get the last user message to understand context
 	var lastUserMessage string
 	for i := len(messages) - 1; i >= 0; i-- {
@@ -878,8 +878,8 @@ Guidelines:
 Respond to the user's question using this live system data.`, ahContext)
 
 	// Prepend system message before all user/assistant turns
-	enhancedMessages := make([]floodgate.ChatMessage, 0, len(messages)+1)
-	enhancedMessages = append(enhancedMessages, floodgate.ChatMessage{
+	enhancedMessages := make([]oidc.ChatMessage, 0, len(messages)+1)
+	enhancedMessages = append(enhancedMessages, oidc.ChatMessage{
 		Role:    "system",
 		Content: systemPrompt,
 	})
@@ -1200,7 +1200,7 @@ func (h *AIHandler) getTopologyOverview() (*TopologyOverview, error) {
 }
 
 // getMockResponseWithContext provides context-aware mock responses
-func (h *AIHandler) getMockResponseWithContext(messages []floodgate.ChatMessage, userID string) *floodgate.ChatResponse {
+func (h *AIHandler) getMockResponseWithContext(messages []oidc.ChatMessage, userID string) *oidc.ChatResponse {
 	var lastUserMessage string
 	var systemContext string
 
@@ -1255,12 +1255,12 @@ func (h *AIHandler) getMockResponseWithContext(messages []floodgate.ChatMessage,
 
 	log.Printf("Mock AI: Generated response (%d chars)\n", len(response))
 
-	return &floodgate.ChatResponse{
+	return &oidc.ChatResponse{
 		ID:      uuid.New().String(),
 		Model:   "alerthub-ai",
 		Message: response,
 		Role:    "assistant",
-		Usage: floodgate.TokenUsage{
+		Usage: oidc.TokenUsage{
 			PromptTokens:     150,
 			CompletionTokens: 200,
 			TotalTokens:      350,

@@ -636,7 +636,7 @@ function LDAPSection({ roles }: { roles: Role[] }) {
         <div style={{ fontSize: 13, fontWeight: 600, color: c.label, marginBottom: 12 }}>Add / Update Mapping</div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: c.secondary, display: 'block', marginBottom: 4 }}>DS-LDAP Group</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: c.secondary, display: 'block', marginBottom: 4 }}>LDAP Group</label>
             <input value={form.ldap_group} onChange={e => onGroupChange(e.target.value)}
               onBlur={() => setTimeout(() => setShowSuggest(false), 150)}
               onFocus={onGroupFocus}
@@ -1249,7 +1249,7 @@ function AILLMSection() {
             <Field label="Provider">
               <select value={form.provider} onChange={e => setForm(f => ({ ...f, provider: e.target.value }))}
                 style={{ padding: '8px 10px', borderRadius: c.r.sm, fontSize: 14, border: `1px solid ${c.separator}`, background: c.fill, color: c.label }}>
-                {['ollama', 'openai', 'anthropic', 'floodgate'].map(p => <option key={p} value={p}>{p}</option>)}
+                {['ollama', 'openai', 'anthropic', 'oidc'].map(p => <option key={p} value={p}>{p}</option>)}
               </select>
             </Field>
           </div>
@@ -1741,7 +1741,7 @@ export default function AdminPage() {
   const navInfo = NAV.find(n => n.id === section)!
 
   return (
-    <div style={{ minHeight: '100vh', background: c.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: c.bg, fontFamily: '-aileron-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px 20px' }}>
         {/* Header */}
         <div style={{ marginBottom: 24 }}>

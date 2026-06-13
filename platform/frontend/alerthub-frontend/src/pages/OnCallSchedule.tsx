@@ -23,10 +23,10 @@ import { pagerDutyService } from '@/services/PagerDutyService'
 import type { PDCurrentOnCall, PDShift, PDSchedule } from '@/types/pagerduty'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Apple Design Tokens
+// Aileron Design Tokens
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -147,9 +147,9 @@ function CurrentOnCallCard({ oncall }: { oncall: PDCurrentOnCall }) {
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       style={{
-        background: `linear-gradient(135deg, ${apple.green}15, ${apple.green}08)`,
-        border: `0.5px solid ${apple.green}40`,
-        borderRadius: apple.radius.lg,
+        background: `linear-gradient(135deg, ${tokens.green}15, ${tokens.green}08)`,
+        border: `0.5px solid ${tokens.green}40`,
+        borderRadius: tokens.radius.lg,
         padding: 20,
         position: 'relative',
         overflow: 'hidden',
@@ -163,20 +163,20 @@ function CurrentOnCallCard({ oncall }: { oncall: PDCurrentOnCall }) {
         width: 12,
         height: 12,
         borderRadius: '50%',
-        background: apple.green,
-        boxShadow: `0 0 12px ${apple.green}60`,
+        background: tokens.green,
+        boxShadow: `0 0 12px ${tokens.green}60`,
         animation: 'pulse 2s infinite',
       }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
         <PersonAvatar name={oncall.user.name} avatarUrl={oncall.user.avatar_url} size={64} />
         <div style={{ flex: 1 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, color: apple.label, margin: '0 0 4px' }}>
+          <h3 style={{ fontSize: 18, fontWeight: 600, color: tokens.label, margin: '0 0 4px' }}>
             {oncall.user.name}
           </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-            <Mail style={{ width: 12, height: 12, color: apple.secondaryLabel }} />
-            <span style={{ fontSize: 13, color: apple.secondaryLabel }}>
+            <Mail style={{ width: 12, height: 12, color: tokens.secondaryLabel }} />
+            <span style={{ fontSize: 13, color: tokens.secondaryLabel }}>
               {oncall.user.email}
             </span>
           </div>
@@ -185,18 +185,18 @@ function CurrentOnCallCard({ oncall }: { oncall: PDCurrentOnCall }) {
 
       {/* Details */}
       <div style={{
-        background: apple.secondaryBackground,
-        borderRadius: apple.radius.sm,
+        background: tokens.secondaryBackground,
+        borderRadius: tokens.radius.sm,
         padding: 12,
         marginBottom: 12,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 500, color: apple.secondaryLabel }}>Schedule</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: apple.label }}>{oncall.schedule_name}</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: tokens.secondaryLabel }}>Schedule</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: tokens.label }}>{oncall.schedule_name}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 12, fontWeight: 500, color: apple.secondaryLabel }}>Shift</span>
-          <span style={{ fontSize: 13, color: apple.label }}>{formatTimeRange(oncall.start, oncall.end)}</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: tokens.secondaryLabel }}>Shift</span>
+          <span style={{ fontSize: 13, color: tokens.label }}>{formatTimeRange(oncall.start, oncall.end)}</span>
         </div>
       </div>
 
@@ -207,11 +207,11 @@ function CurrentOnCallCard({ oncall }: { oncall: PDCurrentOnCall }) {
         justifyContent: 'center',
         gap: 6,
         padding: '8px 12px',
-        background: `${apple.green}20`,
-        borderRadius: apple.radius.sm,
+        background: `${tokens.green}20`,
+        borderRadius: tokens.radius.sm,
         fontSize: 12,
         fontWeight: 600,
-        color: apple.green,
+        color: tokens.green,
       }}>
         <Clock style={{ width: 12, height: 12 }} />
         {getTimeRemaining(oncall.end)}
@@ -243,9 +243,9 @@ function UpcomingShiftCard({ shift, scheduleName }: { shift: PDShift; scheduleNa
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       style={{
-        background: apple.secondaryBackground,
-        border: `0.5px solid ${apple.separator}`,
-        borderRadius: apple.radius.lg,
+        background: tokens.secondaryBackground,
+        border: `0.5px solid ${tokens.separator}`,
+        borderRadius: tokens.radius.lg,
         padding: 16,
         display: 'flex',
         alignItems: 'center',
@@ -254,20 +254,20 @@ function UpcomingShiftCard({ shift, scheduleName }: { shift: PDShift; scheduleNa
         cursor: 'pointer',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = apple.tertiaryFill
-        e.currentTarget.style.borderColor = apple.blue
+        e.currentTarget.style.background = tokens.tertiaryFill
+        e.currentTarget.style.borderColor = tokens.blue
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = apple.secondaryBackground
-        e.currentTarget.style.borderColor = apple.separator
+        e.currentTarget.style.background = tokens.secondaryBackground
+        e.currentTarget.style.borderColor = tokens.separator
       }}
     >
       <PersonAvatar name={shift.user.name} avatarUrl={shift.user.avatar_url} size={40} />
       <div style={{ flex: 1 }}>
-        <h4 style={{ fontSize: 15, fontWeight: 600, color: apple.label, margin: '0 0 4px' }}>
+        <h4 style={{ fontSize: 15, fontWeight: 600, color: tokens.label, margin: '0 0 4px' }}>
           {shift.user.name}
         </h4>
-        <div style={{ fontSize: 12, color: apple.secondaryLabel }}>
+        <div style={{ fontSize: 12, color: tokens.secondaryLabel }}>
           {scheduleName} • {formatTimeRange(shift.start, shift.end)}
         </div>
       </div>
@@ -277,8 +277,8 @@ function UpcomingShiftCard({ shift, scheduleName }: { shift: PDShift; scheduleNa
         padding: '3px 8px',
         borderRadius: 5,
         textTransform: 'uppercase',
-        background: `${apple.blue}20`,
-        color: apple.blue,
+        background: `${tokens.blue}20`,
+        color: tokens.blue,
         letterSpacing: '0.3px',
       }}>
         Upcoming
@@ -346,7 +346,7 @@ export const OnCallSchedule: React.FC = () => {
     return (
       <div style={{
         minHeight: '100vh',
-        background: apple.background,
+        background: tokens.background,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -355,11 +355,11 @@ export const OnCallSchedule: React.FC = () => {
           <Loader2 style={{ 
             width: 32, 
             height: 32, 
-            color: apple.blue, 
+            color: tokens.blue, 
             animation: 'spin 1s linear infinite', 
             margin: '0 auto 16px' 
           }} />
-          <p style={{ fontSize: 15, color: apple.secondaryLabel }}>
+          <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>
             Loading on-call schedule from PagerDuty...
           </p>
         </div>
@@ -371,7 +371,7 @@ export const OnCallSchedule: React.FC = () => {
     return (
       <div style={{
         minHeight: '100vh',
-        background: apple.background,
+        background: tokens.background,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -380,8 +380,8 @@ export const OnCallSchedule: React.FC = () => {
           <div style={{
             width: 64,
             height: 64,
-            borderRadius: apple.radius.xl,
-            background: apple.red,
+            borderRadius: tokens.radius.xl,
+            background: tokens.red,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -389,19 +389,19 @@ export const OnCallSchedule: React.FC = () => {
           }}>
             <AlertCircle style={{ width: 28, height: 28, color: '#fff' }} />
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: apple.label, marginBottom: 8 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: tokens.label, marginBottom: 8 }}>
             Failed to Load Schedule
           </h2>
-          <p style={{ fontSize: 15, color: apple.secondaryLabel, marginBottom: 20 }}>
+          <p style={{ fontSize: 15, color: tokens.secondaryLabel, marginBottom: 20 }}>
             {errorCurrent instanceof Error ? errorCurrent.message : 'Unable to connect to PagerDuty service'}
           </p>
           <button
             onClick={handleRefresh}
             style={{
               padding: '10px 20px',
-              borderRadius: apple.radius.sm,
+              borderRadius: tokens.radius.sm,
               border: 'none',
-              background: apple.blue,
+              background: tokens.blue,
               color: '#fff',
               fontSize: 14,
               fontWeight: 500,
@@ -428,7 +428,7 @@ export const OnCallSchedule: React.FC = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: apple.background,
+      background: tokens.background,
     }}>
       <div style={{
         maxWidth: 1200,
@@ -438,10 +438,10 @@ export const OnCallSchedule: React.FC = () => {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: apple.label, margin: 0 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: tokens.label, margin: 0 }}>
               On-Call Schedule
             </h1>
-            <p style={{ fontSize: 15, color: apple.secondaryLabel, marginTop: 4 }}>
+            <p style={{ fontSize: 15, color: tokens.secondaryLabel, marginTop: 4 }}>
               PagerDuty rotation and upcoming shifts • {currentData?.cached && 'Cached data'}
             </p>
           </div>
@@ -453,9 +453,9 @@ export const OnCallSchedule: React.FC = () => {
               alignItems: 'center',
               gap: 6,
               padding: '8px 12px',
-              borderRadius: apple.radius.sm,
+              borderRadius: tokens.radius.sm,
               border: 'none',
-              background: apple.blue,
+              background: tokens.blue,
               color: '#fff',
               fontSize: 13,
               fontWeight: 500,
@@ -472,8 +472,8 @@ export const OnCallSchedule: React.FC = () => {
         {schedules.length > 0 && (
           <div style={{ marginBottom: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Filter style={{ width: 16, height: 16, color: apple.secondaryLabel }} />
-              <span style={{ fontSize: 14, fontWeight: 500, color: apple.label }}>Filter by Schedule</span>
+              <Filter style={{ width: 16, height: 16, color: tokens.secondaryLabel }} />
+              <span style={{ fontSize: 14, fontWeight: 500, color: tokens.label }}>Filter by Schedule</span>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {schedules.map(schedule => (
@@ -488,10 +488,10 @@ export const OnCallSchedule: React.FC = () => {
                   }}
                   style={{
                     padding: '6px 12px',
-                    borderRadius: apple.radius.sm,
-                    border: `0.5px solid ${selectedSchedules.includes(schedule.id) ? apple.blue : apple.separator}`,
-                    background: selectedSchedules.includes(schedule.id) ? `${apple.blue}20` : apple.fill,
-                    color: selectedSchedules.includes(schedule.id) ? apple.blue : apple.label,
+                    borderRadius: tokens.radius.sm,
+                    border: `0.5px solid ${selectedSchedules.includes(schedule.id) ? tokens.blue : tokens.separator}`,
+                    background: selectedSchedules.includes(schedule.id) ? `${tokens.blue}20` : tokens.fill,
+                    color: selectedSchedules.includes(schedule.id) ? tokens.blue : tokens.label,
                     fontSize: 13,
                     fontWeight: 500,
                     cursor: 'pointer',
@@ -514,52 +514,52 @@ export const OnCallSchedule: React.FC = () => {
             marginBottom: 24,
           }}>
             <div style={{
-              background: apple.secondaryBackground,
-              border: `0.5px solid ${apple.separator}`,
-              borderRadius: apple.radius.md,
+              background: tokens.secondaryBackground,
+              border: `0.5px solid ${tokens.separator}`,
+              borderRadius: tokens.radius.md,
               padding: '16px 20px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Activity style={{ width: 16, height: 16, color: apple.blue }} />
-                <div style={{ fontSize: 11, color: apple.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <Activity style={{ width: 16, height: 16, color: tokens.blue }} />
+                <div style={{ fontSize: 11, color: tokens.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Total Incidents
                 </div>
               </div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: apple.label }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: tokens.label }}>
                 {stats.total_incidents}
               </div>
             </div>
 
             <div style={{
-              background: apple.secondaryBackground,
-              border: `0.5px solid ${apple.separator}`,
-              borderRadius: apple.radius.md,
+              background: tokens.secondaryBackground,
+              border: `0.5px solid ${tokens.separator}`,
+              borderRadius: tokens.radius.md,
               padding: '16px 20px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <TrendingUp style={{ width: 16, height: 16, color: apple.green }} />
-                <div style={{ fontSize: 11, color: apple.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <TrendingUp style={{ width: 16, height: 16, color: tokens.green }} />
+                <div style={{ fontSize: 11, color: tokens.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Avg Resolution
                 </div>
               </div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: apple.label }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: tokens.label }}>
                 {Math.round(stats.avg_resolution_time_seconds / 60)}m
               </div>
             </div>
 
             <div style={{
-              background: apple.secondaryBackground,
-              border: `0.5px solid ${apple.separator}`,
-              borderRadius: apple.radius.md,
+              background: tokens.secondaryBackground,
+              border: `0.5px solid ${tokens.separator}`,
+              borderRadius: tokens.radius.md,
               padding: '16px 20px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <UserCheck style={{ width: 16, height: 16, color: apple.purple }} />
-                <div style={{ fontSize: 11, color: apple.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <UserCheck style={{ width: 16, height: 16, color: tokens.purple }} />
+                <div style={{ fontSize: 11, color: tokens.secondaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   On-Call Now
                 </div>
               </div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: apple.label }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: tokens.label }}>
                 {currentOnCall.length}
               </div>
             </div>
@@ -569,8 +569,8 @@ export const OnCallSchedule: React.FC = () => {
         {/* Current On-Call Section */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <UserCheck style={{ width: 20, height: 20, color: apple.green }} />
-            <h2 style={{ fontSize: 20, fontWeight: 600, color: apple.label, margin: 0 }}>
+            <UserCheck style={{ width: 20, height: 20, color: tokens.green }} />
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: tokens.label, margin: 0 }}>
               Currently On-Call
             </h2>
             <div style={{
@@ -579,19 +579,19 @@ export const OnCallSchedule: React.FC = () => {
               gap: 4,
               padding: '2px 8px',
               borderRadius: 8,
-              background: `${apple.green}15`,
+              background: `${tokens.green}15`,
             }}>
               <div style={{
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: apple.green,
+                background: tokens.green,
                 animation: 'pulse 2s infinite',
               }} />
               <span style={{
                 fontSize: 10,
                 fontWeight: 600,
-                color: apple.green,
+                color: tokens.green,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
               }}>
@@ -614,15 +614,15 @@ export const OnCallSchedule: React.FC = () => {
             <div style={{
               textAlign: 'center',
               padding: '60px 20px',
-              background: apple.secondaryBackground,
-              border: `0.5px solid ${apple.separator}`,
-              borderRadius: apple.radius.lg,
+              background: tokens.secondaryBackground,
+              border: `0.5px solid ${tokens.separator}`,
+              borderRadius: tokens.radius.lg,
             }}>
-              <UserCheck style={{ width: 48, height: 48, color: apple.quaternaryLabel, margin: '0 auto 16px' }} />
-              <h3 style={{ fontSize: 17, fontWeight: 500, color: apple.label, margin: '0 0 8px' }}>
+              <UserCheck style={{ width: 48, height: 48, color: tokens.quaternaryLabel, margin: '0 auto 16px' }} />
+              <h3 style={{ fontSize: 17, fontWeight: 500, color: tokens.label, margin: '0 0 8px' }}>
                 No one is currently on-call
               </h3>
-              <p style={{ fontSize: 13, color: apple.tertiaryLabel }}>
+              <p style={{ fontSize: 13, color: tokens.tertiaryLabel }}>
                 Check the schedule configuration in PagerDuty.
               </p>
             </div>
@@ -634,8 +634,8 @@ export const OnCallSchedule: React.FC = () => {
           <div style={{ marginBottom: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Calendar style={{ width: 20, height: 20, color: apple.blue }} />
-                <h2 style={{ fontSize: 20, fontWeight: 600, color: apple.label, margin: 0 }}>
+                <Calendar style={{ width: 20, height: 20, color: tokens.blue }} />
+                <h2 style={{ fontSize: 20, fontWeight: 600, color: tokens.label, margin: 0 }}>
                   Upcoming Shifts
                 </h2>
               </div>
@@ -644,11 +644,11 @@ export const OnCallSchedule: React.FC = () => {
                 onChange={(e) => setUpcomingDays(Number(e.target.value))}
                 style={{
                   padding: '6px 12px',
-                  borderRadius: apple.radius.sm,
-                  border: `0.5px solid ${apple.separator}`,
-                  background: apple.fill,
+                  borderRadius: tokens.radius.sm,
+                  border: `0.5px solid ${tokens.separator}`,
+                  background: tokens.fill,
                   fontSize: 13,
-                  color: apple.label,
+                  color: tokens.label,
                   cursor: 'pointer',
                   outline: 'none',
                 }}
@@ -675,43 +675,43 @@ export const OnCallSchedule: React.FC = () => {
         {/* Schedule Information */}
         {schedules.length > 0 && (
           <div style={{
-            background: apple.secondaryBackground,
-            border: `0.5px solid ${apple.separator}`,
-            borderRadius: apple.radius.lg,
+            background: tokens.secondaryBackground,
+            border: `0.5px solid ${tokens.separator}`,
+            borderRadius: tokens.radius.lg,
             padding: 20,
             marginBottom: 24,
           }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <CalendarDays style={{ width: 14, height: 14, color: apple.secondaryLabel }} />
-                  <span style={{ fontSize: 12, fontWeight: 500, color: apple.secondaryLabel }}>
+                  <CalendarDays style={{ width: 14, height: 14, color: tokens.secondaryLabel }} />
+                  <span style={{ fontSize: 12, fontWeight: 500, color: tokens.secondaryLabel }}>
                     Active Schedules
                   </span>
                 </div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: apple.label }}>
+                <div style={{ fontSize: 16, fontWeight: 600, color: tokens.label }}>
                   {schedules.length}
                 </div>
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <Users style={{ width: 14, height: 14, color: apple.secondaryLabel }} />
-                  <span style={{ fontSize: 12, fontWeight: 500, color: apple.secondaryLabel }}>
+                  <Users style={{ width: 14, height: 14, color: tokens.secondaryLabel }} />
+                  <span style={{ fontSize: 12, fontWeight: 500, color: tokens.secondaryLabel }}>
                     Team Size
                   </span>
                 </div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: apple.label }}>
+                <div style={{ fontSize: 16, fontWeight: 600, color: tokens.label }}>
                   {currentOnCall.length + upcomingShifts.reduce((sum, s) => sum + (s.shifts?.length ?? 0), 0)} engineers
                 </div>
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <Clock style={{ width: 14, height: 14, color: apple.secondaryLabel }} />
-                  <span style={{ fontSize: 12, fontWeight: 500, color: apple.secondaryLabel }}>
+                  <Clock style={{ width: 14, height: 14, color: tokens.secondaryLabel }} />
+                  <span style={{ fontSize: 12, fontWeight: 500, color: tokens.secondaryLabel }}>
                     Time Zone
                   </span>
                 </div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: apple.label }}>
+                <div style={{ fontSize: 16, fontWeight: 600, color: tokens.label }}>
                   {schedules[0]?.time_zone || 'N/A'}
                 </div>
               </div>

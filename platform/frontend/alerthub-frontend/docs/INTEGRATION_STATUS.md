@@ -19,21 +19,21 @@
 ## ⚠️ **KENTAURUS INCIDENTS INTEGRATION - NEEDS BACKEND AUTH**
 
 ### Configuration:
-- ✅ Types: [`src/types/kentaurus.ts`](../src/types/kentaurus.ts)
-- ✅ Service: [`src/services/KentaurusService.ts`](../src/services/KentaurusService.ts)
-- ✅ Store: [`src/stores/kentaurusIncidentsStore.ts`](../src/stores/kentaurusIncidentsStore.ts)
+- ✅ Types: [`src/types/incident_manager.ts`](../src/types/incident_manager.ts)
+- ✅ Service: [`src/services/IncidentManagerService.ts`](../src/services/IncidentManagerService.ts)
+- ✅ Store: [`src/stores/incident_managerIncidentsStore.ts`](../src/stores/incident_managerIncidentsStore.ts)
 - ✅ UI: [`src/pages/IncidentsPage.tsx`](../src/pages/IncidentsPage.tsx)
 
 ### Status: **CORS ISSUE - NEEDS FIX**
 
 **Problem:**
 ```
-Browser → https://idmsservice.example.com/auth/apptoapp/token/generate
-❌ 403 Forbidden (Apple internal service, not accessible from browser)
+Browser → https://oidcservice.example.com/auth/apptoapp/token/generate
+❌ 403 Forbidden (internal service, not accessible from browser)
 ```
 
 **Root Cause:**
-- `idmsservice.example.com` is Apple's **internal** authentication service
+- `oidcservice.example.com` is your organization's **internal** authentication service
 - Cannot be called directly from browser (CORS/network restrictions)
 - Token generation MUST happen **server-side**
 
@@ -45,9 +45,9 @@ Browser → https://idmsservice.example.com/auth/apptoapp/token/generate
 Move token generation to your backend:
 
 ```typescript
-// Backend: /api/v1/kentaurus/token
-app.post('/api/v1/kentaurus/token', async (req, res) => {
-  const response = await fetch('https://idmsservice.example.com/auth/apptoapp/token/generate', {
+// Backend: /api/v1/incident_manager/token
+app.post('/api/v1/incident_manager/token', async (req, res) => {
+  const response = await fetch('https://oidcservice.example.com/auth/apptoapp/token/generate', {
     method: 'POST',
     body: JSON.stringify({
       appId: '928952',
@@ -63,19 +63,19 @@ app.post('/api/v1/kentaurus/token', async (req, res) => {
 });
 ```
 
-Frontend calls: `/api/v1/kentaurus/token` (no CORS!)
+Frontend calls: `/api/v1/incident_manager/token` (no CORS!)
 
 ### **Option 2: Full Backend Proxy**
-Proxy ALL Kentaurus calls through backend:
+Proxy ALL IncidentManager calls through backend:
 
 ```typescript
 // Backend handles auth + API calls
-app.post('/api/v1/kentaurus/create', kentaurusController.createIncident);
-app.post('/api/v1/kentaurus/query', kentaurusController.queryIncidents);
+app.post('/api/v1/incident_manager/create', incident_managerController.createIncident);
+app.post('/api/v1/incident_manager/query', incident_managerController.queryIncidents);
 ```
 
 ### **Option 3: Use Existing Backend API**
-If your `alerthub-backend` already has incident management, use that instead of Kentaurus.
+If your `alerthub-backend` already has incident management, use that instead of IncidentManager.
 
 ---
 
@@ -84,7 +84,7 @@ If your `alerthub-backend` already has incident management, use that instead of 
 | Integration | Frontend | Backend/Proxy | Status |
 |------------|----------|---------------|--------|
 | **PagerDuty** | ✅ Complete | ✅ Nginx proxy | ✅ **READY** (deploy to activate) |
-| **Kentaurus** | ✅ Complete | ❌ Needs backend | ⚠️ **CORS blocked** |
+| **IncidentManager** | ✅ Complete | ❌ Needs backend | ⚠️ **CORS blocked** |
 
 ---
 
@@ -103,7 +103,7 @@ https://alerthub-v2.k.example.com
 
 ✅ PagerDuty data loads!
 
-### **For Kentaurus (choose one):**
+### **For IncidentManager (choose one):**
 1. Add backend token endpoint (Option 1)
 2. Add full backend proxy (Option 2)
 3. Use existing backend incidents API (Option 3)
@@ -116,7 +116,7 @@ https://alerthub-v2.k.example.com
 ┌─────────────────────────────────────────────────────────────┐
 │ Browser @ https://alerthub-v2.k.example.com              │
 │ ├─ Calls: /pagerduty/* → Nginx → oncall-pd ✅               │
-│ └─ Calls: /api/v1/kentaurus/* → Backend → idmsservice ⚠️    │
+│ └─ Calls: /api/v1/incident_manager/* → Backend → oidcservice ⚠️    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -135,7 +135,7 @@ https://alerthub-v2.k.example.com
 
 ## 🛠️ **WHAT NEEDS BACKEND:**
 
-- ⚠️ Kentaurus token generation (`idmsservice.example.com`)
-- ⚠️ Kentaurus API calls (`hclapi.example.com`)
+- ⚠️ IncidentManager token generation (`oidcservice.example.com`)
+- ⚠️ IncidentManager API calls (`hclapi.example.com`)
 
-Both require server-side implementation due to Apple internal network restrictions.
+Both require server-side implementation due to internal network restrictions.

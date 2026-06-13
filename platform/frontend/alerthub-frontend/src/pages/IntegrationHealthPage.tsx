@@ -25,7 +25,7 @@ import { platformHealthApi } from '@/lib/api'
 // Design tokens
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const apple = {
+const tokens = {
   blue: '#007AFF',
   green: '#34C759',
   red: '#FF3B30',
@@ -74,10 +74,10 @@ interface HealthSummary {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case 'healthy': return apple.green
-    case 'unhealthy': return apple.red
-    case 'offline': return apple.gray
-    default: return apple.gray
+    case 'healthy': return tokens.green
+    case 'unhealthy': return tokens.red
+    case 'offline': return tokens.gray
+    default: return tokens.gray
   }
 }
 
@@ -121,9 +121,9 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
       style={{
-        background: apple.secondaryBackground,
-        border: `0.5px solid ${apple.separator}`,
-        borderRadius: apple.radius.lg,
+        background: tokens.secondaryBackground,
+        border: `0.5px solid ${tokens.separator}`,
+        borderRadius: tokens.radius.lg,
         padding: 20,
         transition: 'all 0.2s ease',
       }}
@@ -133,7 +133,7 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.boxShadow = 'none'
-        e.currentTarget.style.borderColor = apple.separator
+        e.currentTarget.style.borderColor = tokens.separator
       }}
     >
       {/* Header */}
@@ -141,7 +141,7 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
         <div style={{
           width: 44,
           height: 44,
-          borderRadius: apple.radius.md,
+          borderRadius: tokens.radius.md,
           background: `${statusColor}20`,
           border: `1.5px solid ${statusColor}40`,
           display: 'flex',
@@ -156,7 +156,7 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
             <h3 style={{
               fontSize: 15,
               fontWeight: 600,
-              color: apple.label,
+              color: tokens.label,
               margin: 0,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -165,7 +165,7 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
               {service.name}
             </h3>
           </div>
-          <span style={{ fontSize: 12, color: apple.secondaryLabel, textTransform: 'capitalize' }}>
+          <span style={{ fontSize: 12, color: tokens.secondaryLabel, textTransform: 'capitalize' }}>
             {service.type}
           </span>
         </div>
@@ -187,25 +187,25 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
         <div style={{
           padding: '10px 12px',
-          background: apple.tertiaryFill,
-          borderRadius: apple.radius.sm,
+          background: tokens.tertiaryFill,
+          borderRadius: tokens.radius.sm,
         }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: apple.label }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: tokens.label }}>
             {formatMs(service.response_time_ms)}
           </div>
-          <div style={{ fontSize: 10, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: 2 }}>
+          <div style={{ fontSize: 10, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: 2 }}>
             Response Time
           </div>
         </div>
         <div style={{
           padding: '10px 12px',
-          background: apple.tertiaryFill,
-          borderRadius: apple.radius.sm,
+          background: tokens.tertiaryFill,
+          borderRadius: tokens.radius.sm,
         }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: service.healthy ? apple.green : apple.red }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: service.healthy ? tokens.green : tokens.red }}>
             {service.healthy ? 'Online' : 'Down'}
           </div>
-          <div style={{ fontSize: 10, color: apple.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: 2 }}>
+          <div style={{ fontSize: 10, color: tokens.tertiaryLabel, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: 2 }}>
             Status
           </div>
         </div>
@@ -216,11 +216,11 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
         <div style={{
           padding: '8px 10px',
           background: 'rgba(255, 59, 48, 0.08)',
-          borderRadius: apple.radius.sm,
+          borderRadius: tokens.radius.sm,
           marginBottom: 10,
           border: `0.5px solid rgba(255, 59, 48, 0.2)`,
         }}>
-          <div style={{ fontSize: 11, color: apple.red, fontFamily: 'monospace', wordBreak: 'break-all' }}>
+          <div style={{ fontSize: 11, color: tokens.red, fontFamily: 'monospace', wordBreak: 'break-all' }}>
             {service.error.length > 80 ? service.error.slice(0, 80) + '…' : service.error}
           </div>
         </div>
@@ -228,12 +228,12 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
 
       {/* Footer */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>
+        <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>
           {service.endpoint !== '/api/v1' && service.endpoint !== 'postgres://[internal]' && service.endpoint !== 'redis://[internal]'
             ? new URL(service.endpoint).hostname
             : service.endpoint}
         </span>
-        <span style={{ fontSize: 11, color: apple.tertiaryLabel }}>
+        <span style={{ fontSize: 11, color: tokens.tertiaryLabel }}>
           {formatLastChecked(service.last_checked)}
         </span>
       </div>
@@ -256,16 +256,16 @@ function SummaryCard({
 }) {
   return (
     <div style={{
-      background: apple.secondaryBackground,
-      border: `0.5px solid ${apple.separator}`,
-      borderRadius: apple.radius.lg,
+      background: tokens.secondaryBackground,
+      border: `0.5px solid ${tokens.separator}`,
+      borderRadius: tokens.radius.lg,
       padding: '20px 16px',
       textAlign: 'center',
     }}>
       <div style={{
         width: 44,
         height: 44,
-        borderRadius: apple.radius.md,
+        borderRadius: tokens.radius.md,
         background: `${iconColor}20`,
         border: `1.5px solid ${iconColor}40`,
         display: 'flex',
@@ -275,13 +275,13 @@ function SummaryCard({
       }}>
         <Icon style={{ width: 22, height: 22, color: iconColor }} />
       </div>
-      <div style={{ fontSize: 26, fontWeight: 700, color: apple.label, marginBottom: 4 }}>
+      <div style={{ fontSize: 26, fontWeight: 700, color: tokens.label, marginBottom: 4 }}>
         {value}
       </div>
-      <div style={{ fontSize: 13, color: apple.secondaryLabel, marginBottom: 4 }}>
+      <div style={{ fontSize: 13, color: tokens.secondaryLabel, marginBottom: 4 }}>
         {title}
       </div>
-      <div style={{ fontSize: 11, color: apple.tertiaryLabel }}>
+      <div style={{ fontSize: 11, color: tokens.tertiaryLabel }}>
         {subtitle}
       </div>
     </div>
@@ -331,7 +331,7 @@ export function IntegrationHealthPage() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: apple.background,
+        background: tokens.background,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -340,11 +340,11 @@ export function IntegrationHealthPage() {
           <Loader2 style={{
             width: 32,
             height: 32,
-            color: apple.blue,
+            color: tokens.blue,
             animation: 'spin 1s linear infinite',
             margin: '0 auto 16px',
           }} />
-          <p style={{ fontSize: 15, color: apple.secondaryLabel }}>
+          <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>
             Checking platform health…
           </p>
         </div>
@@ -356,7 +356,7 @@ export function IntegrationHealthPage() {
   const totalCount = summary?.total ?? services.length
   const unhealthyCount = summary?.unhealthy ?? services.filter(s => !s.healthy).length
   const healthScore = summary?.health_score ?? (totalCount > 0 ? (healthyCount / totalCount) * 100 : 0)
-  const scoreColor = healthScore >= 80 ? apple.green : healthScore >= 60 ? apple.orange : apple.red
+  const scoreColor = healthScore >= 80 ? tokens.green : healthScore >= 60 ? tokens.orange : tokens.red
 
   const offlineCount = services.filter(s => s.status === 'offline').length
   const degradedCount = services.filter(s => s.status === 'unhealthy').length
@@ -365,22 +365,22 @@ export function IntegrationHealthPage() {
     : 0
 
   return (
-    <div style={{ minHeight: '100vh', background: apple.background }}>
+    <div style={{ minHeight: '100vh', background: tokens.background }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: apple.label, margin: 0 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: tokens.label, margin: 0 }}>
               Platform Health
             </h1>
-            <p style={{ fontSize: 15, color: apple.secondaryLabel, marginTop: 4 }}>
+            <p style={{ fontSize: 15, color: tokens.secondaryLabel, marginTop: 4 }}>
               Real-time health status of all platform components
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {lastRefresh && (
-              <span style={{ fontSize: 12, color: apple.tertiaryLabel }}>
+              <span style={{ fontSize: 12, color: tokens.tertiaryLabel }}>
                 Updated {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             )}
@@ -392,9 +392,9 @@ export function IntegrationHealthPage() {
                 alignItems: 'center',
                 gap: 6,
                 padding: '8px 14px',
-                borderRadius: apple.radius.sm,
+                borderRadius: tokens.radius.sm,
                 border: 'none',
-                background: apple.blue,
+                background: tokens.blue,
                 color: '#fff',
                 fontSize: 13,
                 fontWeight: 500,
@@ -418,14 +418,14 @@ export function IntegrationHealthPage() {
             padding: '12px 16px',
             background: 'rgba(255, 59, 48, 0.08)',
             border: `0.5px solid rgba(255, 59, 48, 0.3)`,
-            borderRadius: apple.radius.md,
+            borderRadius: tokens.radius.md,
             marginBottom: 24,
             display: 'flex',
             alignItems: 'center',
             gap: 8,
           }}>
-            <AlertTriangle style={{ width: 16, height: 16, color: apple.red, flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: apple.red }}>{error}</span>
+            <AlertTriangle style={{ width: 16, height: 16, color: tokens.red, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: tokens.red }}>{error}</span>
           </div>
         )}
 
@@ -438,9 +438,9 @@ export function IntegrationHealthPage() {
         }}>
           {/* Score */}
           <div style={{
-            background: apple.secondaryBackground,
-            border: `0.5px solid ${apple.separator}`,
-            borderRadius: apple.radius.lg,
+            background: tokens.secondaryBackground,
+            border: `0.5px solid ${tokens.separator}`,
+            borderRadius: tokens.radius.lg,
             padding: 24,
             display: 'flex',
             flexDirection: 'column',
@@ -451,10 +451,10 @@ export function IntegrationHealthPage() {
             <div style={{ fontSize: 52, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>
               {Math.round(healthScore)}%
             </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: apple.secondaryLabel }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: tokens.secondaryLabel }}>
               Health Score
             </div>
-            <div style={{ fontSize: 11, color: apple.tertiaryLabel }}>
+            <div style={{ fontSize: 11, color: tokens.tertiaryLabel }}>
               {healthyCount}/{totalCount} services healthy
             </div>
             {/* Progress bar */}
@@ -462,7 +462,7 @@ export function IntegrationHealthPage() {
               width: '100%',
               height: 6,
               borderRadius: 3,
-              background: apple.fill,
+              background: tokens.fill,
               overflow: 'hidden',
               marginTop: 4,
             }}>
@@ -487,28 +487,28 @@ export function IntegrationHealthPage() {
               value={healthyCount.toString()}
               subtitle="All systems operational"
               icon={CheckCircle}
-              iconColor={apple.green}
+              iconColor={tokens.green}
             />
             <SummaryCard
               title="Degraded"
               value={degradedCount.toString()}
               subtitle="Experiencing issues"
               icon={AlertTriangle}
-              iconColor={apple.orange}
+              iconColor={tokens.orange}
             />
             <SummaryCard
               title="Offline"
               value={offlineCount.toString()}
               subtitle="Not responding"
               icon={WifiOff}
-              iconColor={apple.gray}
+              iconColor={tokens.gray}
             />
             <SummaryCard
               title="Avg Response"
               value={avgResponse > 0 ? `${avgResponse}ms` : 'N/A'}
               subtitle="Across all services"
               icon={Clock}
-              iconColor={apple.blue}
+              iconColor={tokens.blue}
             />
           </div>
         </div>
@@ -516,7 +516,7 @@ export function IntegrationHealthPage() {
         {/* Services grid */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: apple.label, margin: 0 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: tokens.label, margin: 0 }}>
               Platform Services
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -524,10 +524,10 @@ export function IntegrationHealthPage() {
                 width: 7,
                 height: 7,
                 borderRadius: '50%',
-                background: apple.green,
+                background: tokens.green,
                 animation: 'pulse 2s infinite',
               }} />
-              <span style={{ fontSize: 12, color: apple.secondaryLabel }}>
+              <span style={{ fontSize: 12, color: tokens.secondaryLabel }}>
                 Auto-refreshing every 30s
               </span>
             </div>
@@ -537,12 +537,12 @@ export function IntegrationHealthPage() {
             <div style={{
               textAlign: 'center',
               padding: '80px 20px',
-              background: apple.secondaryBackground,
-              borderRadius: apple.radius.lg,
-              border: `0.5px solid ${apple.separator}`,
+              background: tokens.secondaryBackground,
+              borderRadius: tokens.radius.lg,
+              border: `0.5px solid ${tokens.separator}`,
             }}>
-              <Activity style={{ width: 40, height: 40, color: apple.quaternaryLabel, margin: '0 auto 16px' }} />
-              <p style={{ fontSize: 15, color: apple.secondaryLabel }}>No platform services reported</p>
+              <Activity style={{ width: 40, height: 40, color: tokens.quaternaryLabel, margin: '0 auto 16px' }} />
+              <p style={{ fontSize: 15, color: tokens.secondaryLabel }}>No platform services reported</p>
             </div>
           ) : (
             <div style={{
@@ -561,38 +561,38 @@ export function IntegrationHealthPage() {
         {services.length > 0 && (
           <div style={{
             marginTop: 28,
-            background: apple.secondaryBackground,
-            border: `0.5px solid ${apple.separator}`,
-            borderRadius: apple.radius.lg,
+            background: tokens.secondaryBackground,
+            border: `0.5px solid ${tokens.separator}`,
+            borderRadius: tokens.radius.lg,
             padding: '20px 24px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <BarChart3 style={{ width: 16, height: 16, color: apple.blue }} />
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: apple.label, margin: 0 }}>
+              <BarChart3 style={{ width: 16, height: 16, color: tokens.blue }} />
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: tokens.label, margin: 0 }}>
                 Status Breakdown
               </h3>
             </div>
-            <div style={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', background: apple.fill }}>
+            <div style={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', background: tokens.fill }}>
               {healthyCount > 0 && (
-                <div style={{ flex: healthyCount, background: apple.green, transition: 'flex 0.5s ease' }} />
+                <div style={{ flex: healthyCount, background: tokens.green, transition: 'flex 0.5s ease' }} />
               )}
               {degradedCount > 0 && (
-                <div style={{ flex: degradedCount, background: apple.red, transition: 'flex 0.5s ease' }} />
+                <div style={{ flex: degradedCount, background: tokens.red, transition: 'flex 0.5s ease' }} />
               )}
               {offlineCount > 0 && (
-                <div style={{ flex: offlineCount, background: apple.gray, transition: 'flex 0.5s ease' }} />
+                <div style={{ flex: offlineCount, background: tokens.gray, transition: 'flex 0.5s ease' }} />
               )}
             </div>
             <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
               {[
-                { label: 'Healthy', count: healthyCount, color: apple.green },
-                { label: 'Unhealthy', count: degradedCount, color: apple.red },
-                { label: 'Offline', count: offlineCount, color: apple.gray },
+                { label: 'Healthy', count: healthyCount, color: tokens.green },
+                { label: 'Unhealthy', count: degradedCount, color: tokens.red },
+                { label: 'Offline', count: offlineCount, color: tokens.gray },
               ].map(({ label, count, color }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div style={{ width: 10, height: 10, borderRadius: 2, background: color }} />
-                  <span style={{ fontSize: 12, color: apple.secondaryLabel }}>
-                    {label}: <strong style={{ color: apple.label }}>{count}</strong>
+                  <span style={{ fontSize: 12, color: tokens.secondaryLabel }}>
+                    {label}: <strong style={{ color: tokens.label }}>{count}</strong>
                   </span>
                 </div>
               ))}

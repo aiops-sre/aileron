@@ -36,18 +36,18 @@ data:
   # AlertHub backend URL for RCA writeback and skip_rca policy evaluation
   OIE_ALERTHUB_BASE_URL: {{ .Values.oie.alertHubBaseURL | quote }}
 
-  # Kubernetes kubeconfigs (populated from Whisper by the init container)
+  # Kubernetes kubeconfigs (populated from SecretsManager by the init container)
   OIE_KUBECONFIGS_DIR: {{ .Values.oie.kubeconfigsDir | quote }}
 
   # Tracing
   JAEGER_COLLECTOR_ENDPOINT: {{ .Values.oie.jaegerEndpoint | quote }}
   OTEL_SERVICE_NAME: {{ .Values.oie.otelServiceName | quote }}
 
-  # DB connection settings (URL built from Whisper at runtime; these tune the pool)
+  # DB connection settings (URL built from SecretsManager at runtime; these tune the pool)
   OIE_DB_MAX_OPEN_CONNS: "30"
   OIE_DB_MAX_IDLE_CONNS: "5"
   OIE_DB_CONN_MAX_LIFETIME: "30m"
 
-  # NetApp ONTAP (non-sensitive config; password injected from Whisper as NETAPP_PASSWORD)
+  # NetApp ONTAP (non-sensitive config; password injected from SecretsManager as NETAPP_PASSWORD)
   NETAPP_CLUSTERS: {{ .Values.oie.netappClusters | quote }}
   NETAPP_USER: {{ .Values.oie.netappUser | quote }}
