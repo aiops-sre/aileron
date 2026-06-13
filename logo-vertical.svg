@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 216" width="180" height="216" role="img" aria-label="Aileron">
+  <title>Aileron</title>
+  <defs>
+    <linearGradient id="v-wing" x1="50" y1="22" x2="50" y2="66" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#3730A3"/>
+    </linearGradient>
+    <linearGradient id="v-ail" x1="50" y1="54" x2="50" y2="92" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+    <radialGradient id="v-apex" cx="50" cy="88" r="11" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#FFFFFF"/>
+      <stop offset="38%"  stop-color="#67E8F9"/>
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="v-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Icon mark 88×88, horizontally centered -->
+  <g transform="translate(46,16) scale(0.88)">
+    <path d="M 12,22 C 32,17 68,17 88,22 L 63,65 C 57,62 43,62 37,65 Z"
+          fill="url(#v-wing)"/>
+    <path d="M 37,65 C 43,62 57,62 63,65 L 50,88 Z"
+          fill="url(#v-ail)"/>
+    <path d="M 36,65 C 43,61 57,61 64,65"
+          fill="none" stroke="rgba(255,255,255,0.20)"
+          stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="12" y1="22" x2="50" y2="52"
+          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="88" y1="22" x2="50" y2="52"
+          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="50" y1="52" x2="50" y2="88"
+          stroke="rgba(255,255,255,0.09)" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="12" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#v-glow)"/>
+    <circle cx="88" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#v-glow)"/>
+    <circle cx="50" cy="52" r="3.5" fill="white" opacity="0.62"/>
+    <circle cx="50" cy="88" r="9"   fill="url(#v-apex)"/>
+    <circle cx="50" cy="88" r="3.4" fill="white"/>
+  </g>
+
+  <!-- Primary wordmark (centered) -->
+  <text x="90" y="140"
+        font-family="'Inter', 'DM Sans', -apple-system, 'Helvetica Neue', Arial, sans-serif"
+        font-size="36" font-weight="800" letter-spacing="-1.6"
+        text-anchor="middle" fill="#FFFFFF">aileron</text>
+
+  <!-- Tagline (centered) -->
+  <text x="90" y="163"
+        font-family="'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif"
+        font-size="9.5" font-weight="500" letter-spacing="2.8"
+        text-anchor="middle" fill="#6366F1">EVENT INTELLIGENCE</text>
+
+  <!-- Subtle rule -->
+  <line x1="56" y1="173" x2="124" y2="173"
+        stroke="#1E1B4B" stroke-width="0.8"/>
+
+  <!-- Open source line -->
+  <text x="90" y="188"
+        font-family="'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif"
+        font-size="9" font-weight="400" letter-spacing="0.8"
+        text-anchor="middle" fill="#3730A3">Open Source  ·  Apache 2.0</text>
+</svg>

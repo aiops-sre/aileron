@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268 72" width="268" height="72" role="img" aria-label="Aileron">
+  <title>Aileron</title>
+
+  <!-- Icon mark, 52×52, monochrome via currentColor + opacity tiers -->
+  <g transform="translate(10,10) scale(0.52)">
+
+    <!-- Wing body -->
+    <path d="M 12,22 C 32,17 68,17 88,22 L 63,65 C 57,62 43,62 37,65 Z"
+          fill="currentColor" opacity="0.90"/>
+
+    <!-- Aileron section (slightly lighter to preserve hinge read) -->
+    <path d="M 37,65 C 43,62 57,62 63,65 L 50,88 Z"
+          fill="currentColor" opacity="0.68"/>
+
+    <!-- Hinge line -->
+    <path d="M 36,65 C 43,61 57,61 64,65"
+          fill="none" stroke="currentColor" stroke-opacity="0.35"
+          stroke-width="1.4" stroke-linecap="round"/>
+
+    <!-- Graph skeleton -->
+    <line x1="12" y1="22" x2="50" y2="52"
+          stroke="currentColor" stroke-opacity="0.30"
+          stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="88" y1="22" x2="50" y2="52"
+          stroke="currentColor" stroke-opacity="0.30"
+          stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="50" y1="52" x2="50" y2="88"
+          stroke="currentColor" stroke-opacity="0.22"
+          stroke-width="1.5" stroke-linecap="round"/>
+
+    <!-- Source nodes (punched out as white circles over the fill) -->
+    <circle cx="12" cy="22" r="5.2" fill="currentColor" opacity="1"/>
+    <circle cx="88" cy="22" r="5.2" fill="currentColor" opacity="1"/>
+    <circle cx="12" cy="22" r="3.4" fill="currentColor" opacity="0" style="mix-blend-mode:normal"/>
+
+    <!-- Correlation node -->
+    <circle cx="50" cy="52" r="3.5" fill="currentColor" opacity="0.55"/>
+
+    <!-- Apex node -->
+    <circle cx="50" cy="88" r="9"   fill="currentColor" opacity="0.80"/>
+    <circle cx="50" cy="88" r="4"   fill="currentColor" opacity="0" style="mix-blend-mode:normal"/>
+
+  </g>
+
+  <!-- Wordmark -->
+  <text x="76" y="45"
+        font-family="'Inter', 'DM Sans', -apple-system, 'Helvetica Neue', Arial, sans-serif"
+        font-size="33" font-weight="800" letter-spacing="-1.4"
+        fill="currentColor">aileron</text>
+</svg>
