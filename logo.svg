@@ -1,336 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
-  AILERON LOGO SYSTEM
-  Senior brand design — aviation × event intelligence × AIOps
-  Designed for dark mode (GitHub, dashboards, dark UIs)
+  AILERON LOGO SYSTEM  ·  v2
+  Base concept: A-letterform × correlation-diamond graph
+  The graph's horizontal edge is the A's crossbar — dual meaning:
+    A = brand initial, wing/delta shape
+    Diamond graph = correlation engine: 2 sources → hub → root cause
 
-  Mark anatomy:
-  ● Delta wing planform = swept-back aviation form
-  ● Y-graph skeleton = event correlation architecture
-  ● Indigo → cyan gradient = signals flowing to root cause
-  ● Two source nodes (top) → correlation node → root cause apex (bottom)
+  Dark-mode optimised (GitHub #0D1117, Linear, Vercel dark)
+  All backgrounds transparent unless noted
 
-  VARIANTS:
-    1. aileron-icon.svg        — Mark only, scales from 16px favicon to 512px
-    2. aileron-horizontal.svg  — Horizontal lockup (icon + wordmark)
-    3. aileron-full.svg        — Full logo with tagline
-    4. aileron-vertical.svg    — Vertical stacked lockup
-    5. aileron-mono.svg        — Monochrome (white) for single-color contexts
+  Files:
+    logo-icon.svg        ·  420×260  ·  isolated mark, scales 16px→512px
+    logo-horizontal.svg  ·  1200×300 ·  primary horizontal lockup
+    logo-full.svg        ·  1200×320 ·  dark pill, tagline, badge
+    logo-vertical.svg    ·  480×560  ·  stacked lockup
+    logo-mono.svg        ·  1200×300 ·  all-white, currentColor-friendly
 -->
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     1. ICON MARK  ·  aileron-icon.svg
+<!-- ═══════════════════════════════════════════════════════════════════════
+     1.  ICON MARK  ·  logo-icon.svg
      Readable from 16px favicon to 512px app icon
-     ═══════════════════════════════════════════════════════════════════ -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" overflow="visible" role="img" aria-label="Aileron icon">
+     At ≤32px: reads as bold "A"  ·  At 64px+: graph structure emerges
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="120 10 275 245"
+     width="275" height="245"
+     role="img" aria-label="Aileron icon">
   <title>Aileron</title>
   <defs>
-    <linearGradient id="ic-wing" x1="50" y1="20" x2="50" y2="66" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#3730A3"/>
+    <linearGradient id="ic-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#00D4FF"/>
+      <stop offset="30%"  stop-color="#3B82F6"/>
+      <stop offset="65%"  stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
     </linearGradient>
-    <linearGradient id="ic-ail" x1="50" y1="54" x2="50" y2="92" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4F46E5"/>
-      <stop offset="100%" stop-color="#06B6D4"/>
-    </linearGradient>
-    <radialGradient id="ic-apex" cx="50" cy="88" r="11" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="38%"  stop-color="#67E8F9"/>
-      <stop offset="100%" stop-color="#0284C7" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="ic-glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="2" result="b"/>
+    <!-- Tight crisp glow — cleaner than stdDeviation=6 -->
+    <filter id="ic-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Strong glow for hub node (root-cause focal point) -->
+    <filter id="ic-hub" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <!-- Wing body — main delta trapezoid, curved leading edge -->
-  <path d="M 12,22 C 32,17 68,17 88,22 L 63,65 C 57,62 43,62 37,65 Z"
-        fill="url(#ic-wing)"/>
+  <!-- ── A letterform ─────────────────────────────────────── -->
+  <!-- Left leg: outer (130,240)→(220,20), inner (165,240)→(255,20) -->
+  <path d="M130 240 L220 20 L255 20 L165 240 Z" fill="url(#ic-g)"/>
+  <!-- Right leg: mirror -->
+  <path d="M340 240 L250 20 L285 20 L375 240 Z" fill="url(#ic-g)"/>
 
-  <!-- Aileron section — lower triangle, indigo → cyan signal -->
-  <path d="M 37,65 C 43,62 57,62 63,65 L 50,88 Z"
-        fill="url(#ic-ail)"/>
-
-  <!-- Hinge line — aileron deflection joint -->
-  <path d="M 36,65 C 43,61 57,61 64,65"
-        fill="none" stroke="rgba(255,255,255,0.20)"
-        stroke-width="1.2" stroke-linecap="round"/>
-
-  <!-- Graph skeleton: Y-structure (2 sources → correlation → root cause) -->
-  <line x1="12" y1="22" x2="50" y2="52"
-        stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="88" y1="22" x2="50" y2="52"
-        stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="50" y1="52" x2="50" y2="88"
-        stroke="rgba(255,255,255,0.09)" stroke-width="1.5" stroke-linecap="round"/>
-
-  <!-- Event source nodes (alert origins, wing tips) -->
-  <circle cx="12" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#ic-glow)"/>
-  <circle cx="88" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#ic-glow)"/>
-
-  <!-- Correlation node (where signals converge) -->
-  <circle cx="50" cy="52" r="3.5" fill="white" opacity="0.62"/>
-
-  <!-- Root cause apex (the identified root cause — brightest focal point) -->
-  <circle cx="50" cy="88" r="9"   fill="url(#ic-apex)"/>
-  <circle cx="50" cy="88" r="3.4" fill="white"/>
-</svg>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     2. HORIZONTAL LOCKUP  ·  aileron-horizontal.svg
-     Primary lockup for README headers, docs, nav bars
-     ═══════════════════════════════════════════════════════════════════ -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268 72" width="268" height="72" role="img" aria-label="Aileron">
-  <title>Aileron</title>
-  <defs>
-    <linearGradient id="h-wing" x1="50" y1="22" x2="50" y2="66" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#3730A3"/>
-    </linearGradient>
-    <linearGradient id="h-ail" x1="50" y1="54" x2="50" y2="92" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4F46E5"/>
-      <stop offset="100%" stop-color="#06B6D4"/>
-    </linearGradient>
-    <radialGradient id="h-apex" cx="50" cy="88" r="11" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="38%"  stop-color="#67E8F9"/>
-      <stop offset="100%" stop-color="#0284C7" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="h-glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="2" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-  </defs>
-
-  <!-- Icon mark scaled to 52×52, centered vertically in 72px canvas -->
-  <g transform="translate(10,10) scale(0.52)">
-    <path d="M 12,22 C 32,17 68,17 88,22 L 63,65 C 57,62 43,62 37,65 Z"
-          fill="url(#h-wing)"/>
-    <path d="M 37,65 C 43,62 57,62 63,65 L 50,88 Z"
-          fill="url(#h-ail)"/>
-    <path d="M 36,65 C 43,61 57,61 64,65"
-          fill="none" stroke="rgba(255,255,255,0.20)"
-          stroke-width="1.2" stroke-linecap="round"/>
-    <line x1="12" y1="22" x2="50" y2="52"
-          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="88" y1="22" x2="50" y2="52"
-          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="50" y1="52" x2="50" y2="88"
-          stroke="rgba(255,255,255,0.09)" stroke-width="1.5" stroke-linecap="round"/>
-    <circle cx="12" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#h-glow)"/>
-    <circle cx="88" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#h-glow)"/>
-    <circle cx="50" cy="52" r="3.5" fill="white" opacity="0.62"/>
-    <circle cx="50" cy="88" r="9"   fill="url(#h-apex)"/>
-    <circle cx="50" cy="88" r="3.4" fill="white"/>
+  <!-- ── Correlation diamond (graph crossbar of the A) ──── -->
+  <!-- Edges — drawn with glow; crossbar is slightly heavier -->
+  <g stroke="url(#ic-g)" fill="none" filter="url(#ic-glow)">
+    <!-- Arms from apex to left/right nodes -->
+    <line x1="252" y1="72"  x2="182" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+    <line x1="252" y1="72"  x2="322" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+    <!-- Arms from left/right to root-cause node -->
+    <line x1="182" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+    <line x1="322" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+    <!-- Crossbar (= A's crossbar) — slightly heavier for emphasis -->
+    <line x1="182" y1="132" x2="322" y2="132" stroke-width="6.5" stroke-linecap="round"/>
+    <!-- Vertical spine -->
+    <line x1="252" y1="72"  x2="252" y2="192" stroke-width="4"   stroke-linecap="round"/>
   </g>
 
-  <!-- Wordmark -->
-  <text x="76" y="45"
-        font-family="'Inter', 'DM Sans', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="33" font-weight="800" letter-spacing="-1.4"
-        fill="#FFFFFF">aileron</text>
+  <!-- ── Event-source nodes (input signals, top & outer) ── -->
+  <circle cx="252" cy="72"  r="9.5"  fill="url(#ic-g)" filter="url(#ic-glow)"/>
+  <circle cx="182" cy="132" r="9.5"  fill="url(#ic-g)" filter="url(#ic-glow)"/>
+  <circle cx="322" cy="132" r="9.5"  fill="url(#ic-g)" filter="url(#ic-glow)"/>
+
+  <!-- ── Hub node (correlation engine, dominant center) ── -->
+  <circle cx="252" cy="132" r="17"   fill="url(#ic-g)" filter="url(#ic-hub)"/>
+  <circle cx="252" cy="132" r="8"    fill="white" opacity="0.22"/>
+
+  <!-- ── Root-cause apex (identified root cause) ────────── -->
+  <circle cx="252" cy="192" r="11.5" fill="url(#ic-g)" filter="url(#ic-hub)"/>
+  <circle cx="252" cy="192" r="5"    fill="white" opacity="0.30"/>
 </svg>
 
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     3. FULL LOGO WITH TAGLINE  ·  aileron-full.svg
-     GitHub README hero, product pages, pitch decks
-     ═══════════════════════════════════════════════════════════════════ -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" width="320" height="96" role="img" aria-label="Aileron — Event Intelligence Platform">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     2.  HORIZONTAL LOCKUP  ·  logo-horizontal.svg
+     Primary format: README headers, docs, nav bars, email footers
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1200 300"
+     width="1200" height="300"
+     role="img" aria-label="Aileron — Event Intelligence Platform">
+  <title>Aileron</title>
+  <defs>
+    <linearGradient id="h-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#00D4FF"/>
+      <stop offset="30%"  stop-color="#3B82F6"/>
+      <stop offset="65%"  stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <filter id="h-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="h-hub" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Icon mark (translate to center vertically in 300px canvas) -->
+  <g transform="translate(30 20)">
+    <path d="M130 240 L220 20 L255 20 L165 240 Z" fill="url(#h-g)"/>
+    <path d="M340 240 L250 20 L285 20 L375 240 Z" fill="url(#h-g)"/>
+    <g stroke="url(#h-g)" fill="none" filter="url(#h-glow)">
+      <line x1="252" y1="72"  x2="182" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="252" y1="72"  x2="322" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="182" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="322" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="182" y1="132" x2="322" y2="132" stroke-width="6.5" stroke-linecap="round"/>
+      <line x1="252" y1="72"  x2="252" y2="192" stroke-width="4"   stroke-linecap="round"/>
+    </g>
+    <circle cx="252" cy="72"  r="9.5"  fill="url(#h-g)" filter="url(#h-glow)"/>
+    <circle cx="182" cy="132" r="9.5"  fill="url(#h-g)" filter="url(#h-glow)"/>
+    <circle cx="322" cy="132" r="9.5"  fill="url(#h-g)" filter="url(#h-glow)"/>
+    <circle cx="252" cy="132" r="17"   fill="url(#h-g)" filter="url(#h-hub)"/>
+    <circle cx="252" cy="132" r="8"    fill="white" opacity="0.22"/>
+    <circle cx="252" cy="192" r="11.5" fill="url(#h-g)" filter="url(#h-hub)"/>
+    <circle cx="252" cy="192" r="5"    fill="white" opacity="0.30"/>
+  </g>
+
+  <!-- Vertical separator -->
+  <line x1="472" y1="48" x2="472" y2="252"
+        stroke="white" stroke-opacity="0.10" stroke-width="1"/>
+
+  <!-- Wordmark -->
+  <g transform="translate(504 88)">
+    <!-- Primary name -->
+    <text x="0" y="0"
+          font-family="'Inter', 'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+          font-size="96" font-weight="800" letter-spacing="-3"
+          fill="#FFFFFF">AILERON</text>
+
+    <!-- Category label -->
+    <text x="4" y="52"
+          font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+          font-size="20" font-weight="500" letter-spacing="8"
+          fill="url(#h-g)" opacity="0.85">EVENT INTELLIGENCE</text>
+  </g>
+</svg>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     3.  FULL LOGO WITH BACKGROUND  ·  logo-full.svg
+     Standalone card, GitHub hero, pitch decks, product pages
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1200 320"
+     width="1200" height="320"
+     role="img" aria-label="Aileron — Event Intelligence Platform">
   <title>Aileron — Event Intelligence Platform</title>
   <defs>
-    <linearGradient id="hf-wing" x1="50" y1="22" x2="50" y2="66" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#3730A3"/>
+    <linearGradient id="f-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#00D4FF"/>
+      <stop offset="30%"  stop-color="#3B82F6"/>
+      <stop offset="65%"  stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
     </linearGradient>
-    <linearGradient id="hf-ail" x1="50" y1="54" x2="50" y2="92" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4F46E5"/>
-      <stop offset="100%" stop-color="#06B6D4"/>
+    <!-- Subtle background gradient -->
+    <linearGradient id="f-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#08081A"/>
+      <stop offset="100%" stop-color="#0D0B1E"/>
     </linearGradient>
-    <radialGradient id="hf-apex" cx="50" cy="88" r="11" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="38%"  stop-color="#67E8F9"/>
-      <stop offset="100%" stop-color="#0284C7" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="hf-glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="2" result="b"/>
+    <!-- Accent glow for background border -->
+    <linearGradient id="f-border" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#00D4FF" stop-opacity="0.3"/>
+      <stop offset="50%"  stop-color="#6366F1" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.3"/>
+    </linearGradient>
+    <filter id="f-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="f-hub" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <!-- Background pill (optional, for standalone display) -->
-  <rect width="320" height="96" rx="14" fill="#0A0A14"/>
+  <!-- Background card -->
+  <rect width="1200" height="320" rx="20" fill="url(#f-bg)"/>
+  <!-- Accent border -->
+  <rect width="1200" height="320" rx="20"
+        fill="none" stroke="url(#f-border)" stroke-width="1.5"/>
 
-  <!-- Icon mark, 60×60, vertically centered -->
-  <g transform="translate(18,18) scale(0.60)">
-    <path d="M 12,22 C 32,17 68,17 88,22 L 63,65 C 57,62 43,62 37,65 Z"
-          fill="url(#hf-wing)"/>
-    <path d="M 37,65 C 43,62 57,62 63,65 L 50,88 Z"
-          fill="url(#hf-ail)"/>
-    <path d="M 36,65 C 43,61 57,61 64,65"
-          fill="none" stroke="rgba(255,255,255,0.20)"
-          stroke-width="1.2" stroke-linecap="round"/>
-    <line x1="12" y1="22" x2="50" y2="52"
-          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="88" y1="22" x2="50" y2="52"
-          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="50" y1="52" x2="50" y2="88"
-          stroke="rgba(255,255,255,0.09)" stroke-width="1.5" stroke-linecap="round"/>
-    <circle cx="12" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#hf-glow)"/>
-    <circle cx="88" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#hf-glow)"/>
-    <circle cx="50" cy="52" r="3.5" fill="white" opacity="0.62"/>
-    <circle cx="50" cy="88" r="9"   fill="url(#hf-apex)"/>
-    <circle cx="50" cy="88" r="3.4" fill="white"/>
+  <!-- Icon mark -->
+  <g transform="translate(30 30)">
+    <path d="M130 240 L220 20 L255 20 L165 240 Z" fill="url(#f-g)"/>
+    <path d="M340 240 L250 20 L285 20 L375 240 Z" fill="url(#f-g)"/>
+    <g stroke="url(#f-g)" fill="none" filter="url(#f-glow)">
+      <line x1="252" y1="72"  x2="182" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="252" y1="72"  x2="322" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="182" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="322" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="182" y1="132" x2="322" y2="132" stroke-width="6.5" stroke-linecap="round"/>
+      <line x1="252" y1="72"  x2="252" y2="192" stroke-width="4"   stroke-linecap="round"/>
+    </g>
+    <circle cx="252" cy="72"  r="9.5"  fill="url(#f-g)" filter="url(#f-glow)"/>
+    <circle cx="182" cy="132" r="9.5"  fill="url(#f-g)" filter="url(#f-glow)"/>
+    <circle cx="322" cy="132" r="9.5"  fill="url(#f-g)" filter="url(#f-glow)"/>
+    <circle cx="252" cy="132" r="17"   fill="url(#f-g)" filter="url(#f-hub)"/>
+    <circle cx="252" cy="132" r="8"    fill="white" opacity="0.22"/>
+    <circle cx="252" cy="192" r="11.5" fill="url(#f-g)" filter="url(#f-hub)"/>
+    <circle cx="252" cy="192" r="5"    fill="white" opacity="0.30"/>
   </g>
 
-  <!-- Primary wordmark -->
-  <text x="92" y="48"
-        font-family="'Inter', 'DM Sans', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="32" font-weight="800" letter-spacing="-1.2"
-        fill="#FFFFFF">aileron</text>
+  <!-- Vertical separator -->
+  <line x1="472" y1="52" x2="472" y2="268"
+        stroke="white" stroke-opacity="0.08" stroke-width="1"/>
 
-  <!-- Tagline -->
-  <text x="94" y="68"
-        font-family="'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="10" font-weight="500" letter-spacing="2.6"
-        fill="#6366F1">EVENT INTELLIGENCE</text>
+  <!-- Wordmark block -->
+  <g transform="translate(504 76)">
+    <text x="0" y="0"
+          font-family="'Inter', 'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+          font-size="96" font-weight="800" letter-spacing="-3"
+          fill="#FFFFFF">AILERON</text>
 
-  <!-- "Open Source" badge -->
-  <rect x="93" y="76" width="82" height="13" rx="6"
-        fill="none" stroke="#1E1B4B" stroke-width="1"/>
-  <text x="134" y="86.5"
-        font-family="'Inter', monospace, sans-serif"
-        font-size="8" font-weight="500" letter-spacing="0.5"
-        text-anchor="middle" fill="#4338CA">Apache 2.0  ·  Open Source</text>
+    <text x="4" y="52"
+          font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+          font-size="20" font-weight="500" letter-spacing="8"
+          fill="url(#f-g)" opacity="0.85">EVENT INTELLIGENCE</text>
+
+    <!-- Separator rule -->
+    <line x1="0" y1="82" x2="620" y2="82"
+          stroke="white" stroke-opacity="0.10" stroke-width="1"/>
+
+    <!-- Product tagline -->
+    <text x="0" y="118"
+          font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+          font-size="18" font-weight="400" letter-spacing="0.3"
+          fill="white" opacity="0.45">
+      Correlate  ·  Explain  ·  Resolve  ·  Automate
+    </text>
+  </g>
 </svg>
 
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     4. VERTICAL STACKED  ·  aileron-vertical.svg
-     App store icons, square social cards, compact embeds
-     ═══════════════════════════════════════════════════════════════════ -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 216" width="180" height="216" role="img" aria-label="Aileron">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     4.  VERTICAL STACKED  ·  logo-vertical.svg
+     App store, square cards, compact social embeds
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 500 540"
+     width="500" height="540"
+     role="img" aria-label="Aileron">
   <title>Aileron</title>
   <defs>
-    <linearGradient id="v-wing" x1="50" y1="22" x2="50" y2="66" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#3730A3"/>
+    <linearGradient id="v-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#00D4FF"/>
+      <stop offset="30%"  stop-color="#3B82F6"/>
+      <stop offset="65%"  stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
     </linearGradient>
-    <linearGradient id="v-ail" x1="50" y1="54" x2="50" y2="92" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4F46E5"/>
-      <stop offset="100%" stop-color="#06B6D4"/>
-    </linearGradient>
-    <radialGradient id="v-apex" cx="50" cy="88" r="11" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="38%"  stop-color="#67E8F9"/>
-      <stop offset="100%" stop-color="#0284C7" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="v-glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="2" result="b"/>
+    <filter id="v-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="v-hub" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <!-- Icon mark 88×88, horizontally centered -->
-  <g transform="translate(46,16) scale(0.88)">
-    <path d="M 12,22 C 32,17 68,17 88,22 L 63,65 C 57,62 43,62 37,65 Z"
-          fill="url(#v-wing)"/>
-    <path d="M 37,65 C 43,62 57,62 63,65 L 50,88 Z"
-          fill="url(#v-ail)"/>
-    <path d="M 36,65 C 43,61 57,61 64,65"
-          fill="none" stroke="rgba(255,255,255,0.20)"
-          stroke-width="1.2" stroke-linecap="round"/>
-    <line x1="12" y1="22" x2="50" y2="52"
-          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="88" y1="22" x2="50" y2="52"
-          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="50" y1="52" x2="50" y2="88"
-          stroke="rgba(255,255,255,0.09)" stroke-width="1.5" stroke-linecap="round"/>
-    <circle cx="12" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#v-glow)"/>
-    <circle cx="88" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#v-glow)"/>
-    <circle cx="50" cy="52" r="3.5" fill="white" opacity="0.62"/>
-    <circle cx="50" cy="88" r="9"   fill="url(#v-apex)"/>
-    <circle cx="50" cy="88" r="3.4" fill="white"/>
+  <!-- Icon mark scaled ~0.9×, centered horizontally -->
+  <g transform="translate(45 20) scale(0.92)">
+    <path d="M130 240 L220 20 L255 20 L165 240 Z" fill="url(#v-g)"/>
+    <path d="M340 240 L250 20 L285 20 L375 240 Z" fill="url(#v-g)"/>
+    <g stroke="url(#v-g)" fill="none" filter="url(#v-glow)">
+      <line x1="252" y1="72"  x2="182" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="252" y1="72"  x2="322" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="182" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="322" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="182" y1="132" x2="322" y2="132" stroke-width="6.5" stroke-linecap="round"/>
+      <line x1="252" y1="72"  x2="252" y2="192" stroke-width="4"   stroke-linecap="round"/>
+    </g>
+    <circle cx="252" cy="72"  r="9.5"  fill="url(#v-g)" filter="url(#v-glow)"/>
+    <circle cx="182" cy="132" r="9.5"  fill="url(#v-g)" filter="url(#v-glow)"/>
+    <circle cx="322" cy="132" r="9.5"  fill="url(#v-g)" filter="url(#v-glow)"/>
+    <circle cx="252" cy="132" r="17"   fill="url(#v-g)" filter="url(#v-hub)"/>
+    <circle cx="252" cy="132" r="8"    fill="white" opacity="0.22"/>
+    <circle cx="252" cy="192" r="11.5" fill="url(#v-g)" filter="url(#v-hub)"/>
+    <circle cx="252" cy="192" r="5"    fill="white" opacity="0.30"/>
   </g>
 
-  <!-- Primary wordmark (centered) -->
-  <text x="90" y="140"
-        font-family="'Inter', 'DM Sans', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="36" font-weight="800" letter-spacing="-1.6"
-        text-anchor="middle" fill="#FFFFFF">aileron</text>
+  <!-- Horizontal rule below icon -->
+  <line x1="90" y1="260" x2="410" y2="260"
+        stroke="white" stroke-opacity="0.08" stroke-width="1"/>
 
-  <!-- Tagline (centered) -->
-  <text x="90" y="163"
-        font-family="'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="9.5" font-weight="500" letter-spacing="2.8"
-        text-anchor="middle" fill="#6366F1">EVENT INTELLIGENCE</text>
+  <!-- Wordmark (centered) -->
+  <text x="250" y="338"
+        font-family="'Inter', 'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+        font-size="80" font-weight="800" letter-spacing="-2.5"
+        text-anchor="middle" fill="#FFFFFF">AILERON</text>
 
-  <!-- Subtle rule -->
-  <line x1="56" y1="173" x2="124" y2="173"
-        stroke="#1E1B4B" stroke-width="0.8"/>
+  <!-- Category -->
+  <text x="250" y="386"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+        font-size="16" font-weight="500" letter-spacing="6"
+        text-anchor="middle" fill="url(#v-g)" opacity="0.80">EVENT INTELLIGENCE</text>
 
-  <!-- Open source line -->
-  <text x="90" y="188"
-        font-family="'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="9" font-weight="400" letter-spacing="0.8"
-        text-anchor="middle" fill="#3730A3">Open Source  ·  Apache 2.0</text>
+  <!-- Tagline -->
+  <text x="250" y="426"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+        font-size="14" font-weight="400" letter-spacing="0.5"
+        text-anchor="middle" fill="white" opacity="0.38">
+    Correlate · Explain · Resolve · Automate
+  </text>
+
+  <!-- OS badge -->
+  <rect x="168" y="450" width="164" height="28" rx="14"
+        fill="none" stroke="#3730A3" stroke-width="1.2"/>
+  <text x="250" y="469"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+        font-size="11" font-weight="500" letter-spacing="1"
+        text-anchor="middle" fill="#6366F1">Apache 2.0  ·  Open Source</text>
 </svg>
 
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     5. MONOCHROME  ·  aileron-mono.svg
-     Single-color contexts: embossing, watermarks, print, favicons
-     Uses currentColor — inherits text color from parent CSS
-     On dark bg: set color:white  |  On light bg: set color:#111827
-     ═══════════════════════════════════════════════════════════════════ -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268 72" width="268" height="72" role="img" aria-label="Aileron">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     5.  MONOCHROME  ·  logo-mono.svg
+     Print, embossing, single-color embeds, watermarks
+     All shapes use white — set CSS color: black for light contexts
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1200 300"
+     width="1200" height="300"
+     role="img" aria-label="Aileron">
   <title>Aileron</title>
 
-  <!-- Icon mark, 52×52, monochrome via currentColor + opacity tiers -->
-  <g transform="translate(10,10) scale(0.52)">
+  <!-- Icon mark (white fills, opacity-tiered for visual depth) -->
+  <g transform="translate(30 20)">
+    <!-- A letterform — full opacity base -->
+    <path d="M130 240 L220 20 L255 20 L165 240 Z" fill="white" opacity="0.92"/>
+    <path d="M340 240 L250 20 L285 20 L375 240 Z" fill="white" opacity="0.92"/>
 
-    <!-- Wing body -->
-    <path d="M 12,22 C 32,17 68,17 88,22 L 63,65 C 57,62 43,62 37,65 Z"
-          fill="currentColor" opacity="0.90"/>
+    <!-- Graph edges — mid-opacity, drawn on top of legs for "embedded" look -->
+    <g stroke="white" fill="none" stroke-linecap="round">
+      <line x1="252" y1="72"  x2="182" y2="132" stroke-width="5.5" stroke-opacity="0.35"/>
+      <line x1="252" y1="72"  x2="322" y2="132" stroke-width="5.5" stroke-opacity="0.35"/>
+      <line x1="182" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-opacity="0.35"/>
+      <line x1="322" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-opacity="0.35"/>
+      <line x1="182" y1="132" x2="322" y2="132" stroke-width="6.5" stroke-opacity="0.42"/>
+      <line x1="252" y1="72"  x2="252" y2="192" stroke-width="4"   stroke-opacity="0.28"/>
+    </g>
 
-    <!-- Aileron section (slightly lighter to preserve hinge read) -->
-    <path d="M 37,65 C 43,62 57,62 63,65 L 50,88 Z"
-          fill="currentColor" opacity="0.68"/>
-
-    <!-- Hinge line -->
-    <path d="M 36,65 C 43,61 57,61 64,65"
-          fill="none" stroke="currentColor" stroke-opacity="0.35"
-          stroke-width="1.4" stroke-linecap="round"/>
-
-    <!-- Graph skeleton -->
-    <line x1="12" y1="22" x2="50" y2="52"
-          stroke="currentColor" stroke-opacity="0.30"
-          stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="88" y1="22" x2="50" y2="52"
-          stroke="currentColor" stroke-opacity="0.30"
-          stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="50" y1="52" x2="50" y2="88"
-          stroke="currentColor" stroke-opacity="0.22"
-          stroke-width="1.5" stroke-linecap="round"/>
-
-    <!-- Source nodes (punched out as white circles over the fill) -->
-    <circle cx="12" cy="22" r="5.2" fill="currentColor" opacity="1"/>
-    <circle cx="88" cy="22" r="5.2" fill="currentColor" opacity="1"/>
-    <circle cx="12" cy="22" r="3.4" fill="currentColor" opacity="0" style="mix-blend-mode:normal"/>
-
-    <!-- Correlation node -->
-    <circle cx="50" cy="52" r="3.5" fill="currentColor" opacity="0.55"/>
-
-    <!-- Apex node -->
-    <circle cx="50" cy="88" r="9"   fill="currentColor" opacity="0.80"/>
-    <circle cx="50" cy="88" r="4"   fill="currentColor" opacity="0" style="mix-blend-mode:normal"/>
-
+    <!-- Nodes — solid white, punched out against leg fill -->
+    <circle cx="252" cy="72"  r="9.5"  fill="white" opacity="1"/>
+    <circle cx="182" cy="132" r="9.5"  fill="white" opacity="1"/>
+    <circle cx="322" cy="132" r="9.5"  fill="white" opacity="1"/>
+    <circle cx="252" cy="132" r="17"   fill="white" opacity="1"/>
+    <circle cx="252" cy="192" r="11.5" fill="white" opacity="1"/>
   </g>
 
-  <!-- Wordmark -->
-  <text x="76" y="45"
-        font-family="'Inter', 'DM Sans', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="33" font-weight="800" letter-spacing="-1.4"
-        fill="currentColor">aileron</text>
+  <!-- Vertical separator -->
+  <line x1="472" y1="48" x2="472" y2="252"
+        stroke="white" stroke-opacity="0.15" stroke-width="1"/>
+
+  <!-- Wordmark (white) -->
+  <g transform="translate(504 88)">
+    <text x="0" y="0"
+          font-family="'Inter', 'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+          font-size="96" font-weight="800" letter-spacing="-3"
+          fill="white">AILERON</text>
+
+    <text x="4" y="52"
+          font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+          font-size="20" font-weight="500" letter-spacing="8"
+          fill="white" opacity="0.50">EVENT INTELLIGENCE</text>
+  </g>
 </svg>

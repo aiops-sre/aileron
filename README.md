@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="logo-full.svg" alt="Aileron — Event Intelligence Platform" width="320"/>
+  <img src="logo-full.svg" alt="Aileron — Event Intelligence Platform" width="800"/>
 </p>
 
 <p align="center">
-  <img src="logo-icon.svg" alt="Aileron icon" width="64"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="logo-horizontal.svg" alt="Aileron horizontal" height="48"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="logo-mono.svg" alt="Aileron monochrome" height="48"/>
+  <img src="logo-icon.svg" alt="Aileron icon" width="80"/>&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="logo-horizontal.svg" alt="Aileron logo" height="56"/>&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="logo-mono.svg" alt="Aileron monochrome" height="56"/>
 </p>
 
 # Aileron — Open-Source Enterprise AIOps Platform

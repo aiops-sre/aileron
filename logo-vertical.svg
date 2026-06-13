@@ -1,67 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 216" width="180" height="216" role="img" aria-label="Aileron">
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 500 540"
+     width="500" height="540"
+     role="img" aria-label="Aileron">
   <title>Aileron</title>
   <defs>
-    <linearGradient id="v-wing" x1="50" y1="22" x2="50" y2="66" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#3730A3"/>
+    <linearGradient id="v-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#00D4FF"/>
+      <stop offset="30%"  stop-color="#3B82F6"/>
+      <stop offset="65%"  stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
     </linearGradient>
-    <linearGradient id="v-ail" x1="50" y1="54" x2="50" y2="92" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4F46E5"/>
-      <stop offset="100%" stop-color="#06B6D4"/>
-    </linearGradient>
-    <radialGradient id="v-apex" cx="50" cy="88" r="11" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="38%"  stop-color="#67E8F9"/>
-      <stop offset="100%" stop-color="#0284C7" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="v-glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="2" result="b"/>
+    <filter id="v-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="v-hub" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <!-- Icon mark 88×88, horizontally centered -->
-  <g transform="translate(46,16) scale(0.88)">
-    <path d="M 12,22 C 32,17 68,17 88,22 L 63,65 C 57,62 43,62 37,65 Z"
-          fill="url(#v-wing)"/>
-    <path d="M 37,65 C 43,62 57,62 63,65 L 50,88 Z"
-          fill="url(#v-ail)"/>
-    <path d="M 36,65 C 43,61 57,61 64,65"
-          fill="none" stroke="rgba(255,255,255,0.20)"
-          stroke-width="1.2" stroke-linecap="round"/>
-    <line x1="12" y1="22" x2="50" y2="52"
-          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="88" y1="22" x2="50" y2="52"
-          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="50" y1="52" x2="50" y2="88"
-          stroke="rgba(255,255,255,0.09)" stroke-width="1.5" stroke-linecap="round"/>
-    <circle cx="12" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#v-glow)"/>
-    <circle cx="88" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#v-glow)"/>
-    <circle cx="50" cy="52" r="3.5" fill="white" opacity="0.62"/>
-    <circle cx="50" cy="88" r="9"   fill="url(#v-apex)"/>
-    <circle cx="50" cy="88" r="3.4" fill="white"/>
+  <!-- Icon mark scaled ~0.9×, centered horizontally -->
+  <g transform="translate(45 20) scale(0.92)">
+    <path d="M130 240 L220 20 L255 20 L165 240 Z" fill="url(#v-g)"/>
+    <path d="M340 240 L250 20 L285 20 L375 240 Z" fill="url(#v-g)"/>
+    <g stroke="url(#v-g)" fill="none" filter="url(#v-glow)">
+      <line x1="252" y1="72"  x2="182" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="252" y1="72"  x2="322" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="182" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="322" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="182" y1="132" x2="322" y2="132" stroke-width="6.5" stroke-linecap="round"/>
+      <line x1="252" y1="72"  x2="252" y2="192" stroke-width="4"   stroke-linecap="round"/>
+    </g>
+    <circle cx="252" cy="72"  r="9.5"  fill="url(#v-g)" filter="url(#v-glow)"/>
+    <circle cx="182" cy="132" r="9.5"  fill="url(#v-g)" filter="url(#v-glow)"/>
+    <circle cx="322" cy="132" r="9.5"  fill="url(#v-g)" filter="url(#v-glow)"/>
+    <circle cx="252" cy="132" r="17"   fill="url(#v-g)" filter="url(#v-hub)"/>
+    <circle cx="252" cy="132" r="8"    fill="white" opacity="0.22"/>
+    <circle cx="252" cy="192" r="11.5" fill="url(#v-g)" filter="url(#v-hub)"/>
+    <circle cx="252" cy="192" r="5"    fill="white" opacity="0.30"/>
   </g>
 
-  <!-- Primary wordmark (centered) -->
-  <text x="90" y="140"
-        font-family="'Inter', 'DM Sans', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="36" font-weight="800" letter-spacing="-1.6"
-        text-anchor="middle" fill="#FFFFFF">aileron</text>
+  <!-- Horizontal rule below icon -->
+  <line x1="90" y1="260" x2="410" y2="260"
+        stroke="white" stroke-opacity="0.08" stroke-width="1"/>
 
-  <!-- Tagline (centered) -->
-  <text x="90" y="163"
-        font-family="'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="9.5" font-weight="500" letter-spacing="2.8"
-        text-anchor="middle" fill="#6366F1">EVENT INTELLIGENCE</text>
+  <!-- Wordmark (centered) -->
+  <text x="250" y="338"
+        font-family="'Inter', 'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+        font-size="80" font-weight="800" letter-spacing="-2.5"
+        text-anchor="middle" fill="#FFFFFF">AILERON</text>
 
-  <!-- Subtle rule -->
-  <line x1="56" y1="173" x2="124" y2="173"
-        stroke="#1E1B4B" stroke-width="0.8"/>
+  <!-- Category -->
+  <text x="250" y="386"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+        font-size="16" font-weight="500" letter-spacing="6"
+        text-anchor="middle" fill="url(#v-g)" opacity="0.80">EVENT INTELLIGENCE</text>
 
-  <!-- Open source line -->
-  <text x="90" y="188"
-        font-family="'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="9" font-weight="400" letter-spacing="0.8"
-        text-anchor="middle" fill="#3730A3">Open Source  ·  Apache 2.0</text>
+  <!-- Tagline -->
+  <text x="250" y="426"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+        font-size="14" font-weight="400" letter-spacing="0.5"
+        text-anchor="middle" fill="white" opacity="0.38">
+    Correlate · Explain · Resolve · Automate
+  </text>
+
+  <!-- OS badge -->
+  <rect x="168" y="450" width="164" height="28" rx="14"
+        fill="none" stroke="#3730A3" stroke-width="1.2"/>
+  <text x="250" y="469"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+        font-size="11" font-weight="500" letter-spacing="1"
+        text-anchor="middle" fill="#6366F1">Apache 2.0  ·  Open Source</text>
 </svg>

@@ -1,55 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" overflow="visible" role="img" aria-label="Aileron icon">
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="120 10 275 245"
+     width="275" height="245"
+     role="img" aria-label="Aileron icon">
   <title>Aileron</title>
   <defs>
-    <linearGradient id="ic-wing" x1="50" y1="20" x2="50" y2="66" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#3730A3"/>
+    <linearGradient id="ic-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#00D4FF"/>
+      <stop offset="30%"  stop-color="#3B82F6"/>
+      <stop offset="65%"  stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
     </linearGradient>
-    <linearGradient id="ic-ail" x1="50" y1="54" x2="50" y2="92" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4F46E5"/>
-      <stop offset="100%" stop-color="#06B6D4"/>
-    </linearGradient>
-    <radialGradient id="ic-apex" cx="50" cy="88" r="11" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="38%"  stop-color="#67E8F9"/>
-      <stop offset="100%" stop-color="#0284C7" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="ic-glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="2" result="b"/>
+    <!-- Tight crisp glow — cleaner than stdDeviation=6 -->
+    <filter id="ic-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Strong glow for hub node (root-cause focal point) -->
+    <filter id="ic-hub" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <!-- Wing body — main delta trapezoid, curved leading edge -->
-  <path d="M 12,22 C 32,17 68,17 88,22 L 63,65 C 57,62 43,62 37,65 Z"
-        fill="url(#ic-wing)"/>
+  <!-- ── A letterform ─────────────────────────────────────── -->
+  <!-- Left leg: outer (130,240)→(220,20), inner (165,240)→(255,20) -->
+  <path d="M130 240 L220 20 L255 20 L165 240 Z" fill="url(#ic-g)"/>
+  <!-- Right leg: mirror -->
+  <path d="M340 240 L250 20 L285 20 L375 240 Z" fill="url(#ic-g)"/>
 
-  <!-- Aileron section — lower triangle, indigo → cyan signal -->
-  <path d="M 37,65 C 43,62 57,62 63,65 L 50,88 Z"
-        fill="url(#ic-ail)"/>
+  <!-- ── Correlation diamond (graph crossbar of the A) ──── -->
+  <!-- Edges — drawn with glow; crossbar is slightly heavier -->
+  <g stroke="url(#ic-g)" fill="none" filter="url(#ic-glow)">
+    <!-- Arms from apex to left/right nodes -->
+    <line x1="252" y1="72"  x2="182" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+    <line x1="252" y1="72"  x2="322" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+    <!-- Arms from left/right to root-cause node -->
+    <line x1="182" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+    <line x1="322" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+    <!-- Crossbar (= A's crossbar) — slightly heavier for emphasis -->
+    <line x1="182" y1="132" x2="322" y2="132" stroke-width="6.5" stroke-linecap="round"/>
+    <!-- Vertical spine -->
+    <line x1="252" y1="72"  x2="252" y2="192" stroke-width="4"   stroke-linecap="round"/>
+  </g>
 
-  <!-- Hinge line — aileron deflection joint -->
-  <path d="M 36,65 C 43,61 57,61 64,65"
-        fill="none" stroke="rgba(255,255,255,0.20)"
-        stroke-width="1.2" stroke-linecap="round"/>
+  <!-- ── Event-source nodes (input signals, top & outer) ── -->
+  <circle cx="252" cy="72"  r="9.5"  fill="url(#ic-g)" filter="url(#ic-glow)"/>
+  <circle cx="182" cy="132" r="9.5"  fill="url(#ic-g)" filter="url(#ic-glow)"/>
+  <circle cx="322" cy="132" r="9.5"  fill="url(#ic-g)" filter="url(#ic-glow)"/>
 
-  <!-- Graph skeleton: Y-structure (2 sources → correlation → root cause) -->
-  <line x1="12" y1="22" x2="50" y2="52"
-        stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="88" y1="22" x2="50" y2="52"
-        stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="50" y1="52" x2="50" y2="88"
-        stroke="rgba(255,255,255,0.09)" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- ── Hub node (correlation engine, dominant center) ── -->
+  <circle cx="252" cy="132" r="17"   fill="url(#ic-g)" filter="url(#ic-hub)"/>
+  <circle cx="252" cy="132" r="8"    fill="white" opacity="0.22"/>
 
-  <!-- Event source nodes (alert origins, wing tips) -->
-  <circle cx="12" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#ic-glow)"/>
-  <circle cx="88" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#ic-glow)"/>
-
-  <!-- Correlation node (where signals converge) -->
-  <circle cx="50" cy="52" r="3.5" fill="white" opacity="0.62"/>
-
-  <!-- Root cause apex (the identified root cause — brightest focal point) -->
-  <circle cx="50" cy="88" r="9"   fill="url(#ic-apex)"/>
-  <circle cx="50" cy="88" r="3.4" fill="white"/>
+  <!-- ── Root-cause apex (identified root cause) ────────── -->
+  <circle cx="252" cy="192" r="11.5" fill="url(#ic-g)" filter="url(#ic-hub)"/>
+  <circle cx="252" cy="192" r="5"    fill="white" opacity="0.30"/>
 </svg>

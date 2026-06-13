@@ -1,51 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268 72" width="268" height="72" role="img" aria-label="Aileron">
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1200 300"
+     width="1200" height="300"
+     role="img" aria-label="Aileron — Event Intelligence Platform">
   <title>Aileron</title>
   <defs>
-    <linearGradient id="h-wing" x1="50" y1="22" x2="50" y2="66" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#3730A3"/>
+    <linearGradient id="h-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#00D4FF"/>
+      <stop offset="30%"  stop-color="#3B82F6"/>
+      <stop offset="65%"  stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
     </linearGradient>
-    <linearGradient id="h-ail" x1="50" y1="54" x2="50" y2="92" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4F46E5"/>
-      <stop offset="100%" stop-color="#06B6D4"/>
-    </linearGradient>
-    <radialGradient id="h-apex" cx="50" cy="88" r="11" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="38%"  stop-color="#67E8F9"/>
-      <stop offset="100%" stop-color="#0284C7" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="h-glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="2" result="b"/>
+    <filter id="h-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="h-hub" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <!-- Icon mark scaled to 52×52, centered vertically in 72px canvas -->
-  <g transform="translate(10,10) scale(0.52)">
-    <path d="M 12,22 C 32,17 68,17 88,22 L 63,65 C 57,62 43,62 37,65 Z"
-          fill="url(#h-wing)"/>
-    <path d="M 37,65 C 43,62 57,62 63,65 L 50,88 Z"
-          fill="url(#h-ail)"/>
-    <path d="M 36,65 C 43,61 57,61 64,65"
-          fill="none" stroke="rgba(255,255,255,0.20)"
-          stroke-width="1.2" stroke-linecap="round"/>
-    <line x1="12" y1="22" x2="50" y2="52"
-          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="88" y1="22" x2="50" y2="52"
-          stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="50" y1="52" x2="50" y2="88"
-          stroke="rgba(255,255,255,0.09)" stroke-width="1.5" stroke-linecap="round"/>
-    <circle cx="12" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#h-glow)"/>
-    <circle cx="88" cy="22" r="5.2" fill="white" opacity="0.90" filter="url(#h-glow)"/>
-    <circle cx="50" cy="52" r="3.5" fill="white" opacity="0.62"/>
-    <circle cx="50" cy="88" r="9"   fill="url(#h-apex)"/>
-    <circle cx="50" cy="88" r="3.4" fill="white"/>
+  <!-- Icon mark (translate to center vertically in 300px canvas) -->
+  <g transform="translate(30 20)">
+    <path d="M130 240 L220 20 L255 20 L165 240 Z" fill="url(#h-g)"/>
+    <path d="M340 240 L250 20 L285 20 L375 240 Z" fill="url(#h-g)"/>
+    <g stroke="url(#h-g)" fill="none" filter="url(#h-glow)">
+      <line x1="252" y1="72"  x2="182" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="252" y1="72"  x2="322" y2="132" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="182" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="322" y1="132" x2="252" y2="192" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="182" y1="132" x2="322" y2="132" stroke-width="6.5" stroke-linecap="round"/>
+      <line x1="252" y1="72"  x2="252" y2="192" stroke-width="4"   stroke-linecap="round"/>
+    </g>
+    <circle cx="252" cy="72"  r="9.5"  fill="url(#h-g)" filter="url(#h-glow)"/>
+    <circle cx="182" cy="132" r="9.5"  fill="url(#h-g)" filter="url(#h-glow)"/>
+    <circle cx="322" cy="132" r="9.5"  fill="url(#h-g)" filter="url(#h-glow)"/>
+    <circle cx="252" cy="132" r="17"   fill="url(#h-g)" filter="url(#h-hub)"/>
+    <circle cx="252" cy="132" r="8"    fill="white" opacity="0.22"/>
+    <circle cx="252" cy="192" r="11.5" fill="url(#h-g)" filter="url(#h-hub)"/>
+    <circle cx="252" cy="192" r="5"    fill="white" opacity="0.30"/>
   </g>
 
+  <!-- Vertical separator -->
+  <line x1="472" y1="48" x2="472" y2="252"
+        stroke="white" stroke-opacity="0.10" stroke-width="1"/>
+
   <!-- Wordmark -->
-  <text x="76" y="45"
-        font-family="'Inter', 'DM Sans', -apple-system, 'Helvetica Neue', Arial, sans-serif"
-        font-size="33" font-weight="800" letter-spacing="-1.4"
-        fill="#FFFFFF">aileron</text>
+  <g transform="translate(504 88)">
+    <!-- Primary name -->
+    <text x="0" y="0"
+          font-family="'Inter', 'DM Sans', 'Helvetica Neue', Arial, sans-serif"
+          font-size="96" font-weight="800" letter-spacing="-3"
+          fill="#FFFFFF">AILERON</text>
+
+    <!-- Category label -->
+    <text x="4" y="52"
+          font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+          font-size="20" font-weight="500" letter-spacing="8"
+          fill="url(#h-g)" opacity="0.85">EVENT INTELLIGENCE</text>
+  </g>
 </svg>
