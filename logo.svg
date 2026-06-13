@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <defs>
+    <linearGradient id="wing" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#6366f1"/>
+      <stop offset="50%"  stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background pill -->
+  <rect x="0" y="10" width="400" height="100" rx="16" fill="#0f0a1e"/>
+
+  <!-- Aileron wing shape — left wing -->
+  <path d="M 30 60 Q 70 30 120 55 L 100 65 Q 65 48 35 68 Z"
+        fill="url(#wing)" opacity="0.9" filter="url(#glow)"/>
+
+  <!-- Aileron wing shape — right wing (mirror) -->
+  <path d="M 190 60 Q 150 30 105 55 L 120 65 Q 155 48 185 68 Z"
+        fill="url(#wing)" opacity="0.7"/>
+
+  <!-- Fuselage / body -->
+  <ellipse cx="110" cy="61" rx="18" ry="7" fill="url(#body)" stroke="#6366f1" stroke-width="1.5"/>
+
+  <!-- Signal arcs — representing alert signals converging -->
+  <path d="M 125 54 Q 145 45 165 50" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.8"/>
+  <path d="M 125 61 Q 150 55 175 58" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.8"/>
+  <path d="M 125 68 Q 145 75 165 72" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.8"/>
+
+  <!-- Dot — RCA focal point -->
+  <circle cx="110" cy="61" r="3.5" fill="#f0abfc" filter="url(#glow)"/>
+
+  <!-- Wordmark -->
+  <text x="210" y="55" font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', Arial, sans-serif"
+        font-size="34" font-weight="700" letter-spacing="-1" fill="white">aileron</text>
+
+  <!-- Tagline -->
+  <text x="211" y="78" font-family="'SF Pro Text', 'Inter', 'Helvetica Neue', Arial, sans-serif"
+        font-size="12" font-weight="400" letter-spacing="2.5" fill="#8b8eb8"
+        text-transform="uppercase">AIOPS PLATFORM</text>
+
+  <!-- Version badge -->
+  <rect x="212" y="87" width="118" height="16" rx="8" fill="#1e1b4b" stroke="#4f46e5" stroke-width="1"/>
+  <text x="271" y="99" text-anchor="middle"
+        font-family="'SF Mono', 'JetBrains Mono', 'Fira Code', monospace"
+        font-size="9" fill="#a5b4fc" letter-spacing="1">Open Source · Apache 2.0</text>
+</svg>

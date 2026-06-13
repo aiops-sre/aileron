@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.svg" alt="Aileron AIOps Platform" width="400"/>
+</p>
+
 # Aileron — Open-Source Enterprise AIOps Platform
 
 [![CI](https://github.com/aiops-sre/aileron/actions/workflows/ci.yml/badge.svg)](https://github.com/aiops-sre/aileron/actions/workflows/ci.yml)

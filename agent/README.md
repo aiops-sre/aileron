@@ -756,4 +756,4 @@ kubectl logs -n aileron-agent kubesense-agent-<pod> | grep "chaos\|violation\|pu
 
 ## License
 
-Internal — Apple SRE Team. Not for external distribution.
+Apache 2.0 — Open Source. See LICENSE.

@@ -25,7 +25,7 @@ labels: bug, needs-triage
 ## Environment
 
 - **Component:** (backend / frontend / pipeline / correlation / topology)
-- **Cluster:** (mps-dev-rno / local)
+- **Cluster:** (your-cluster / local)
 - **Version / SHA:** (run `kubectl -n alert-engine-poc get deployment alerthub-backend -o jsonpath='{.spec.template.spec.containers[0].image}'`)
 
 ## Relevant logs

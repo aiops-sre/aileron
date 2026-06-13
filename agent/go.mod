@@ -17,7 +17,15 @@ require (
 	// PostgreSQL driver — used by collector and core
 	github.com/lib/pq v1.10.9
 
-	// Prometheus metrics for RCA correlator — pinned to Go 1.22 compatible version.
-	// v1.23.x requires Go >= 1.23; this pin prevents -mod=mod from auto-fetching it.
+	// Prometheus metrics — pinned to Go 1.22 compatible version
 	github.com/prometheus/client_golang v1.19.1
+
+	// OpenTelemetry — metrics export via OTLP (Grafana Alloy, OTel Collector, etc.)
+	go.opentelemetry.io/otel                                    v1.28.0
+	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.50.0
+	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v0.50.0
+	go.opentelemetry.io/otel/metric                             v1.28.0
+	go.opentelemetry.io/otel/sdk                                v1.28.0
+	go.opentelemetry.io/otel/sdk/metric                         v1.28.0
+	google.golang.org/grpc                                      v1.65.0
 )

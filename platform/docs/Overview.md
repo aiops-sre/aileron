@@ -7,7 +7,7 @@
 
 ## What the App Is
 
-AlertHub (SRE Command Center) is an AI-powered alert correlation and incident management platform built for Apple SRE teams. It ingests alerts from every monitoring tool — Dynatrace, Prometheus, Grafana, PagerDuty, Splunk — and automatically groups related alerts into incidents with the root cause pre-identified.
+AlertHub (SRE Command Center) is an AI-powered alert correlation and incident management platform built for Aileron Platform teams. It ingests alerts from every monitoring tool — Dynatrace, Prometheus, Grafana, PagerDuty, Splunk — and automatically groups related alerts into incidents with the root cause pre-identified.
 
 The core problem it solves: one infrastructure failure generates dozens of independent alerts across different tools. Without AlertHub, engineers wake up to 50 pages and spend 20 minutes triaging noise. With AlertHub, they see one incident titled "Kubernetes Node Down — mps-worker-z3-08", with 23 correlated alerts already grouped, blast radius mapped, and a timeline assembled.
 

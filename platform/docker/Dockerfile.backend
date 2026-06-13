@@ -33,7 +33,6 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates tzdata postgresql-client curl
 
 # Trust Apple Corporate Root CAs (required for  and other internal services)
-# Certs sourced from git@github.com:crypto-services/trust-apple-corp-root-cas.git
 COPY docker/apple-corp-cas.crt /usr/local/share/ca-certificates/apple-corp.crt
 RUN update-ca-certificates
 

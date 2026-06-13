@@ -20,11 +20,7 @@ ENV HTTP_PROXY=${PKG_PROXY} \
 WORKDIR /build
 
 RUN apk --no-cache add git ca-certificates
-RUN git clone git@github.com:crypto-services/trust-apple-corp-root-cas.git /tmp/apple-cas 2>/dev/null \
     || true
-RUN if [ -d /tmp/apple-cas ]; then \
-      cp /tmp/apple-cas/*.pem /usr/local/share/ca-certificates/ 2>/dev/null; \
-      cp /tmp/apple-cas/*.crt /usr/local/share/ca-certificates/ 2>/dev/null; \
       update-ca-certificates; \
     fi
 

@@ -47,6 +47,7 @@ import (
 	"github.com/aileron-platform/aileron/agent/services/core/internal/cost"
 	"github.com/aileron-platform/aileron/agent/services/core/internal/fingerprint"
 	"github.com/aileron-platform/aileron/agent/services/core/internal/forecast"
+	"github.com/aileron-platform/aileron/agent/services/core/internal/metrics"
 	"github.com/aileron-platform/aileron/agent/services/core/internal/playbook"
 	"github.com/aileron-platform/aileron/agent/services/core/internal/publish"
 	"github.com/aileron-platform/aileron/agent/services/core/internal/rca"
@@ -70,6 +71,17 @@ func main() {
 	if apiToken == "" {
 		log.Printf("SECURITY WARNING: KUBESENSE_API_TOKEN is not set — all API routes are unauthenticated. Set this secret via Whisper before exposing the service.")
 	}
+
+	// Metrics — Prometheus scrape endpoint (:9090/metrics) or OTel OTLP push.
+	// Set METRICS_BACKEND=prometheus (default) or METRICS_BACKEND=otel
+	// Set OTEL_EXPORTER_OTLP_ENDPOINT to enable OTel export.
+	metricsCol, err := metrics.New(metrics.ConfigFromEnv())
+	if err != nil {
+		log.Printf("metrics: init failed, falling back to noop: %v", err)
+		metricsCol, _ = metrics.New(metrics.Config{Backend: metrics.BackendNoop})
+	}
+	defer metricsCol.Close()
+	log.Printf("metrics: backend=%s", metrics.ConfigFromEnv().Backend)
 
 	// The topology querier uses the Neo4j HTTP REST API (port 7474), not the bolt driver.
 	// If NEO4J_URL is a bolt/neo4j:// URL, convert it to HTTP so the querier can connect.

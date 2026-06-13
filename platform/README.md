@@ -859,7 +859,7 @@ alerthub-enterprise/
 
 - `kubectl` configured for `oidc02@example-cluster-01`
 - Access to `aileron` namespace
-- Apple Corp VPN connected
+- VPN (if required by your cluster) connected
 
 ### Access the Live UI
 
@@ -1331,4 +1331,4 @@ K8s has a fixed hierarchy (Node > Deployment > ReplicaSet > Pod). The topology R
 
 ## License
 
-Internal — Apple SRE Team. Not for external distribution.
+Apache 2.0 — Open Source. See LICENSE.

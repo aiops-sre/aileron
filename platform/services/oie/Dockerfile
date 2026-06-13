@@ -46,7 +46,6 @@ RUN apk --no-cache add ca-certificates tzdata && \
 
 # Trust Apple Corporate Root CAs — required for ONTAP REST API, IdMS JWKS endpoint,
 # CloudStack API, and all other internal Apple services reached by OIE fetchers.
-# Source: git@github.com:crypto-services/trust-apple-corp-root-cas.git
 COPY services/oie/apple-corp-cas.crt /usr/local/share/ca-certificates/apple-corp.crt
 RUN update-ca-certificates
 

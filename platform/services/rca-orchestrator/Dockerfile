@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl libsnappy-
 
 # Trust Apple Corporate Root CAs (required for Floodgate, IdMS, and all internal Apple services).
 # Fetched fresh from the canonical source at build time so the bundle is always current.
-# Source: git@github.com:crypto-services/trust-apple-corp-root-cas.git
 # The COPY below brings in the pre-fetched bundle for air-gapped / offline builds;
 # the RUN below overwrites it if the repo is reachable (CI builds with SSH key).
 COPY apple-corp-cas.crt /usr/local/share/ca-certificates/apple-corp.crt
