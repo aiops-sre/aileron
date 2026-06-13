@@ -1,54 +1,121 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 140" width="500" height="140">
   <defs>
-    <linearGradient id="wing" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%"   stop-color="#6366f1"/>
-      <stop offset="50%"  stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#06b6d4"/>
+    <!-- Background gradient -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#080714"/>
+      <stop offset="100%" stop-color="#0d0b22"/>
     </linearGradient>
-    <linearGradient id="body" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"  stop-color="#1e1b4b"/>
-      <stop offset="100%" stop-color="#312e81"/>
+
+    <!-- Main wing surface: deep indigo → violet -->
+    <linearGradient id="wingGrad" x1="1" y1="0.5" x2="0" y2="0">
+      <stop offset="0%"   stop-color="#3730a3"/>
+      <stop offset="60%"  stop-color="#5b21b6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
     </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="2" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+
+    <!-- Aileron: electric indigo → cyan -->
+    <linearGradient id="aileronGrad" x1="1" y1="1" x2="0" y2="0">
+      <stop offset="0%"   stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+
+    <!-- Glow for main wing -->
+    <filter id="wGlow" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Stronger glow for ailerons -->
+    <filter id="aGlow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Soft shadow under whole mark -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#6366f1" flood-opacity="0.25"/>
     </filter>
   </defs>
 
-  <!-- Background pill -->
-  <rect x="0" y="10" width="400" height="100" rx="16" fill="#0f0a1e"/>
+  <!-- ── Background ──────────────────────────────────────────── -->
+  <rect width="500" height="140" rx="16" fill="url(#bg)"/>
 
-  <!-- Aileron wing shape — left wing -->
-  <path d="M 30 60 Q 70 30 120 55 L 100 65 Q 65 48 35 68 Z"
-        fill="url(#wing)" opacity="0.9" filter="url(#glow)"/>
+  <!-- ── Wing mark (aircraft plan-view, top-down) ───────────── -->
+  <!--
+      Coordinate system:
+        Fuselage runs left→right along y=70
+        Wing tips extend UP (y=15) and DOWN (y=125)
+        Root is on the right (x=105), tips on the left (x=28)
+        Leading edge = left/outer face of wing
+        Trailing edge = right/inner face of wing
+  -->
+  <g filter="url(#shadow)">
 
-  <!-- Aileron wing shape — right wing (mirror) -->
-  <path d="M 190 60 Q 150 30 105 55 L 120 65 Q 155 48 185 68 Z"
-        fill="url(#wing)" opacity="0.7"/>
+    <!-- Upper main wing (inner 72% of span) -->
+    <!-- Corners: root-LE(88,70) → 72%-span-LE(38,24) → 72%-span-TE(54,29) → root-TE(108,70) -->
+    <path d="M 88,70 L 38,24 L 54,29 L 108,70 Z"
+          fill="url(#wingGrad)" opacity="0.92" filter="url(#wGlow)"/>
 
-  <!-- Fuselage / body -->
-  <ellipse cx="110" cy="61" rx="18" ry="7" fill="url(#body)" stroke="#6366f1" stroke-width="1.5"/>
+    <!-- Lower main wing (mirror about y=70) -->
+    <path d="M 88,70 L 38,116 L 54,111 L 108,70 Z"
+          fill="url(#wingGrad)" opacity="0.92" filter="url(#wGlow)"/>
 
-  <!-- Signal arcs — representing alert signals converging -->
-  <path d="M 125 54 Q 145 45 165 50" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.8"/>
-  <path d="M 125 61 Q 150 55 175 58" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.8"/>
-  <path d="M 125 68 Q 145 75 165 72" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.8"/>
+    <!-- Upper aileron (outer 28% of span) -->
+    <!-- Corners: 72%-LE(38,24) → tip-LE(24,14) → tip-TE(37,15) → 72%-TE(54,29) -->
+    <path d="M 38,24 L 24,14 L 38,15 L 54,29 Z"
+          fill="url(#aileronGrad)" opacity="1" filter="url(#aGlow)"/>
 
-  <!-- Dot — RCA focal point -->
-  <circle cx="110" cy="61" r="3.5" fill="#f0abfc" filter="url(#glow)"/>
+    <!-- Lower aileron (mirror) -->
+    <path d="M 38,116 L 24,126 L 38,125 L 54,111 Z"
+          fill="url(#aileronGrad)" opacity="1" filter="url(#aGlow)"/>
 
-  <!-- Wordmark -->
-  <text x="210" y="55" font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', Arial, sans-serif"
-        font-size="34" font-weight="700" letter-spacing="-1" fill="white">aileron</text>
+    <!-- Fuselage body -->
+    <ellipse cx="98" cy="70" rx="22" ry="5.5"
+             fill="#13103a" stroke="#6366f1" stroke-width="1.2"/>
+
+    <!-- Fuselage nose cone -->
+    <path d="M 76,70 Q 68,67 64,70 Q 68,73 76,70 Z"
+          fill="#818cf8" opacity="0.7"/>
+
+  </g>
+
+  <!-- Airflow lines (trailing from wing root, suggesting speed) -->
+  <g stroke="#6366f1" stroke-linecap="round" opacity="0.35">
+    <line x1="112" y1="48" x2="136" y2="45" stroke-width="1.3"/>
+    <line x1="114" y1="59" x2="140" y2="57" stroke-width="1"/>
+    <line x1="114" y1="70" x2="142" y2="70" stroke-width="1.5"/>
+    <line x1="114" y1="81" x2="140" y2="83" stroke-width="1"/>
+    <line x1="112" y1="92" x2="136" y2="95" stroke-width="1.3"/>
+  </g>
+
+  <!-- Divider between mark and wordmark -->
+  <line x1="152" y1="24" x2="152" y2="116"
+        stroke="#1e1c40" stroke-width="1"/>
+
+  <!-- ── Wordmark ────────────────────────────────────────────── -->
+
+  <!-- Primary name -->
+  <text x="168" y="62"
+        font-family="'Inter','Helvetica Neue',Arial,sans-serif"
+        font-size="42" font-weight="800" letter-spacing="-2"
+        fill="#ffffff">aileron</text>
+
+  <!-- Subtitle -->
+  <text x="170" y="82"
+        font-family="'Inter','Helvetica Neue',Arial,sans-serif"
+        font-size="12" font-weight="500" letter-spacing="4.5"
+        fill="#6b6f9e">AIOPS PLATFORM</text>
+
+  <!-- Thin rule -->
+  <line x1="170" y1="91" x2="468" y2="91"
+        stroke="#1e1c3a" stroke-width="0.8"/>
 
   <!-- Tagline -->
-  <text x="211" y="78" font-family="'SF Pro Text', 'Inter', 'Helvetica Neue', Arial, sans-serif"
-        font-size="12" font-weight="400" letter-spacing="2.5" fill="#8b8eb8"
-        text-transform="uppercase">AIOPS PLATFORM</text>
-
-  <!-- Version badge -->
-  <rect x="212" y="87" width="118" height="16" rx="8" fill="#1e1b4b" stroke="#4f46e5" stroke-width="1"/>
-  <text x="271" y="99" text-anchor="middle"
-        font-family="'SF Mono', 'JetBrains Mono', 'Fira Code', monospace"
-        font-size="9" fill="#a5b4fc" letter-spacing="1">Open Source · Apache 2.0</text>
+  <text x="170" y="107"
+        font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+        font-size="10.5" letter-spacing="0.8" fill="#3d3d6b">Open Source</text>
+  <circle cx="249" cy="103" r="1.8" fill="#3d3d6b"/>
+  <text x="256" y="107"
+        font-family="'JetBrains Mono','Fira Code','Courier New',monospace"
+        font-size="10.5" letter-spacing="0.8" fill="#3d3d6b">Apache 2.0</text>
 </svg>
